@@ -78,7 +78,7 @@ wire [PayloadLen-1:0] dataC;
 wire [PayloadLen-1:0] sum;
 wire buf_empty;
 wire buf_full;
-wire [4:0]fifo_counter;
+wire [12:0]fifo_counter;
 wire [WaitWidth-1:0]spy_lock;
 wire spec_lock;
 wire rd_en;
@@ -98,8 +98,7 @@ is ready to accept it
 assign spy_lock = ((nextPacket==0) || (nextIndex == packetIndex))? WaitCount : (reduction_table[nextIndex][WaitPos+WaitWidth-1:WaitPos]); //check this change
 
 assign spec_lock = ((children_count == 0) && ((nextPacket==0) || (nextIndex == packetIndex)) && (packetA[ValidBitPos]) &&  ((WaitCount>0)||(reduction_table[packetIndex][ValidBitPos]==0)));
-						//||(done && (done_index==packetIndex));
-		 
+		 //||(done && (done_index==packetIndex)) ;
 assign rd_en =  !(spec_lock || spy_lock);
 
 //write enable signal just needs to wait for a small startup period
@@ -125,6 +124,7 @@ reduce_instr R1 (
  .clk(clk),
  .rst(rst)
 );
+
 
 fifo F1 (
  .clk(clk),
@@ -370,7 +370,7 @@ always@(posedge clk) begin
   if (((reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos]!=1) || (reduction_table[packetIndex][ExtraWaitPos]==1))&&(reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos]>0))begin
     reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos]<=reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos]-1;
   end 
-  
+   
   
  end //end if !rst
  
