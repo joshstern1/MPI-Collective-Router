@@ -79,13 +79,12 @@ wire [PayloadLen-1:0] sum;
 wire buf_empty;
 wire buf_full;
 wire [4:0]fifo_counter;
-wire [WaitWidth-1:0]lock;
 wire [WaitWidth-1:0]spy_lock;
+wire spec_lock;
 wire rd_en;
 wire wr_en;
 wire [DataWidth+ChildrenWidth-1:0]nextPacket;
 wire [DataWidth+ChildrenWidth-1:0]instr_out;
-wire spec_lock;
 wire [IndexWidth-1:0]packetIndex;
 wire [SrcWidth-1:0]packetSrc;
 wire [IndexWidth-1:0]nextIndex;
@@ -95,16 +94,17 @@ wire [WaitWidth-1:0]WaitCount;
 these locks determine read enable signal.  They look at the incoming packet and see if the reduction table
 is ready to accept it
 */
-assign lock = WaitCount;
-assign spy_lock = (nextPacket==0)? lock: ((nextIndex == packetIndex)? lock : ((reduction_table[nextIndex][WaitPos+WaitWidth-1:WaitPos]==0)? 0: 1));
-assign spec_lock = ((children_count == 0) && ((nextIndex==packetIndex)||(nextPacket==0))
-       &&(packetA[DataWidth-1:0]!=0)&&  !((WaitCount==0)&&
-       (reduction_table[packetIndex][ValidBitPos]==1)))||(done && (done_index==packetIndex));
-assign rd_en = (spec_lock==1)?0:((spy_lock>0)? 0:1);
+
+assign spy_lock = ((nextPacket==0) || (nextIndex == packetIndex))? WaitCount : (reduction_table[nextIndex][WaitPos+WaitWidth-1:WaitPos]); //check this change
+
+assign spec_lock = ((children_count == 0) && ((nextPacket==0) || (nextIndex == packetIndex)) && (packetA[ValidBitPos]) &&  ((WaitCount>0)||(reduction_table[packetIndex][ValidBitPos]==0)));
+						//||(done && (done_index==packetIndex));
+		 
+assign rd_en =  !(spec_lock || spy_lock);
 
 //write enable signal just needs to wait for a small startup period
-assign wr_en = (counter<(AdderLatency+3))?1:0;
-
+//assign wr_en = counter<(AdderLatency+3);
+assign wr_en = 1'b1;
 
 packeter P1 (
  .packeterOut(packeterOut),
@@ -250,11 +250,20 @@ always@(posedge clk) begin
      packet has the same index and src, then it should not be copied into the table.  if it is a new packet, copy its
      contents into the reduction table
      */
-				  if(reductiontype && !((reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] == packetSrc) &&
+				 /* if(reductiontype && !((reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] == packetSrc) &&
 				  (reduction_table_index==packetIndex))  && (reduction_table[packetIndex][ValidBitPos] ==1)) begin
 					 reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] <= packetSrc;
 					 reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos] <= reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]-1;
+				  end*/
+				  
+				  if(reductiontype && !((reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] == packetSrc) &&
+				  (reduction_table_index==packetIndex))  && (reduction_table[packetIndex][ValidBitPos] ==1))	begin
+						reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] <= packetSrc;
+						reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos] <= reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]-1;
+						reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos] <= AdderLatency-1;
+						reduction_table[packetIndex][ExtraWaitPos]<=1;
 				  end
+
      
      /*
      the WaitCount is used as a countdown.  each reduction table slot has a WaitCount.  Because the ip core operations
@@ -263,10 +272,10 @@ always@(posedge clk) begin
      if the waitcount was ever used.
      */
      
-				  if(WaitCount==0)begin
+				/*  if(WaitCount==0)begin
 					 reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos] <= AdderLatency-1;
 					 reduction_table[packetIndex][ExtraWaitPos]<=1;
-				  end
+				  end*/
 				  
 				end //end if different slot
 				
@@ -279,7 +288,7 @@ always@(posedge clk) begin
 	  was not just completed and the incoming packet is not a repeat, update and start waiting */
 	   
 		else if(reductiontype && !((reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] == packetSrc) &&
-		(reduction_table_index==packetIndex)) && (reduction_table[packetIndex][ValidBitPos] ==1)) begin
+		(reduction_table_index==packetIndex)) && (reduction_table[packetIndex][ValidBitPos])) begin
 			reduction_table[packetIndex][SrcPos+SrcWidth-1:SrcPos] <= packetSrc;
 			reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos] <= reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]-1;
 			reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos] <= AdderLatency-1;
@@ -294,30 +303,23 @@ always@(posedge clk) begin
   in a reduction operation, the waitcount must be set to 1 so that is not immediately overwritten by
   the next incoming packet. */
   
-  if(reductiontype)begin
-	if(((packetA[DataWidth-1:0] != 0)&&(reduction_table[packetIndex][DataWidth-1:0]==0))||
-   ((WaitCount==0)&&(packetA[ValidBitPos]==1))||
-   ((WaitCount==0) && (reduction_table[packetIndex][ExtraWaitPos]==1)))begin
-    if(!((children_count==0)||(reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]==1)))begin
+  if((reductiontype)&&(packetA[ValidBitPos])&&(WaitCount==0))begin
+    if((children_count>0)&&(reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]!=1))begin
      reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos]<=1;
     end
-	end
   end
   
-  
+   
   /* the following logic is a continuation of the previous special case logic.  If a reduction
   table index receives its first packet but it still under threat to be overwritten, the
   wait count must be set to 1. */
   
-  if(nextPacket[ReductionBitPos])begin
-	if(nextIndex!=packetIndex)begin
-		if((nextPacket[DataWidth-1:0]!=0)&&(reduction_table[nextIndex][ValidBitPos]==1)&&
-		(reduction_table[nextIndex][WaitPos+WaitWidth-1:WaitPos]==0))begin
-			if(!((nextPacket[ChildrenPos+ChildrenWidth-1:ChildrenPos]==0)||(reduction_table[nextIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]==1)))begin
+  if((nextPacket[ReductionBitPos]) && (nextIndex!=packetIndex))begin
+		if((reduction_table[nextIndex][ValidBitPos]==1)&&(reduction_table[nextIndex][WaitPos+WaitWidth-1:WaitPos]==0))begin
+			if((nextPacket[ChildrenPos+ChildrenWidth-1:ChildrenPos]>0)&&(reduction_table[nextIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]!=1))begin
 				reduction_table[nextIndex][WaitPos+WaitWidth-1:WaitPos]<=1;
 			end
 		end
-	end
   end
   
   
