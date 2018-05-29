@@ -36,7 +36,7 @@ output[63:0]Outpacket;
 
 parameter DataWidth = 64;
 parameter ReductionTableWidth = 73;
-parameter ReductionTableSize = 50;
+parameter ReductionTableSize = 2;
 parameter AdderLatency = 14;
 parameter PayloadLen=32;
 parameter opPos = 32;
@@ -63,13 +63,17 @@ parameter LeafBitPos=72;
 reg [8:0]counter;
 reg done;
 reg done_index;
+reg[ReductionTableWidth-1:0] reduction_table[ReductionTableSize-1:0];
+reg [IndexWidth-1:0] reduction_table_index;
+reg [ReductionTableSize-1:0]i;
+reg [ReductionTableSize-1:0]j;
+reg [ReductionTableSize-1:0]k;
+
 wire [DataWidth+ChildrenWidth-1:0]packetA;
 wire [DataWidth-1:0]packeterOut;
 wire [ChildrenWidth-1:0]children_count;
-reg[ReductionTableWidth-1:0] reduction_table[ReductionTableSize-1:0];
 wire[ReductionTableWidth-1:0] reduction_table_entry;
 wire reductiontype;
-reg [IndexWidth-1:0] reduction_table_index;
 wire [PayloadLen-1:0] dataC;
 wire [PayloadLen-1:0] sum;
 wire buf_empty;
@@ -86,9 +90,7 @@ wire [IndexWidth-1:0]packetIndex;
 wire [SrcWidth-1:0]packetSrc;
 wire [IndexWidth-1:0]nextIndex;
 wire [WaitWidth-1:0]WaitCount;
-reg [ReductionTableSize-1:0]i;
-reg [ReductionTableSize-1:0]j;
-reg [ReductionTableSize-1:0]k;
+
 /*
 these locks determine read enable signal.  They look at the incoming packet and see if the reduction table
 is ready to accept it
