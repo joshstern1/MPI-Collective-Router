@@ -19,18 +19,24 @@ inside the fifo
 	
 //leaf bit is for if the operation's children count == 0, because then the input is also the output 
 //extra bit/counting down is 1 if the wait count was ever set to the proper latency
+
+//communicator table
+
+	*|  41-33   | 32-30  |   29-27  |26-18|  17-9   | 8-0 |     	
+	*|local_rank|children| commsize |third| second  |first|
+
 /////////////////////////////////////////////////////////////////////////////////*/
 
 module reduce_instr(packetOut, packetIn, clk, rst);
 
 parameter rank = 9'b0;
 parameter root = 9'b0;
-parameter rank_z = 3'b000;
-parameter rank_y = 3'b000;
-parameter rank_x = 3'b000;
-parameter root_z = 3'b000;
-parameter root_y = 3'b000;
-parameter root_x = 3'b000;
+parameter rank_z = 3'b0;
+parameter rank_y = 3'b0;
+parameter rank_x = 3'b0;
+parameter root_z = 3'b0;
+parameter root_y = 3'b0;
+parameter root_x = 3'b0;
 
 parameter Comm_world_size = 8;
 
@@ -123,21 +129,33 @@ end
 
 
 //communicator table
-parameter CommTableWidth = 27;
+parameter CommTableWidth = 41;
 parameter CommTableSize = 4;
 reg [CommTableSize-1:0]i;
 
 //reduce, recursive halving, recursive doubling, ring, bcast 
 reg[CommTableWidth-1:0] comm_table[CommTableSize-1:0];
 
+wire [Dst_XPos-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
+wire [Dst_XPos-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
 wire [Dst_XPos-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [Dst_XPos-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
 wire [Dst_XPos-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
 
 reg [3:0] send_again;
+wire [lg_numprocs-1:0]bcast_offset;
+//assign bcast_offset = ((log(commsize) - children)+send_again)*DstWidth;
 
 //leftmost rank is first guy you would send to in recursive halving
-assign {dst_x_uptree, dst_y_uptree, dst_x_uptree} = (rank == root)? root : rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][26:18]];
+assign {dst_z_ring, dst_y_ring, dst_x_ring} = (rank == 3'b111)? root : rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][8:0]];  //ring (long allgather)
+//assign {dst_z_bcast, dst_y_bcast, dst_x_bcast} = rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][(26-bcast_offset):(18-bcast_offset)]]; //short broadcast
+assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (rank == root)? root : rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][26:18]]; //short reduction, gather, barrier
+
+wire [7:0]temp_tag;
+wire [lg_numprocs-1:0]recusive_halving_offset;
+assign temp_tag = packetIn[TagPos+TagWidth-1:TagPos];
+//assign recusive_halving_offset = (temp_tag >= (4'b1000/2))? 
+
 assign {dst_z_halving, dst_y_halving, dst_x_halving} = rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][26:18]];
 assign {dst_z_doubling, dst_y_doubling, dst_x_doubling} = rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][8:0]];
 
@@ -147,6 +165,7 @@ always @(posedge clk) begin
   for(i=0;i<CommTableSize;i=i+1)begin
 	comm_table[i]<=27'b0;
   end	
+  send_again<=0;
   payload<=0;
   op<=0;
   algtype<=0;
