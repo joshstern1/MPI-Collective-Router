@@ -70,7 +70,7 @@ module london;
 		// Initialize Inputs
 		clk = 0;
 		rst = 1;
-		valid_in = 1;
+		valid_in = 0;
 		dst_z = 0;
 		dst_y = 0;
 		dst_x = 0;
@@ -78,7 +78,7 @@ module london;
 		src_y = 0;
 		src_x = 0;
 		contextId = 0;
-		tag = 1;
+		tag = 5;
 		algtype = 0;
 		op = 4'b0;
 		payload = 0;
@@ -88,41 +88,42 @@ module london;
 		rst=0;
 		
 		#10;
+		valid_in = 1;
 		op = 4'b1111;
       src_x = 1;
 		payload=6;
  
 		#10;
 	   payload=5;
-		tag=0;
+		//tag=0;
 	  
 	   #10;
 	   payload=4;
-		tag=1;
+		//tag=1;
 	  
 	   #10;
 	   payload=3;
-		tag=0;
+		//tag=0;
 	  
 	   #10;
 	   payload=2;  
-		tag=1;
+		//tag=1;
 		
 		#10;
 	   payload=1;  
-		tag=0;
+		//tag=0;
 		
 		#10;
 	   payload=6;  
-		tag=1;
+		//tag=1;
 		
 		#10;
 	   payload=5;  
-		tag=0;
+	//	tag=0;
 		
 		#10;
 	   payload=4;  
-		tag=1;
+		//tag=1;
 		
 	end
 	
