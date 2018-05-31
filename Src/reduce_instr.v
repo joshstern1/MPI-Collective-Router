@@ -22,8 +22,8 @@ inside the fifo
 
 //communicator table
 
-	*|  42-34   | 33-31  | 30-27  |26-18| 17-9 | 8-0 |     	
-	*|local_rank|children|commsize|third|second|first|
+	*|  42-34   | 33-31  |   30-27   |26-18| 17-9 | 8-0 |     	
+	*|local_rank|children|lg_commsize|third|second|first|
 
 /////////////////////////////////////////////////////////////////////////////////*/
 
@@ -153,50 +153,72 @@ always @(posedge clk) begin
   end	
  end 
  else begin
-	 comm_table[0] <= {9'b0, 3'b011, 4'b1000, 9'b01, 9'b10, 9'b100};
+	 comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
  end 
 end
 
 reg [3:0] send_again;
+reg rd;
+wire rd_en;
 wire [ContextIdWidth-1:0]context;
 wire [lg_numprocs-1:0]lg_commsize;
 wire [lg_numprocs-1:0]communicator_children;
-wire [CommTableWidth-1:0]bcast_offset;
+wire [9:0]bcast_offset;
+
+wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
+reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
+reg [Dst_XWidth-1:0] dst1, dst2, dst3;	//used for testing
+wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
+wire [Dst_XWidth-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
+wire [Dst_XWidth-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
 
 assign context = packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
-assign lg_commsize = (1<<comm_table[context][30:27]);
+assign lg_commsize = comm_table[context][30:27];
 assign communicator_children = comm_table[context][33:31];
-assign bcast_offset = ((lg_commsize - children)+send_again)*DstWidth;
+assign bcast_offset = ((lg_commsize - communicator_children)+send_again)*DstWidth;
 
-wire [Dst_XPos-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
-reg [Dst_XPos-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
-wire [Dst_XPos-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
-wire [Dst_XPos-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
-wire [Dst_XPos-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
 
 //leftmost rank is first guy you would send to in recursive halving
-assign {dst_z_ring, dst_y_ring, dst_x_ring} = (rank == 3'b111)? root : rank_table[comm_table[context][8:0]];  //ring (long allgather)
-assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (rank == root)? root : rank_table[comm_table[context][26:18]]; //short reduction, gather, barrier
+assign {dst_x_ring, dst_y_ring, dst_z_ring} = (rank == 3'b111)? root : rank_table[comm_table[context][8:0]];  //ring (long allgather)
+assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (rank == root)? root : rank_table[comm_table[context][26:18]]; //short reduction, gather, barrier
 
-//assign {dst_z_bcast, dst_y_bcast, dst_x_bcast} = rank_table[comm_table[context][ (bcast_offset+8) : bcast_offset ]]; //short broadcast
-
-assign {dst_z_halving, dst_y_halving, dst_x_halving} = rank_table[comm_table[context][26:18]];
-assign {dst_z_doubling, dst_y_doubling, dst_x_doubling} = rank_table[comm_table[context][8:0]];
+assign {dst_x_halving, dst_y_halving, dst_z_halving} = rank_table[comm_table[context][26:18]];
+assign {dst_x_doubling, dst_y_doubling, dst_z_doubling} = rank_table[comm_table[context][8:0]];
 
 always @(posedge clk) begin
+	if(rst) begin
+		send_again = 0;
+		rd = 0;
+		dst_x_bcast = 0;
+		dst_y_bcast = 0;
+		dst_z_bcast = 0;
+	end
+	else begin	
+		if(send_again == comm_table[context][33:31]-1) begin
+			rd=1;
+			send_again=0;
+		end
+		else begin
+			if(packetIn[opPos+opWidth-1:opPos]==4'b1111) begin
+				send_again = send_again+1;
+			end
+		end
+		
+		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = comm_table[context][bcast_offset+:9]; //short broadcast
 
-	//bcast_offset = ((lg_commsize - children)+send_again)*DstWidth + DstWidth - 1;
-	{dst_z_bcast, dst_y_bcast, dst_x_bcast} = comm_table[context][bcast_offset+:9]; //short broadcast
-	
+		case(packetIn[opPos+opWidth-1:opPos])
+			4'b1111: {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
+		endcase	
+	end
 end
 
+assign rd_en = rd;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 always @(posedge clk) begin
   
  if (rst) begin //if rst, set everything to 0
-  //send_again<=0;
   payload<=0;
   op<=0;
   algtype<=0;
