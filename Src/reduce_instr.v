@@ -22,8 +22,8 @@ inside the fifo
 
 //communicator table
 
-	*|  42-34   | 33-31  |   30-27  |26-18|  17-9   | 8-0 |     	
-	*|local_rank|children| commsize |third| second  |first|
+	*|  42-34   | 33-31  | 30-27  |26-18| 17-9 | 8-0 |     	
+	*|local_rank|children|commsize|third|second|first|
 
 /////////////////////////////////////////////////////////////////////////////////*/
 
@@ -166,7 +166,6 @@ wire [lg_numprocs-1:0]bcast_offset;
 assign context = packetIn[ContextIdPos+ContextWidth-1:ContextIdPos];
 assign lg_commsize = (1<<comm_table[context][30:27]);
 assign communicator_children = comm_table[context][33:31];
-
 assign bcast_offset = ((log(commsize) - children)+send_again)*DstWidth;
 
 wire [Dst_XPos-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
