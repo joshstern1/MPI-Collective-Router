@@ -63,7 +63,7 @@ parameter DstWidth = 9;
 parameter ValidBitPos = 72;
 
 parameter ReductionTableWidth = 82;
-parameter ReductionTableSize = 2;
+parameter ReductionTableSize = 8;
 parameter AdderLatency = 14;
 
 parameter ReductionBitPos=35;
@@ -116,7 +116,7 @@ wire [PayloadWidth-1:0] sum;
 
 reg [8:0]counter;
 reg done;
-reg done_index;
+reg [ReductionTableSize-1:0]done_index;
 reg[ReductionTableWidth-1:0] reduction_table[ReductionTableSize-1:0];
 reg [ReductionTableSize-1:0]i;
 reg [ReductionTableSize-1:0]j;
@@ -338,6 +338,6 @@ always@(posedge clk) begin
  end //end if !rst
  
 end  //end always
- 
+
 endmodule
 
