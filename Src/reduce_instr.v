@@ -22,7 +22,7 @@ inside the fifo
 
 //communicator table
 
-	*|  41-33   | 32-30  |   29-27  |26-18|  17-9   | 8-0 |     	
+	*|  42-34   | 33-31  |   30-27  |26-18|  17-9   | 8-0 |     	
 	*|local_rank|children| commsize |third| second  |first|
 
 /////////////////////////////////////////////////////////////////////////////////*/
@@ -89,52 +89,85 @@ reg [Dst_XPos-1:0] dst_x, dst_y, dst_z;
 reg valid;
 reg [ChildrenWidth-1:0]children;
 
+//rank table
 reg [num_procs-1:0] rank_table [SrcWidth-1:0];	//rank table matches ranks to physical address
+reg [lg_numprocs-1:0]j;
+
 always @(posedge rst) begin
- rank_table[0] <= {3'b001, 3'b001, 3'b001};
- rank_table[1] <= {3'b001, 3'b001, 3'b000};
- rank_table[2] <= {3'b001, 3'b000, 3'b001};
- rank_table[3] <= {3'b001, 3'b000, 3'b000};
- rank_table[4] <= {3'b000, 3'b001, 3'b001};
- rank_table[5] <= {3'b000, 3'b001, 3'b000};
- rank_table[6] <= {3'b000, 3'b000, 3'b001};
- rank_table[7] <= {3'b000, 3'b000, 3'b000};
- /*
- rank_table[8] <= {3'b001, 3'b001, 3'b010};
- rank_table[9] <= {3'b001, 3'b001, 3'b011};
- rank_table[10] <= {3'b001, 3'b000, 3'b010};
- rank_table[11] <= {3'b001, 3'b000, 3'b011};
- rank_table[12] <= {3'b000, 3'b001, 3'b010};
- rank_table[13] <= {3'b000, 3'b001, 3'b011};
- rank_table[14] <= {3'b000, 3'b000, 3'b010};
- rank_table[15] <= {3'b000, 3'b000, 3'b011};
- rank_table[16] <= {3'b001, 3'b010, 3'b001};
- rank_table[17] <= {3'b001, 3'b010, 3'b000};
- rank_table[18] <= {3'b001, 3'b011, 3'b001};
- rank_table[19] <= {3'b001, 3'b011, 3'b000};
- rank_table[20] <= {3'b000, 3'b010, 3'b001};
- rank_table[21] <= {3'b000, 3'b010, 3'b000};
- rank_table[22] <= {3'b000, 3'b011, 3'b001};
- rank_table[23] <= {3'b000, 3'b011, 3'b000};
- rank_table[24] <= {3'b001, 3'b010, 3'b010};
- rank_table[25] <= {3'b001, 3'b010, 3'b011};
- rank_table[26] <= {3'b001, 3'b011, 3'b010};
- rank_table[27] <= {3'b001, 3'b011, 3'b011};
- rank_table[28] <= {3'b000, 3'b010, 3'b010};
- rank_table[29] <= {3'b000, 3'b010, 3'b011};
- rank_table[30] <= {3'b000, 3'b011, 3'b010};
- rank_table[31] <= {3'b000, 3'b011, 3'b011};
- */
+
+ if (rst) begin //if rst, set everything to 0
+  for(j=0;j<num_procs;j=j+1)begin
+	rank_table[j]<=9'b0;
+  end	
+ end
+ 
+ else begin
+	 rank_table[0] <= {3'b001, 3'b001, 3'b001};
+	 rank_table[1] <= {3'b001, 3'b001, 3'b000};
+	 rank_table[2] <= {3'b001, 3'b000, 3'b001};
+	 rank_table[3] <= {3'b001, 3'b000, 3'b000};
+	 rank_table[4] <= {3'b000, 3'b001, 3'b001};
+	 rank_table[5] <= {3'b000, 3'b001, 3'b000};
+	 rank_table[6] <= {3'b000, 3'b000, 3'b001};
+	 rank_table[7] <= {3'b000, 3'b000, 3'b000};
+	 /*
+	 rank_table[8] <= {3'b001, 3'b001, 3'b010};
+	 rank_table[9] <= {3'b001, 3'b001, 3'b011};
+	 rank_table[10] <= {3'b001, 3'b000, 3'b010};
+	 rank_table[11] <= {3'b001, 3'b000, 3'b011};
+	 rank_table[12] <= {3'b000, 3'b001, 3'b010};
+	 rank_table[13] <= {3'b000, 3'b001, 3'b011};
+	 rank_table[14] <= {3'b000, 3'b000, 3'b010};
+	 rank_table[15] <= {3'b000, 3'b000, 3'b011};
+	 rank_table[16] <= {3'b001, 3'b010, 3'b001};
+	 rank_table[17] <= {3'b001, 3'b010, 3'b000};
+	 rank_table[18] <= {3'b001, 3'b011, 3'b001};
+	 rank_table[19] <= {3'b001, 3'b011, 3'b000};
+	 rank_table[20] <= {3'b000, 3'b010, 3'b001};
+	 rank_table[21] <= {3'b000, 3'b010, 3'b000};
+	 rank_table[22] <= {3'b000, 3'b011, 3'b001};
+	 rank_table[23] <= {3'b000, 3'b011, 3'b000};
+	 rank_table[24] <= {3'b001, 3'b010, 3'b010};
+	 rank_table[25] <= {3'b001, 3'b010, 3'b011};
+	 rank_table[26] <= {3'b001, 3'b011, 3'b010};
+	 rank_table[27] <= {3'b001, 3'b011, 3'b011};
+	 rank_table[28] <= {3'b000, 3'b010, 3'b010};
+	 rank_table[29] <= {3'b000, 3'b010, 3'b011};
+	 rank_table[30] <= {3'b000, 3'b011, 3'b010};
+	 rank_table[31] <= {3'b000, 3'b011, 3'b011};
+	 */
+ end
 end
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //communicator table
-parameter CommTableWidth = 41;
+parameter CommTableWidth = 43;
 parameter CommTableSize = 4;
+reg[CommTableWidth-1:0] comm_table[CommTableSize-1:0];
 reg [CommTableSize-1:0]i;
 
-//reduce, recursive halving, recursive doubling, ring, bcast 
-reg[CommTableWidth-1:0] comm_table[CommTableSize-1:0];
+always @(posedge rst) begin
+ if (rst) begin //if rst, set everything to 0
+  for(i=0;i<CommTableSize;i=i+1)begin
+	comm_table[i]<=43'b0;
+  end	
+ end 
+ else begin
+	 comm_table[0] <= {9'b0, 3'b011, 4'b1000, 9'b01, 9'b10, 9'b100};
+ end 
+end
+
+reg [3:0] send_again;
+wire [ContextIdWidth-1:0]context;
+wire [lg_numprocs-1:0]lg_commsize;
+wire [lg_numprocs-1:0]communicator_children;
+wire [lg_numprocs-1:0]bcast_offset;
+
+assign context = packetIn[ContextIdPos+ContextWidth-1:ContextIdPos];
+assign lg_commsize = (1<<comm_table[context][30:27]);
+assign communicator_children = comm_table[context][33:31];
+
+assign bcast_offset = ((log(commsize) - children)+send_again)*DstWidth;
 
 wire [Dst_XPos-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
 wire [Dst_XPos-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
@@ -142,29 +175,21 @@ wire [Dst_XPos-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [Dst_XPos-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
 wire [Dst_XPos-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
 
-reg [3:0] send_again;
-wire [lg_numprocs-1:0]bcast_offset;
-//assign bcast_offset = ((log(commsize) - children)+send_again)*DstWidth;
-
 //leftmost rank is first guy you would send to in recursive halving
-assign {dst_z_ring, dst_y_ring, dst_x_ring} = (rank == 3'b111)? root : rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][8:0]];  //ring (long allgather)
-//assign {dst_z_bcast, dst_y_bcast, dst_x_bcast} = rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][(26-bcast_offset):(18-bcast_offset)]]; //short broadcast
-assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (rank == root)? root : rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][26:18]]; //short reduction, gather, barrier
+assign {dst_z_ring, dst_y_ring, dst_x_ring} = (rank == 3'b111)? root : rank_table[comm_table[context][8:0]];  //ring (long allgather)
+assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (rank == root)? root : rank_table[comm_table[context][26:18]]; //short reduction, gather, barrier
 
-wire [7:0]temp_tag;
-wire [lg_numprocs-1:0]recusive_halving_offset;
-assign temp_tag = packetIn[TagPos+TagWidth-1:TagPos];
-//assign recusive_halving_offset = (temp_tag >= (4'b1000/2))? 
+assign {dst_z_bcast, dst_y_bcast, dst_x_bcast} = rank_table[comm_table[context][ (bcast_offset+8) : bcast_offset ]]; //short broadcast
 
-assign {dst_z_halving, dst_y_halving, dst_x_halving} = rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][26:18]];
-assign {dst_z_doubling, dst_y_doubling, dst_x_doubling} = rank_table[comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]][8:0]];
+assign {dst_z_halving, dst_y_halving, dst_x_halving} = rank_table[comm_table[context][26:18]];
+assign {dst_z_doubling, dst_y_doubling, dst_x_doubling} = rank_table[comm_table[context][8:0]];
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 always @(posedge clk) begin
   
  if (rst) begin //if rst, set everything to 0
-  for(i=0;i<CommTableSize;i=i+1)begin
-	comm_table[i]<=27'b0;
-  end	
   send_again<=0;
   payload<=0;
   op<=0;
