@@ -93,7 +93,7 @@ reg [ChildrenWidth-1:0]children;
 reg [num_procs-1:0] rank_table [SrcWidth-1:0];	//rank table matches ranks to physical address
 reg [lg_numprocs-1:0]j;
 
-always @(posedge rst) begin
+always @(posedge clk) begin
 
  if (rst) begin //if rst, set everything to 0
   for(j=0;j<num_procs;j=j+1)begin
@@ -196,7 +196,7 @@ end
 always @(posedge clk) begin
   
  if (rst) begin //if rst, set everything to 0
-  send_again<=0;
+  //send_again<=0;
   payload<=0;
   op<=0;
   algtype<=0;
