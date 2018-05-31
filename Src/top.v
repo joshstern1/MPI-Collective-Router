@@ -25,12 +25,12 @@ module top(Outpacket, done, valid_out, clk, rst, valid_in, dst_z, dst_y, dst_x, 
 
 parameter rank = 9'b0;
 parameter root = 9'b0;
-parameter rank_z = 3'b000;
-parameter rank_y = 3'b000;
-parameter rank_x = 3'b000;
-parameter root_z = 3'b000;
-parameter root_y = 3'b000;
-parameter root_x = 3'b000;
+parameter rank_z = 3'b0;
+parameter rank_y = 3'b0;
+parameter rank_x = 3'b0;
+parameter root_z = 3'b0;
+parameter root_y = 3'b0;
+parameter root_x = 3'b0;
 
 parameter Comm_world_size = 8;
 
@@ -92,16 +92,17 @@ output[FlitWidth-1:0]Outpacket;
 
 //packeter
 wire [FlitWidth-1:0]packeterOut;
-wire buf_empty;
-wire buf_full;
 
 //instr
 wire [FlitWidth+ChildrenWidth-1:0]instr_out;
 
 //fifo
 wire [12:0]fifo_counter;
+wire buf_empty;
+wire buf_full;
 wire rd_en;
 wire wr_en;
+
 
 //reduction unit
 wire [FlitWidth+ChildrenWidth-1:0]packetA;
