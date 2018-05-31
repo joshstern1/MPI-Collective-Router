@@ -1,14 +1,33 @@
 `timescale 1ns / 1ps
 
-//testbench
+////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer:
+//
+// Create Date:   15:27:48 05/30/2018
+// Design Name:   top
+// Module Name:   C:/Users/joshtern/MPI-Collective-Router/london.v
+// Project Name:  MPI-Collective-Router
+// Target Device:  
+// Tool versions:  
+// Description: 
+//
+// Verilog Test Fixture created by ISE for module: top
+//
+// Dependencies:
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
 ////////////////////////////////////////////////////////////////////////////////
 
 module london;
-
+ 
 	// Inputs
 	reg clk;
 	reg rst;
-	reg valid_in;
+	reg valid_in; 
 	reg [2:0] dst_z;
 	reg [2:0] dst_y;
 	reg [2:0] dst_x;
@@ -61,12 +80,15 @@ module london;
 		contextId = 0;
 		tag = 1;
 		algtype = 0;
-		op = 4'b1111;
+		op = 4'b0;
 		payload = 0;
 
 		// Wait 100 ns for global reset to finish
 		#100;
 		rst=0;
+		
+		#10;
+		op = 4'b1111;
       src_x = 1;
 		payload=6;
  
