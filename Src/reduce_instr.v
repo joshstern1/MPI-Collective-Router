@@ -166,9 +166,9 @@ wire [lg_numprocs-1:0]communicator_children;
 wire [9:0]bcast_offset;
 
 wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
+wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
 reg [Dst_XWidth-1:0] dst1, dst2, dst3;	//used for testing
-wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [Dst_XWidth-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
 wire [Dst_XWidth-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
 
@@ -189,9 +189,7 @@ always @(posedge clk) begin
 	if(rst) begin
 		send_again = 0;
 		rd = 0;
-		dst_x_bcast = 0;
-		dst_y_bcast = 0;
-		dst_z_bcast = 0;
+		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 9'b0;
 	end
 	else begin	
 		if(send_again == comm_table[context][33:31]-1) begin
@@ -213,6 +211,33 @@ always @(posedge clk) begin
 end
 
 assign rd_en = rd;
+
+wire [TagWidth-1:0]t_tag;
+assign t_tag = packetIn[TagPos+TagWidth-1:TagPos];
+reg [lg_numprocs-1:0]bitmask;
+reg [lg_numprocs-1:0]k;
+always @(posedge clk)begin
+	for(k=1;k<lg_numprocs-1;k=k+1)begin
+		if((t_tag >= ((1<<k)+comm_table[context][42:34])) && (t_tag < ((1<<(k+1))+comm_table[context][42:34])))begin
+			bitmask[k] = 1'b1;
+		end
+		else begin
+			bitmask[k] = 1'b0;
+		end
+	end
+	if(t_tag >= (1<<(lg_numprocs-1)))begin
+		bitmask[lg_numprocs-1] = 1'b1;
+	end
+	else begin
+		bitmask[lg_numprocs-1] = 1'b0;
+	end
+	if(t_tag == 1)begin
+		bitmask[0] = 1'b1;
+	end
+	else begin
+		bitmask[0] = 1'b0;
+	end
+end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
