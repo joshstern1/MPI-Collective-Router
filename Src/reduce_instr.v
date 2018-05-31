@@ -91,7 +91,7 @@ reg [ChildrenWidth-1:0]children;
 
 //rank table
 reg [num_procs-1:0] rank_table [SrcWidth-1:0];	//rank table matches ranks to physical address
-reg [lg_numprocs-1:0]j;
+reg [lg_numprocs:0]j;
 
 always @(posedge clk) begin
 
@@ -146,7 +146,7 @@ parameter CommTableSize = 4;
 reg[CommTableWidth-1:0] comm_table[CommTableSize-1:0];
 reg [CommTableSize-1:0]i;
 
-always @(posedge rst) begin
+always @(posedge clk) begin
  if (rst) begin //if rst, set everything to 0
   for(i=0;i<CommTableSize;i=i+1)begin
 	comm_table[i]<=43'b0;
