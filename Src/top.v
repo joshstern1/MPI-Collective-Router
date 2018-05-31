@@ -338,6 +338,6 @@ always@(posedge clk) begin
  end //end if !rst
  
 end  //end always
-
+ 
 endmodule
 
