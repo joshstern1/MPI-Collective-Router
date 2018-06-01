@@ -200,7 +200,7 @@ wire [DstWidth:0]bcast_offset;
 reg rd_bcast, t_rd_bcast;
 wire rd_en_bcast;
 reg home_bcast;
-reg do_i_need_it;
+reg bcast_need_it;
 assign rd_en_bcast = rd_bcast;
 assign bcast_offset = ((lg_commsize - communicator_children)+send_again_bcast)*DstWidth;
 
@@ -211,12 +211,13 @@ always @(posedge clk) begin	//bcast
 		t_rd_bcast = 0;
 		home_bcast = 0;
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 9'b0;
+		bcast_need_it <= 0;
 	end
 	else begin		
 		if(send_again_bcast == comm_table[context][33:31]-1) begin
 			t_rd_bcast=1;
 			send_again_bcast=0;
-			home_bcast = from_guest;
+			home_bcast = (local_rank!=0);
 		end
 		else begin
 			if(packetIn[opPos+opWidth-1:opPos]==4'b1111) begin
@@ -226,15 +227,15 @@ always @(posedge clk) begin	//bcast
 			t_rd_bcast = 0;
 		end
 		
-		do_i_need_it <= home_bcast;
+		bcast_need_it <= home_bcast;
 		
-		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = (do_i_need_it)? {rank_x, rank_y, rank_z} : comm_table[context][bcast_offset+:DstWidth]; //short broadcast
+		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = (bcast_need_it)? {rank_x, rank_y, rank_z} : comm_table[context][bcast_offset+:DstWidth]; //short broadcast
 
 		case(packetIn[opPos+opWidth-1:opPos])
 			4'b1111: {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
 		endcase	
 
-		rd_bcast <= (from_guest)? ({dst_x_bcast, dst_y_bcast, dst_z_bcast} == {rank_x, rank_y, rank_z}) : (t_rd_bcast)?1:local_rank[0];
+		rd_bcast <= (local_rank==0)? ({dst_x_bcast, dst_y_bcast, dst_z_bcast} == {rank_x, rank_y, rank_z}) : (t_rd_bcast)?1:local_rank[0];
 		
 	end
 end
@@ -296,7 +297,9 @@ reg [lg_numprocs:0]base2;
 reg rd_doubling;
 wire rd_en_doubling;
 wire [DstWidth-1:0]diff;
-reg home_double;
+reg home_doubling;
+reg t_rd_doubling;
+reg doubling_need_it;
 
 assign rd_en_doubling = rd_doubling;
 assign diff = (t_rank > local_rank)? t_rank - local_rank : local_rank - t_rank;	//what if local rank is greater than t_rank
@@ -308,6 +311,9 @@ always @(posedge clk)begin
 		send_again_doubling = 0;
 		rd_doubling = 0;
 		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = 9'b0;
+		t_rd_doubling = 0;
+		home_doubling = 0;
+		doubling_need_it <= 0;
 	end
 
 	else begin
@@ -318,21 +324,31 @@ always @(posedge clk)begin
 		end
 		
 		if(send_again_doubling == (lg_commsize-base2-1))begin
-			rd_doubling = 1;
+			t_rd_doubling = 1;
+			home_doubling = from_guest;
 			send_again_doubling = 0;
 		end
 		
 		else begin
 			if(packetIn[opPos+opWidth-1:opPos]==4'b1111) begin
-				send_again_doubling = send_again_doubling+1;
+				send_again_doubling = (!home_doubling)? send_again_doubling+1 : send_again_doubling;
 			end
+			
+			home_doubling = 0;
+			t_rd_doubling = 0;
+			
 		end
 
-		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = comm_table[context][doubling_offset+:DstWidth];
+		doubling_need_it <= home_doubling;
+
+		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = (doubling_need_it)? {rank_x, rank_y, rank_z} : comm_table[context][doubling_offset+:DstWidth];
 
 		case(packetIn[opPos+opWidth-1:opPos])
 			4'b1111: {dst7, dst8, dst9} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
 		endcase	
+		
+		rd_doubling <= (from_guest)? ({dst_x_doubling, dst_y_doubling, dst_z_doubling} == {rank_x, rank_y, rank_z}) : (t_rd_doubling)?1:0;
+		
 	end
 
 end
