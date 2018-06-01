@@ -34,6 +34,7 @@ module london;
 	reg [2:0] src_z;
 	reg [2:0] src_y;
 	reg [2:0] src_x;
+	reg [8:0] rank;
 	reg [7:0] contextId;
 	reg [7:0] tag;
 	reg [1:0] algtype;
@@ -41,7 +42,7 @@ module london;
 	reg [31:0] payload;
 
 	// Outputs
-	wire [72:0] Outpacket;
+	wire [81:0] Outpacket;
 	wire done;
 	wire valid_out;
 
@@ -59,6 +60,7 @@ module london;
 		.src_z(src_z), 
 		.src_y(src_y), 
 		.src_x(src_x), 
+		.rank(rank),
 		.contextId(contextId), 
 		.tag(tag), 
 		.algtype(algtype), 
@@ -77,8 +79,9 @@ module london;
 		src_z = 0;
 		src_y = 0;
 		src_x = 0;
+		rank=0;
 		contextId = 0;
-		tag = 5;
+		tag = 3;
 		algtype = 0;
 		op = 4'b0;
 		payload = 0;
@@ -90,7 +93,7 @@ module london;
 		#10;
 		valid_in = 1;
 		op = 4'b1111;
-      src_x = 1;
+      //src_x = 1;
 		payload=6;
  
 		#10;
