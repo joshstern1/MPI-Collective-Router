@@ -159,16 +159,13 @@ end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //ring and uptree
-reg rd;
-wire rd_en;
 wire [ContextIdWidth-1:0]context;
 wire [lg_numprocs-1:0]lg_commsize;
 wire [lg_numprocs-1:0]communicator_children;
 wire [TagWidth-1:0]t_tag;
-wire [Src_XWidth-1:0]t_rank;
+wire [DstWidth-1:0]t_rank;
 wire [DstWidth-1:0]local_rank;
 
-assign rd_en = rd;
 assign context = packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
 assign lg_commsize = comm_table[context][30:27];
 assign communicator_children = comm_table[context][33:31];
@@ -189,18 +186,21 @@ reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
 reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [lg_numprocs:0] send_again_bcast;
 wire [DstWidth:0]bcast_offset;
+reg rd_bcast;
+wire rd_en_bcast;
 
+assign rd_en_bcast = rd_bcast;
 assign bcast_offset = ((lg_commsize - communicator_children)+send_again_bcast)*DstWidth;
 
 always @(posedge clk) begin	//bcast
 	if(rst) begin
 		send_again_bcast = 0;
-		rd = 0;
+		rd_bcast = 0;
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 9'b0;
 	end
 	else begin	
 		if(send_again_bcast == comm_table[context][33:31]-1) begin
-			rd=1;
+			rd_bcast=1;
 			send_again_bcast=0;
 		end
 		else begin
@@ -267,32 +267,34 @@ end
 
 reg [Dst_XWidth-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
 reg [Dst_XWidth-1:0] dst7, dst8, dst9; //used for testing
-reg [lg_numprocs-1:0]bitmask;
 wire [DstWidth:0]doubling_offset;
 reg [lg_numprocs-1:0]a;
 reg [lg_numprocs:0] send_again_doubling;
 reg [lg_numprocs:0]base2;
 reg rd_doubling;
-wire [DstWidith-1:0]diff;
+wire rd_en_doubling;
+wire [DstWidth-1:0]diff;
 
-assign diff = t_rank - local_rank;	//what if local rank is greater than t_rank
-assign doubling_offset = (DstWidth * (lg_commsize - 1)) - (send_again_doubling * DstWidth);
+assign rd_en_doubling = rd_doubling;
+assign diff = (t_rank > local_rank)? t_rank - local_rank : local_rank - t_rank;	//what if local rank is greater than t_rank
+assign doubling_offset = (DstWidth * (lg_commsize - 1)) - ((send_again_doubling+base2) * DstWidth);
 
 always @(posedge clk)begin
 
 	if(rst) begin
 		send_again_doubling = 0;
-		rd_doubling = 1;
+		rd_doubling = 0;
 		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = 9'b0;
 	end
 
 	else begin
-		base2=0;
-		for(a=0; 2**a<diff; a=a+1) begin
-			base2 = a;
+	
+		base2 = (diff==0)? 0 : 1;
+		for(a=1; 2**a<=diff; a=a+1) begin
+			base2 = a+1;
 		end
 		
-		if(send_again_doubling == (lg_commsize-base2))begin
+		if(send_again_doubling == (lg_commsize-base2-1))begin
 			rd_doubling = 1;
 			send_again_doubling = 0;
 		end
