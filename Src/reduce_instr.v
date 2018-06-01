@@ -174,6 +174,7 @@ wire [lg_numprocs-1:0]communicator_children;
 wire [TagWidth-1:0]t_tag;
 wire [DstWidth-1:0]t_rank;
 wire [DstWidth-1:0]local_rank;
+wire from_guest;
 
 assign context = packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
 assign lg_commsize = comm_table[context][30:27];
@@ -181,6 +182,7 @@ assign communicator_children = comm_table[context][33:31];
 assign t_tag = packetIn[TagPos+TagWidth-1:TagPos];
 assign t_rank = packetIn[RankPos+RankWidth-1:RankPos];
 assign local_rank = comm_table[context][42:34];
+assign from_guest = ({rank_z, rank_y, rank_x}!=packetIn[SrcPos+SrcWidth-1:SrcPos]);
 
 wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
@@ -195,9 +197,10 @@ reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
 reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [lg_numprocs:0] send_again_bcast;
 wire [DstWidth:0]bcast_offset;
-reg rd_bcast;
+reg rd_bcast, t_rd_bcast;
 wire rd_en_bcast;
-
+reg home_bcast;
+reg do_i_need_it;
 assign rd_en_bcast = rd_bcast;
 assign bcast_offset = ((lg_commsize - communicator_children)+send_again_bcast)*DstWidth;
 
@@ -205,24 +208,34 @@ always @(posedge clk) begin	//bcast
 	if(rst) begin
 		send_again_bcast = 0;
 		rd_bcast = 0;
+		t_rd_bcast = 0;
+		home_bcast = 0;
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 9'b0;
 	end
-	else begin	
+	else begin		
 		if(send_again_bcast == comm_table[context][33:31]-1) begin
-			rd_bcast=1;
+			t_rd_bcast=1;
 			send_again_bcast=0;
+			home_bcast = from_guest;
 		end
 		else begin
 			if(packetIn[opPos+opWidth-1:opPos]==4'b1111) begin
-				send_again_bcast = send_again_bcast+1;
+				send_again_bcast = (!home_bcast)? send_again_bcast+1 : send_again_bcast;
 			end
+			home_bcast = 0;
+			t_rd_bcast = 0;
 		end
 		
-		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = comm_table[context][bcast_offset+:DstWidth]; //short broadcast
+		do_i_need_it <= home_bcast;
+		
+		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = (do_i_need_it)? {rank_x, rank_y, rank_z} : comm_table[context][bcast_offset+:DstWidth]; //short broadcast
 
 		case(packetIn[opPos+opWidth-1:opPos])
 			4'b1111: {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
 		endcase	
+
+		rd_bcast <= (from_guest)? ({dst_x_bcast, dst_y_bcast, dst_z_bcast} == {rank_x, rank_y, rank_z}) : (t_rd_bcast)?1:local_rank[0];
+		
 	end
 end
 
@@ -259,11 +272,11 @@ always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, 
 	end
 	
 	halving_offset=0;
-	for(p=0; 2**i<bitmask; p=p+1) begin
+	for(p=0; 2**p<=bitmask; p=p+1) begin
 		halving_offset = p*9;
 	end
 	
-	{dst_x_halving, dst_y_halving, dst_z_halving} = comm_table[context][halving_offset+:DstWidth];
+	{dst_x_halving, dst_y_halving, dst_z_halving} = (t_tag == cur_rank)? {rank_x, rank_y, rank_z} : comm_table[context][halving_offset+:DstWidth];
 	
 	case(packetIn[opPos+opWidth-1:opPos])
 		4'b1111: {dst4, dst5, dst6} <= {dst_x_halving, dst_y_halving, dst_z_halving};
@@ -283,6 +296,7 @@ reg [lg_numprocs:0]base2;
 reg rd_doubling;
 wire rd_en_doubling;
 wire [DstWidth-1:0]diff;
+reg home_double;
 
 assign rd_en_doubling = rd_doubling;
 assign diff = (t_rank > local_rank)? t_rank - local_rank : local_rank - t_rank;	//what if local rank is greater than t_rank
