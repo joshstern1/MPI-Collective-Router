@@ -4,18 +4,18 @@
 // Joshua Stern
 
 /*
-	*| 72  |71-69|68-66|65-63|62-60|59-57|56-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
-	*|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|contextId| tag |algtype| op  |payload|
+	*| 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
+	*|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
  
 inside the fifo
 	
-	*| 75-73  | 72  |71-69|68-66|65-63|62-60|59-57|56-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
-	*|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|contextId| tag |algtype| op  |payload|
+	*| 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |   	
+	*|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
 
 //reduction table entry 
  
-	*|   81  |     80     |  79-76  | 75-73  | 72  |71-69|68-66|65-63|62-60|59-57|56-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
-	*|LeafBit|ExtraWaitBit|waitcount|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|contextId| tag |algtype| op  |payload|
+	*|   90  |     89     |  88-85  | 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |      	
+	*|LeafBit|ExtraWaitBit|waitcount|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
 	
 //leaf bit is for if the operation's children count == 0, because then the input is also the output 
 //extra bit/counting down is 1 if the wait count was ever set to the proper latency
@@ -29,7 +29,7 @@ inside the fifo
 
 module reduce_instr(packetOut, packetIn, clk, rst);
 
-parameter rank = 9'b0;
+parameter cur_rank = 9'b0;
 parameter root = 9'b0;
 parameter rank_z = 3'b0;
 parameter rank_y = 3'b0;
@@ -40,7 +40,7 @@ parameter root_x = 3'b0;
 
 parameter Comm_world_size = 8;
 
-parameter FlitWidth = 73;
+parameter FlitWidth = 82;
 parameter PayloadWidth=32;
 parameter opPos = 32;
 parameter opWidth = 4;
@@ -50,25 +50,33 @@ parameter TagPos=38;
 parameter TagWidth = 8;
 parameter ContextIdPos = 46;
 parameter ContextIdWidth = 8;
-parameter Src_XPos = 54;
-parameter Src_YPos = 57;
-parameter Src_ZPos = 60;
+parameter RankPos = 54;
+parameter RankWidth = 9;
+parameter Src_XPos = 63;
+parameter Src_YPos = 66;
+parameter Src_ZPos = 69;
 parameter Src_XWidth = 3;
 parameter Src_YWidth = 3;
 parameter Src_ZWidth = 3;
-parameter Dst_XPos = 63;
-parameter Dst_YPos = 66;
-parameter Dst_ZPos = 69;
+parameter Dst_XPos = 72;
+parameter Dst_YPos = 75;
+parameter Dst_ZPos = 78;
 parameter Dst_XWidth = 3;
 parameter Dst_YWidth = 3;
 parameter Dst_ZWidth = 3;
-parameter SrcPos = 54;
+parameter SrcPos = 63;
 parameter SrcWidth = 9;
-parameter DstPos = 63;
+parameter DstPos = 72;
 parameter DstWidth = 9;
-parameter ValidBitPos = 72;
+parameter ValidBitPos = 81;
 
-parameter ChildrenPos=73;
+parameter ReductionTableWidth = 91;
+parameter ReductionTableSize = 6;
+parameter AdderLatency = 14;
+
+parameter ReductionBitPos=35;
+
+parameter ChildrenPos=82;
 parameter ChildrenWidth=3;
 
 parameter lg_numprocs = 3;
@@ -84,6 +92,7 @@ reg [opWidth-1:0]op;
 reg [AlgTypeWidth-1:0] algtype;
 reg [TagWidth-1:0]tag;
 reg [ContextIdWidth-1:0]contextId;
+reg [RankWidth-1:0]rank;
 reg [Src_XPos-1:0] src_x, src_y, src_z;
 reg [Dst_XPos-1:0] dst_x, dst_y, dst_z;
 reg valid;
@@ -170,14 +179,14 @@ assign context = packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
 assign lg_commsize = comm_table[context][30:27];
 assign communicator_children = comm_table[context][33:31];
 assign t_tag = packetIn[TagPos+TagWidth-1:TagPos];
-assign t_rank = packetIn[Src_XPos+Src_XWidth-1:Src_XPos];
+assign t_rank = packetIn[RankPos+RankWidth-1:RankPos];
 assign local_rank = comm_table[context][42:34];
 
 wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 
-assign {dst_x_ring, dst_y_ring, dst_z_ring} = (rank == 3'b111)? root : rank_table[comm_table[context][26:18]];  //ring (long allgather)
-assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (rank == root)? root : rank_table[comm_table[context][8:0]]; //short reduction, gather, barrier
+assign {dst_x_ring, dst_y_ring, dst_z_ring} = (cur_rank == 3'b111)? root : rank_table[comm_table[context][26:18]];  //ring (long allgather)
+assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (cur_rank == root)? root : rank_table[comm_table[context][8:0]]; //short reduction, gather, barrier
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //short bcast
@@ -317,12 +326,13 @@ end
 
 always @(posedge clk) begin
   
- if (rst) begin //if rst, set everything to 0
+ if ((rst) || (!packetIn[ValidBitPos])) begin //if rst, set everything to 0
   payload<=0;
   op<=0;
   algtype<=0;
   tag<=0;
   contextId<=0;
+  rank<=0;
   src_x<=0;
   src_y<=0;
   src_z<=0;
@@ -335,24 +345,33 @@ always @(posedge clk) begin
  
  else begin
  
-  children <= lg_numprocs;
-  dst_x <= root_x;
-  dst_y <= root_y;
-  dst_z <= root_z;
-
+	if(packetIn[DstPos+DstWidth-1:DstPos]==packetIn[SrcPos+SrcWidth-1:SrcPos]) begin
+		children <= lg_numprocs;
+		dst_x <= root_x;
+		dst_y <= root_y;
+		dst_z <= root_z;
+	end
+	
+	else begin
+	  children <= lg_numprocs;
+	  dst_x <= packetIn[Dst_XPos+Dst_XWidth-1:Dst_XPos];
+	  dst_y <= packetIn[Dst_YPos+Dst_YWidth-1:Dst_YPos];
+	  dst_z <= packetIn[Dst_ZPos+Dst_ZWidth-1:Dst_ZPos];
+	end
  
   payload<=packetIn[PayloadWidth-1:0];
   op<=packetIn[opPos+opWidth-1:opPos];
   algtype<=packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
   tag<=packetIn[TagPos+TagWidth-1:TagPos];
   contextId<=packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
+  rank<=(packetIn[DstPos+DstWidth-1:DstPos]==packetIn[SrcPos+SrcWidth-1:SrcPos])?comm_table[context][42:34]:packetIn[RankPos+RankWidth-1:RankPos];
   src_x<=packetIn[Src_XPos+Src_XWidth-1:Src_XPos];
   src_y<=packetIn[Src_YPos+Src_YWidth-1:Src_YPos];
   src_z<=packetIn[Src_ZPos+Src_ZWidth-1:Src_ZPos];
   valid<=packetIn[ValidBitPos];
   
- end //end else not rst
-
+ end //end else !rst and valid
+ 
 end //end always
 
 //set the output packet contents to the register values
@@ -361,6 +380,7 @@ assign packetOut[opPos+opWidth-1:opPos] = op;
 assign packetOut[AlgTypePos+AlgTypeWidth-1:AlgTypePos] = algtype;
 assign packetOut[TagPos+TagWidth-1:TagPos] = tag;
 assign packetOut[ContextIdPos+ContextIdWidth-1:ContextIdPos] = contextId;
+assign packetOut[RankPos+RankWidth-1:RankPos] = rank;
 assign packetOut[Src_XPos+Src_XWidth-1:Src_XPos] = src_x;
 assign packetOut[Src_YPos+Src_YWidth-1:Src_YPos] = src_y;
 assign packetOut[Src_ZPos+Src_ZWidth-1:Src_ZPos] = src_z;
