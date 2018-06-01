@@ -81,7 +81,7 @@ module london;
 		src_x = 0;
 		rank=0;
 		contextId = 0;
-		tag = 3;
+		tag = 0;
 		algtype = 0;
 		op = 4'b0;
 		payload = 0;
