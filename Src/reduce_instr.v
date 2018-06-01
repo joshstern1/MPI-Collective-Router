@@ -157,52 +157,59 @@ always @(posedge clk) begin
  end 
 end
 
-reg [3:0] send_again;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//ring and uptree
 reg rd;
 wire rd_en;
 wire [ContextIdWidth-1:0]context;
 wire [lg_numprocs-1:0]lg_commsize;
 wire [lg_numprocs-1:0]communicator_children;
-wire [9:0]bcast_offset;
+wire [TagWidth-1:0]t_tag;
+wire [Src_XWidth-1:0]t_rank;
+wire [DstWidth-1:0]local_rank;
 
-wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
-wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
-reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
-reg [Dst_XWidth-1:0] dst1, dst2, dst3;	//used for testing
-wire [Dst_XWidth-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
-wire [Dst_XWidth-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
-
+assign rd_en = rd;
 assign context = packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
 assign lg_commsize = comm_table[context][30:27];
 assign communicator_children = comm_table[context][33:31];
-assign bcast_offset = ((lg_commsize - communicator_children)+send_again)*DstWidth;
+assign t_tag = packetIn[TagPos+TagWidth-1:TagPos];
+assign t_rank = packetIn[Src_XPos+Src_XWidth-1:Src_XPos];
+assign local_rank = comm_table[context][42:34];
 
+wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
+wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 
-//leftmost rank is first guy you would send to in recursive halving
-assign {dst_x_ring, dst_y_ring, dst_z_ring} = (rank == 3'b111)? root : rank_table[comm_table[context][8:0]];  //ring (long allgather)
-assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (rank == root)? root : rank_table[comm_table[context][26:18]]; //short reduction, gather, barrier
+assign {dst_x_ring, dst_y_ring, dst_z_ring} = (rank == 3'b111)? root : rank_table[comm_table[context][26:18]];  //ring (long allgather)
+assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (rank == root)? root : rank_table[comm_table[context][8:0]]; //short reduction, gather, barrier
 
-assign {dst_x_halving, dst_y_halving, dst_z_halving} = rank_table[comm_table[context][26:18]];
-assign {dst_x_doubling, dst_y_doubling, dst_z_doubling} = rank_table[comm_table[context][8:0]];
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//short bcast
 
-always @(posedge clk) begin
+reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
+reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
+reg [lg_numprocs:0] send_again_bcast;
+wire [DstWidth:0]bcast_offset;
+
+assign bcast_offset = ((lg_commsize - communicator_children)+send_again_bcast)*DstWidth;
+
+always @(posedge clk) begin	//bcast
 	if(rst) begin
-		send_again = 0;
+		send_again_bcast = 0;
 		rd = 0;
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 9'b0;
 	end
 	else begin	
-		if(send_again == comm_table[context][33:31]-1) begin
+		if(send_again_bcast == comm_table[context][33:31]-1) begin
 			rd=1;
-			send_again=0;
+			send_again_bcast=0;
 		end
 		else begin
 			if(packetIn[opPos+opWidth-1:opPos]==4'b1111) begin
-				send_again = send_again+1;
+				send_again_bcast = send_again_bcast+1;
 			end
 		end
 		
-		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = comm_table[context][bcast_offset+:9]; //short broadcast
+		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = comm_table[context][bcast_offset+:DstWidth]; //short broadcast
 
 		case(packetIn[opPos+opWidth-1:opPos])
 			4'b1111: {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
@@ -210,13 +217,17 @@ always @(posedge clk) begin
 	end
 end
 
-assign rd_en = rd;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//recursive halving
 
-wire [TagWidth-1:0]t_tag;
-assign t_tag = packetIn[TagPos+TagWidth-1:TagPos];
+reg [Dst_XWidth-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
+reg [Dst_XWidth-1:0] dst4, dst5, dst6; //used for testing
 reg [lg_numprocs-1:0]bitmask;
+reg [9:0]halving_offset;
 reg [lg_numprocs-1:0]k;
-always @(posedge clk)begin
+reg [lg_numprocs-1:0]p;
+
+always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, scatter (scatter used in medium and long broadcast)
 	for(k=1;k<lg_numprocs-1;k=k+1)begin
 		if((t_tag >= ((1<<k)+comm_table[context][42:34])) && (t_tag < ((1<<(k+1))+comm_table[context][42:34])))begin
 			bitmask[k] = 1'b1;
@@ -226,19 +237,80 @@ always @(posedge clk)begin
 		end
 	end
 	if(t_tag >= (1<<(lg_numprocs-1)))begin
-		bitmask[lg_numprocs-1] = 1'b1;
-	end
-	else begin
-		bitmask[lg_numprocs-1] = 1'b0;
-	end
-	if(t_tag == 1)begin
 		bitmask[0] = 1'b1;
 	end
 	else begin
 		bitmask[0] = 1'b0;
 	end
+	if(t_tag == 1)begin
+		bitmask[lg_numprocs-1] = 1'b1;
+	end
+	else begin
+		bitmask[lg_numprocs-1] = 1'b0;
+	end
+	
+	halving_offset=0;
+	for(p=0; 2**i<bitmask; p=p+1) begin
+		halving_offset = p*9;
+	end
+	
+	{dst_x_halving, dst_y_halving, dst_z_halving} = comm_table[context][halving_offset+:DstWidth];
+	
+	case(packetIn[opPos+opWidth-1:opPos])
+		4'b1111: {dst4, dst5, dst6} <= {dst_x_halving, dst_y_halving, dst_z_halving};
+	endcase	
+	
 end
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//recursive doubling
+
+reg [Dst_XWidth-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
+reg [Dst_XWidth-1:0] dst7, dst8, dst9; //used for testing
+reg [lg_numprocs-1:0]bitmask;
+wire [DstWidth:0]doubling_offset;
+reg [lg_numprocs-1:0]a;
+reg [lg_numprocs:0] send_again_doubling;
+reg [lg_numprocs:0]base2;
+reg rd_doubling;
+wire [DstWidith-1:0]diff;
+
+assign diff = t_rank - local_rank;	//what if local rank is greater than t_rank
+assign doubling_offset = (DstWidth * (lg_commsize - 1)) - (send_again_doubling * DstWidth);
+
+always @(posedge clk)begin
+
+	if(rst) begin
+		send_again_doubling = 0;
+		rd_doubling = 1;
+		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = 9'b0;
+	end
+
+	else begin
+		base2=0;
+		for(a=0; 2**a<diff; a=a+1) begin
+			base2 = a;
+		end
+		
+		if(send_again_doubling == (lg_commsize-base2))begin
+			rd_doubling = 1;
+			send_again_doubling = 0;
+		end
+		
+		else begin
+			if(packetIn[opPos+opWidth-1:opPos]==4'b1111) begin
+				send_again_doubling = send_again_doubling+1;
+			end
+		end
+
+		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = comm_table[context][doubling_offset+:DstWidth];
+
+		case(packetIn[opPos+opWidth-1:opPos])
+			4'b1111: {dst7, dst8, dst9} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
+		endcase	
+	end
+
+end
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 always @(posedge clk) begin
