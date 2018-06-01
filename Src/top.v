@@ -4,26 +4,26 @@
 // Joshua Stern
 
 /*
-	*| 72  |71-69|68-66|65-63|62-60|59-57|56-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
-	*|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|contextId| tag |algtype| op  |payload|
+	*| 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
+	*|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
  
 inside the fifo
 	
-	*| 75-73  | 72  |71-69|68-66|65-63|62-60|59-57|56-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
-	*|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|contextId| tag |algtype| op  |payload|
+	*| 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |   	
+	*|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
 
 //reduction table entry 
  
-	*|   81  |     80     |  79-76  | 75-73  | 72  |71-69|68-66|65-63|62-60|59-57|56-54|  53-46  |45-38| 37-36 |35-32| 31-0  |     	
-	*|LeafBit|ExtraWaitBit|waitcount|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|contextId| tag |algtype| op  |payload|
+	*|   90  |     89     |  88-85  | 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |      	
+	*|LeafBit|ExtraWaitBit|waitcount|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
 	
 //leaf bit is for if the operation's children count == 0, because then the input is also the output 
 //extra bit/counting down is 1 if the wait count was ever set to the proper latency
 /////////////////////////////////////////////////////////////////////////////////*/
 
-module top(Outpacket, done, valid_out, clk, rst, valid_in, dst_z, dst_y, dst_x, src_z, src_y, src_x, contextId, tag, algtype, op, payload);
+module top(Outpacket, done, valid_out, clk, rst, valid_in, dst_z, dst_y, dst_x, src_z, src_y, src_x, rank, contextId, tag, algtype, op, payload);
 
-parameter rank = 9'b0;
+parameter cur_rank = 9'b0;
 parameter root = 9'b0;
 parameter rank_z = 3'b0;
 parameter rank_y = 3'b0;
@@ -34,7 +34,7 @@ parameter root_x = 3'b0;
 
 parameter Comm_world_size = 8;
 
-parameter FlitWidth = 73;
+parameter FlitWidth = 82;
 parameter PayloadWidth=32;
 parameter opPos = 32;
 parameter opWidth = 4;
@@ -44,36 +44,38 @@ parameter TagPos=38;
 parameter TagWidth = 8;
 parameter ContextIdPos = 46;
 parameter ContextIdWidth = 8;
-parameter Src_XPos = 54;
-parameter Src_YPos = 57;
-parameter Src_ZPos = 60;
+parameter RankPos = 54;
+parameter RankWidth = 9;
+parameter Src_XPos = 63;
+parameter Src_YPos = 66;
+parameter Src_ZPos = 69;
 parameter Src_XWidth = 3;
 parameter Src_YWidth = 3;
 parameter Src_ZWidth = 3;
-parameter Dst_XPos = 63;
-parameter Dst_YPos = 66;
-parameter Dst_ZPos = 69;
+parameter Dst_XPos = 72;
+parameter Dst_YPos = 75;
+parameter Dst_ZPos = 78;
 parameter Dst_XWidth = 3;
 parameter Dst_YWidth = 3;
 parameter Dst_ZWidth = 3;
-parameter SrcPos = 54;
+parameter SrcPos = 63;
 parameter SrcWidth = 9;
-parameter DstPos = 63;
+parameter DstPos = 72;
 parameter DstWidth = 9;
-parameter ValidBitPos = 72;
+parameter ValidBitPos = 81;
 
-parameter ReductionTableWidth = 82;
-parameter ReductionTableSize = 8;
+parameter ReductionTableWidth = 91;
+parameter ReductionTableSize = 6;
 parameter AdderLatency = 14;
 
 parameter ReductionBitPos=35;
 
-parameter ChildrenPos=73;
+parameter ChildrenPos=82;
 parameter ChildrenWidth=3;
-parameter WaitPos = 76;
+parameter WaitPos = 85;
 parameter WaitWidth = 4;
-parameter ExtraWaitPos=80;
-parameter LeafBitPos=81;
+parameter ExtraWaitPos=89;
+parameter LeafBitPos=90;
 
 input clk;
 input rst;
@@ -82,6 +84,7 @@ input [opWidth-1:0] op;
 input [AlgTypeWidth-1:0] algtype;
 input [TagWidth-1:0] tag;
 input [ContextIdWidth-1:0] contextId;
+input [DstWidth-1:0] rank;
 input [Src_XWidth-1:0] src_x, src_y, src_z;
 input [Dst_XWidth-1:0] dst_x, dst_y, dst_z;
 input valid_in;
@@ -133,6 +136,7 @@ packeter P1 (
  .algtype(algtype),
  .tag(tag),
  .contextId(contextId),
+ .rank(rank),
  .src_x(src_x),
  .src_y(src_y),
  .src_z(src_z),
@@ -164,7 +168,7 @@ fifo F1 (
 
 assign packetIndex = packetA[TagPos+TagWidth-1:TagPos];
 assign children_count = packetA[ChildrenPos+ChildrenWidth-1:ChildrenPos];
-assign reductiontype = packetA[ReductionBitPos];
+assign reductiontype = (packetA[ReductionBitPos])&&(packetA[ValidBitPos]);
 assign WaitCount = reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos];
 
 //ip core that performs floating point single precision addition. dont forget to make this double precision if possible
@@ -179,12 +183,12 @@ addy A1(
 they combine the results of the reduction table such as the payload, destination, etc.
 dataC is just used for simulation and analysis. */
 assign reduction_table_entry = reduction_table[done_index];
-assign Outpacket[ContextIdPos+ContextIdWidth-1:0] = reduction_table_entry[ContextIdPos+ContextIdWidth-1:0];
-assign Outpacket[SrcPos+SrcWidth-1:SrcPos] = rank;	//only if outgoing unit, if local unit, keep the src the same
+assign Outpacket[RankPos+RankWidth-1:0] = reduction_table_entry[RankPos+RankWidth-1:0];
+assign Outpacket[SrcPos+SrcWidth-1:SrcPos] = {rank_z, rank_y, rank_x};	//only if outgoing unit, if local unit, keep the src the same
 assign Outpacket[DstPos+DstWidth-1:DstPos] = reduction_table_entry[DstPos+DstWidth-1:DstPos];
 assign Outpacket[ValidBitPos] = 1;
 assign dataC = Outpacket[PayloadWidth-1:0];
-assign valid_out = 1'b1;
+assign valid_out = !rst; //change this
 
 /* below is the logic for the reduction table.  every instruction is nonblocking and
 changes on the positive edge of the clock. */
@@ -212,7 +216,7 @@ always@(posedge clk) begin
    /* if the incoming packet is to be placed in a reduction table slot that is either empty or invalid,
   the parameters of the incoming packet (packetA) are placed in its table slot. */
   
-		if (reductiontype && (reduction_table[packetIndex][ValidBitPos] ==0 ))begin //if slot is empty
+		if (reductiontype && (reduction_table[packetIndex][ValidBitPos]==0))begin //if slot is empty
 			reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]<=children_count+1;
 			reduction_table[packetIndex][ValidBitPos]<=1;
 			reduction_table[packetIndex][ReductionBitPos:0] <= packetA[ReductionBitPos:0];
@@ -261,7 +265,7 @@ always@(posedge clk) begin
      contents into the reduction table
      */
 				  
-				  if((reductiontype) && (reduction_table[packetIndex][ValidBitPos]))	begin
+				  if(reduction_table[packetIndex][ValidBitPos])	begin
 						reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos] <= reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]-1;
 						reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos] <= AdderLatency-1;
 						reduction_table[packetIndex][ExtraWaitPos]<=1;
