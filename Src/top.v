@@ -166,6 +166,17 @@ fifo F1 (
  .fifo_counter(fifo_counter)
 );
 
+wire [FlitWidth-1:0]temp1;
+wire [FlitWidth+ChildrenWidth-1:0]temp2;
+assign temp2 = 85'b0;
+
+reduce_unit RE1 (
+ .Outpacket(temp1),
+ .packetA(temp2),
+ .clk(clk),
+ .rst(rst)
+);
+
 assign packetIndex = packetA[TagPos+TagWidth-1:TagPos];
 assign children_count = packetA[ChildrenPos+ChildrenWidth-1:ChildrenPos];
 assign reductiontype = (packetA[ReductionBitPos])&&(packetA[ValidBitPos]);
