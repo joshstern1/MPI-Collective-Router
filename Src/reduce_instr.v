@@ -29,7 +29,7 @@ inside the fifo
 
 module reduce_instr(packetOut, packetIn, clk, rst);
 
-parameter cur_rank = 9'b0;
+parameter cur_rank = 9'b000000000;
 parameter root = 9'b0;
 parameter rank_z = 3'b0;
 parameter rank_y = 3'b0;
@@ -163,11 +163,10 @@ always @(posedge clk) begin
  end 
  else begin
 	 comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
+	 //comm_table[0] <= {9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
  end 
 end
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//ring and uptree
 wire [ContextIdWidth-1:0]context;
 wire [lg_numprocs-1:0]lg_commsize;
 wire [lg_numprocs-1:0]communicator_children;
@@ -184,17 +183,51 @@ assign t_rank = packetIn[RankPos+RankWidth-1:RankPos];
 assign local_rank = comm_table[context][42:34];
 assign from_guest = ({rank_z, rank_y, rank_x}!=packetIn[SrcPos+SrcWidth-1:SrcPos]);
 
-wire [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
-wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//ring (long allgather)
 
-assign {dst_x_ring, dst_y_ring, dst_z_ring} = (cur_rank == 3'b111)? root : rank_table[comm_table[context][26:18]];  //ring (long allgather)
-assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (cur_rank == root)? root : rank_table[comm_table[context][8:0]]; //short reduction, gather, barrier
+reg [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
+reg home_ring;
+reg rd_ring;
+assign rd_en_ring = rd_ring;
+
+always @(posedge clk) begin
+	if(rst) begin
+		{dst_x_ring, dst_y_ring, dst_z_ring} = 9'b0;
+		rd_ring <= 0;
+		home_ring <= 0;
+	end
+	else begin
+		{dst_x_ring, dst_y_ring, dst_z_ring} = (home_ring)? {rank_x, rank_y, rank_z} : (cur_rank == 3'b111)? root : comm_table[context][26:18];  //ring (long allgather)	
+		home_ring <= ((from_guest) && (!home_ring) && (packetIn[opPos+opWidth-1:opPos]==4'b1111));
+		rd_ring <= ((home_ring) || (!from_guest));
+	end
+
+end
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//uptree
+
+reg [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
+
+always @(posedge clk) begin //uptree (short reduction, gather, barrier)
+	if(rst) begin
+		{dst_x_uptree, dst_y_uptree, dst_z_uptree} = 9'b0;
+	end
+	
+	else begin
+		{dst_x_uptree, dst_y_uptree, dst_z_uptree} = (cur_rank == root)? {rank_x, rank_y, rank_z} : comm_table[context][8:0]; //short reduction, gather, barrier
+	end
+	
+end
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //short bcast
 
 reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
-reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [lg_numprocs:0] send_again_bcast;
 wire [DstWidth:0]bcast_offset;
 reg rd_bcast, t_rd_bcast;
@@ -231,11 +264,7 @@ always @(posedge clk) begin	//bcast
 		
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = (bcast_need_it)? {rank_x, rank_y, rank_z} : comm_table[context][bcast_offset+:DstWidth]; //short broadcast
 
-		case(packetIn[opPos+opWidth-1:opPos])
-			4'b1111: {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
-		endcase	
-
-		rd_bcast <= (local_rank==0)? ({dst_x_bcast, dst_y_bcast, dst_z_bcast} == {rank_x, rank_y, rank_z}) : (t_rd_bcast)?1:local_rank[0];
+		rd_bcast <= (local_rank!=0)? ({dst_x_bcast, dst_y_bcast, dst_z_bcast} == {rank_x, rank_y, rank_z}) : (t_rd_bcast)?1:local_rank[0];
 		
 	end
 end
@@ -244,28 +273,33 @@ end
 //recursive halving
 
 reg [Dst_XWidth-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
-reg [Dst_XWidth-1:0] dst4, dst5, dst6; //used for testing
 reg [lg_numprocs-1:0]bitmask;
 reg [9:0]halving_offset;
 reg [lg_numprocs-1:0]k;
 reg [lg_numprocs-1:0]p;
+reg home_halving;
+wire home_halving2 = ((t_tag == cur_rank)&&((t_op == 4'b1111)||(t_op==4'b0110)));
+reg rd_halving;
+wire rd_en_halving = rd_halving;
+wire [TagWidth-1:0]t_halving_tag = t_tag - local_rank;
+wire [opWidth-1:0]t_op = packetIn[opPos+opWidth-1:opPos];
 
-always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, scatter (scatter used in medium and long broadcast)
+always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, scatter (scatter also used in medium and long broadcast)
 	for(k=1;k<lg_numprocs-1;k=k+1)begin
-		if((t_tag >= ((1<<k)+comm_table[context][42:34])) && (t_tag < ((1<<(k+1))+comm_table[context][42:34])))begin
+		if((t_halving_tag >= (1<<k)) && (t_halving_tag < (1<<(k+1))))begin
 			bitmask[k] = 1'b1;
 		end
 		else begin
 			bitmask[k] = 1'b0;
 		end
 	end
-	if(t_tag >= (1<<(lg_numprocs-1)))begin
+	if(t_halving_tag >= (1<<(lg_numprocs-1)))begin
 		bitmask[0] = 1'b1;
 	end
 	else begin
 		bitmask[0] = 1'b0;
 	end
-	if(t_tag == 1)begin
+	if(t_halving_tag == 1)begin
 		bitmask[lg_numprocs-1] = 1'b1;
 	end
 	else begin
@@ -277,11 +311,13 @@ always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, 
 		halving_offset = p*9;
 	end
 	
-	{dst_x_halving, dst_y_halving, dst_z_halving} = (t_tag == cur_rank)? {rank_x, rank_y, rank_z} : comm_table[context][halving_offset+:DstWidth];
+	{dst_x_halving, dst_y_halving, dst_z_halving} = (home_halving)? {rank_x, rank_y, rank_z} : (t_op == 4'b1101)? comm_table[context][8:0]:	//long reduce
+																	(home_halving2)? ((cur_rank == 4'b1111)? root : comm_table[context][26:18]):	//long bcast
+																	(t_tag == cur_rank)? {rank_x, rank_y, rank_z} : comm_table[context][halving_offset+:DstWidth];	//scatter
+																	
 	
-	case(packetIn[opPos+opWidth-1:opPos])
-		4'b1111: {dst4, dst5, dst6} <= {dst_x_halving, dst_y_halving, dst_z_halving};
-	endcase	
+	home_halving <= ((t_tag == cur_rank)&&((t_op == 4'b1111)||(t_op==4'b1101))&&(!home_halving));
+	rd_halving <= (home_halving);
 	
 end
 
@@ -289,7 +325,6 @@ end
 //recursive doubling
 
 reg [Dst_XWidth-1:0] dst_x_doubling, dst_y_doubling, dst_z_doubling;
-reg [Dst_XWidth-1:0] dst7, dst8, dst9; //used for testing
 wire [DstWidth:0]doubling_offset;
 reg [lg_numprocs-1:0]a;
 reg [lg_numprocs:0] send_again_doubling;
@@ -342,10 +377,6 @@ always @(posedge clk)begin
 		doubling_need_it <= home_doubling;
 
 		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = (doubling_need_it)? {rank_x, rank_y, rank_z} : comm_table[context][doubling_offset+:DstWidth];
-
-		case(packetIn[opPos+opWidth-1:opPos])
-			4'b1111: {dst7, dst8, dst9} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
-		endcase	
 		
 		rd_doubling <= (from_guest)? ({dst_x_doubling, dst_y_doubling, dst_z_doubling} == {rank_x, rank_y, rank_z}) : (t_rd_doubling)?1:0;
 		
@@ -353,7 +384,47 @@ always @(posedge clk)begin
 
 end
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//mux
+reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
+reg rd_en_reg;
+wire rd_en;
+assign rd_en = rd_en_reg;
 
+always @(posedge clk) begin
+
+	case(packetIn[opPos+opWidth-1:opPos])
+		4'b0101: rd_en_reg <= 1'b1;
+		4'b0110: rd_en_reg <= 1'b1;
+		4'b0111: rd_en_reg <= (local_rank!=0)? ({dst_x_bcast, dst_y_bcast, dst_z_bcast} == {rank_x, rank_y, rank_z}) : (t_rd_bcast)?1:local_rank[0];
+		4'b1000: rd_en_reg <= 1'b1;
+		4'b1001: rd_en_reg <= ((home_ring) || (!from_guest));
+		4'b1010: rd_en_reg <= (from_guest)? ({dst_x_doubling, dst_y_doubling, dst_z_doubling} == {rank_x, rank_y, rank_z}) : (t_rd_doubling)?1:0;
+		4'b1011: rd_en_reg <= 1'b1;
+		4'b1100: rd_en_reg <= 1'b1;
+		4'b1101: rd_en_reg <= 1'b1;
+		4'b1110: rd_en_reg <= (from_guest)? ({dst_x_doubling, dst_y_doubling, dst_z_doubling} == {rank_x, rank_y, rank_z}) : (t_rd_doubling)?1:0;
+		4'b1111: rd_en_reg <= 1'b1;
+		default: rd_en_reg <= 1'b1;
+	endcase
+
+	case(packetIn[opPos+opWidth-1:opPos])
+		4'b0101: {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
+		4'b0110: {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
+		4'b0111: {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
+		4'b1000: {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
+		4'b1001: {dst1, dst2, dst3} <= {dst_x_ring, dst_y_ring, dst_z_ring};
+		4'b1010: {dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
+		4'b1011: {dst1, dst2, dst3} <= {dst_x_uptree, dst_y_uptree, dst_z_uptree};
+		4'b1100: {dst1, dst2, dst3} <= {dst_x_uptree, dst_y_uptree, dst_z_uptree};
+		4'b1101: {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
+		4'b1110: {dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
+		4'b1111: {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
+		default: {dst1, dst2, dst3} <= {root_x, root_y, root_z};
+	endcase
+
+end
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 always @(posedge clk) begin
   
  if ((rst) || (!packetIn[ValidBitPos])) begin //if rst, set everything to 0
@@ -375,15 +446,13 @@ always @(posedge clk) begin
  
  else begin
  
-	if(packetIn[DstPos+DstWidth-1:DstPos]==packetIn[SrcPos+SrcWidth-1:SrcPos]) begin
+	if((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(packetIn[opPos+opWidth-1:opPos]>4'b0)) begin
 		children <= lg_numprocs;
-		dst_x <= root_x;
-		dst_y <= root_y;
-		dst_z <= root_z;
+		{dst_x, dst_y, dst_z} <= {root_x, root_y, root_z};
 	end
 	
 	else begin
-	  children <= lg_numprocs;
+	  children <= num_procs-1;
 	  dst_x <= packetIn[Dst_XPos+Dst_XWidth-1:Dst_XPos];
 	  dst_y <= packetIn[Dst_YPos+Dst_YWidth-1:Dst_YPos];
 	  dst_z <= packetIn[Dst_ZPos+Dst_ZWidth-1:Dst_ZPos];
@@ -424,4 +493,3 @@ endmodule
 
 
 
- 
