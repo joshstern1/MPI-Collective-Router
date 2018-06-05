@@ -3,3 +3,5 @@ This repository is for a reconfigurable router designed to handle the offload of
 
 
 https://sites.google.com/site/exampiworkshop2018/home
+
+https://sc18.supercomputing.org/presentation/?id=wksp142&sess=sess174
