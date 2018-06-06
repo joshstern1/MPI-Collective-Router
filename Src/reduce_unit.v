@@ -21,61 +21,8 @@ inside the fifo
 //extra bit/counting down is 1 if the wait count was ever set to the proper latency
 /////////////////////////////////////////////////////////////////////////////////*/
 
+`include "parameters.v"
 module reduce_unit(Outpacket, done, valid_out, clk, rst, packetA, rd_en, wr_en, fifo_counter, buf_empty, buf_full);
-
-parameter cur_rank = 9'b0;
-parameter root = 9'b0;
-parameter rank_z = 3'b0;
-parameter rank_y = 3'b0;
-parameter rank_x = 3'b0;
-parameter root_z = 3'b0;
-parameter root_y = 3'b0;
-parameter root_x = 3'b0;
-
-parameter Comm_world_size = 8;
-
-parameter FlitWidth = 82;
-parameter PayloadWidth=32;
-parameter opPos = 32;
-parameter opWidth = 4;
-parameter AlgTypePos = 36;
-parameter AlgTypeWidth = 2;
-parameter TagPos=38;
-parameter TagWidth = 8;
-parameter ContextIdPos = 46;
-parameter ContextIdWidth = 8;
-parameter RankPos = 54;
-parameter RankWidth = 9;
-parameter Src_XPos = 63;
-parameter Src_YPos = 66;
-parameter Src_ZPos = 69;
-parameter Src_XWidth = 3;
-parameter Src_YWidth = 3;
-parameter Src_ZWidth = 3;
-parameter Dst_XPos = 72;
-parameter Dst_YPos = 75;
-parameter Dst_ZPos = 78;
-parameter Dst_XWidth = 3;
-parameter Dst_YWidth = 3;
-parameter Dst_ZWidth = 3;
-parameter SrcPos = 63;
-parameter SrcWidth = 9;
-parameter DstPos = 72;
-parameter DstWidth = 9;
-parameter ValidBitPos = 81;
-
-parameter ReductionTableWidth = 91;
-parameter ReductionTableSize = 6;
-parameter AdderLatency = 14;
-
-parameter ReductionBitPos=35;
-
-parameter ChildrenPos=82;
-parameter ChildrenWidth=3;
-parameter WaitPos = 85;
-parameter WaitWidth = 4;
-parameter ExtraWaitPos=89;
-parameter LeafBitPos=90;
 
 input clk, rst;
 input [FlitWidth+ChildrenWidth-1:0]packetA;
@@ -87,7 +34,6 @@ output done;
 output[FlitWidth-1:0]Outpacket;
 
 
-//reduction unit
 wire [TagWidth-1:0]packetIndex;
 wire [ChildrenWidth-1:0]children_count;
 wire reductiontype;
@@ -247,9 +193,10 @@ always@(posedge clk) begin
   for(i=0;i<ReductionTableSize;i=i+1)begin  
    if ((reduction_table[i][WaitPos+WaitWidth-1:WaitPos]==0)&&(reduction_table[i][ValidBitPos]==1)&&(reduction_table[i][ExtraWaitPos]==1))begin
      if((reduction_table[i][LeafBitPos]==0)&&(counter>AdderLatency))begin
-      case(reduction_table[i][opPos+opWidth-1:opPos])
-      4'b1111: reduction_table[i][PayloadWidth-1:0] <= sum;
-      endcase
+      //case(reduction_table[i][opPos+opWidth-1:opPos])
+      //4'b1111: reduction_table[i][PayloadWidth-1:0] <= sum;
+      //endcase
+		reduction_table[i][PayloadWidth-1:0] <= sum;
      end
      reduction_table[i][ExtraWaitPos]<=0;
      reduction_table[i][LeafBitPos]<=0;
