@@ -23,74 +23,17 @@ inside the fifo
 
 module fifo( clk, rst, buf_in, buf_out, wr_en, rd_en, buf_empty, buf_full, fifo_counter);
 
-parameter cur_rank = 9'b0;
-parameter root = 9'b0;
-parameter rank_z = 3'b0;
-parameter rank_y = 3'b0;
-parameter rank_x = 3'b0;
-parameter root_z = 3'b0;
-parameter root_y = 3'b0;
-parameter root_x = 3'b0;
-
-parameter Comm_world_size = 8;
-
-parameter FlitWidth = 82;
-parameter PayloadWidth=32;
-parameter opPos = 32;
-parameter opWidth = 4;
-parameter AlgTypePos = 36;
-parameter AlgTypeWidth = 2;
-parameter TagPos=38;
-parameter TagWidth = 8;
-parameter ContextIdPos = 46;
-parameter ContextIdWidth = 8;
-parameter RankPos = 54;
-parameter RankWidth = 9;
-parameter Src_XPos = 63;
-parameter Src_YPos = 66;
-parameter Src_ZPos = 69;
-parameter Src_XWidth = 3;
-parameter Src_YWidth = 3;
-parameter Src_ZWidth = 3;
-parameter Dst_XPos = 72;
-parameter Dst_YPos = 75;
-parameter Dst_ZPos = 78;
-parameter Dst_XWidth = 3;
-parameter Dst_YWidth = 3;
-parameter Dst_ZWidth = 3;
-parameter SrcPos = 63;
-parameter SrcWidth = 9;
-parameter DstPos = 72;
-parameter DstWidth = 9;
-parameter ValidBitPos = 81;
-
-parameter ReductionTableWidth = 91;
-parameter ReductionTableSize = 6;
-parameter AdderLatency = 14;
-
-parameter ReductionBitPos=35;
-
-parameter ChildrenPos=82;
-parameter ChildrenWidth=3;
-
-
-parameter fifo_lg_size = 12;
-parameter FifoSize = 1<<fifo_lg_size;
-input             	rst, clk, wr_en, rd_en;  
-// reset, system clock, write enable and read enable.
+input rst, clk, wr_en, rd_en;  
 input [FlitWidth+ChildrenWidth-1:0] buf_in;              	 
-// data input to be pushed to buffer
-output[FlitWidth+ChildrenWidth-1:0]       	buf_out;
-// port to output the data using pop.          	 
-output            	buf_empty, buf_full; 	 
-// buffer empty and full indication
+output[FlitWidth+ChildrenWidth-1:0] buf_out;          	 
+output buf_empty, buf_full; 	 
 output[fifo_lg_size:0] fifo_counter;        	 
-// number of data pushed in to buffer  
-reg[FlitWidth+ChildrenWidth-1:0]          	buf_out;
-reg               	buf_empty, buf_full;
+
+reg[FlitWidth+ChildrenWidth-1:0] buf_out;
+reg buf_empty, buf_full;
 reg[fifo_lg_size :0]	fifo_counter;
-reg[fifo_lg_size-1:0]  rd_ptr, wr_ptr;       	// pointer to read and write addresses
-reg[FlitWidth+ChildrenWidth-1:0]          	buf_mem[FifoSize-1:0]; //
+reg[fifo_lg_size-1:0]  rd_ptr, wr_ptr;       
+reg[FlitWidth+ChildrenWidth-1:0] buf_mem[FifoSize-1:0];
 reg [fifo_lg_size:0]i;
 reg [fifo_lg_size:0]j;
 reg [fifo_lg_size:0]k;
@@ -197,4 +140,3 @@ endmodule
 
 
 
- 
