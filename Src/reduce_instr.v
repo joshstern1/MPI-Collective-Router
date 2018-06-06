@@ -103,8 +103,8 @@ always @(posedge clk) begin
  
  //comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
  //comm_table[0] <= {9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
- //comm_table[0] <= {9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
- comm_table[0] <= {9'b000000011, 3'b000, 4'b0011, 9'b000000010, 9'b000000001, 9'b000000111};
+ comm_table[0] <= {9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
+ //comm_table[0] <= {9'b000000011, 3'b000, 4'b0011, 9'b000000010, 9'b000000001, 9'b000000111};
 end
 
 wire [ContextIdWidth-1:0]context;
@@ -146,7 +146,7 @@ always @(posedge clk) begin
 	
 		{dst_x_ring, dst_y_ring, dst_z_ring} = (home_ring)? {rank_x, rank_y, rank_z} : (local_rank == (num_procs-1))? root : comm_table[context][ring_offset+:DstWidth];  //ring (long allgather)	
 
-		home_ring = ((from_guest) && (!home_ring) && (packetIn[opPos+opWidth-1:opPos]==LargeAllGather));
+		home_ring = ((from_guest) && (!home_ring) && (t_op==LargeAllGather));
 
 		rd_ring <= ((home_ring) || (!from_guest)||(t_op != LargeAllGather));
 		
@@ -204,14 +204,17 @@ always @(posedge clk) begin	//bcast
 			t_rd_bcast = 0;
 		end
 		
-		
-		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = (communicator_children==1)? ((one_child)? {rank_x, rank_y, rank_z} : comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]):((communicator_children == 0)||(send_home_bcast))? {rank_x, rank_y, rank_z} : comm_table[context][bcast_offset+:DstWidth]; //short broadcast
+		case(communicator_children)
+			3'b000: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = {rank_x, rank_y, 3'b010};
+			3'b001: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = ((one_child)? {rank_x, rank_y, 3'b010} : comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]);
+			default: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = (send_home_bcast)? {rank_x, rank_y, 3'b010} : comm_table[context][bcast_offset+:DstWidth]; 
+		endcase
 		
 		send_home_bcast = home_bcast;
 		
-		one_child = ((communicator_children==1) && (!one_child) && (packetIn[opPos+opWidth-1:opPos]==ShortBcast));
+		one_child = ((communicator_children==1) && (!one_child) && (t_op==ShortBcast));
 
-		rd_bcast <= (t_op != ShortBcast)? 1 : (local_rank==0)? (bcast_offset == 9) : (communicator_children == 1)? ({dst_x_bcast,dst_y_bcast,dst_z_bcast} == comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]) : (t_rd_bcast)?1:local_rank[0];
+		rd_bcast <= (t_op != ShortBcast)? 1 : (local_rank==0)? (bcast_offset == 9) : (communicator_children == 1)? one_child : (t_rd_bcast)?1:local_rank[0];
 		
 	end
 end
@@ -353,10 +356,10 @@ reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 
 always @(posedge clk) begin
 
-	case(packetIn[opPos+opWidth-1:opPos])
+	case(t_op)
 		LargeBcast: 	 rd_en_reg <= (home_halving)||(!home_halving_bcast);
 		MediumBcast: 	 rd_en_reg <= (home_halving)||(!home_halving_bcast);
-		ShortBcast: 	 rd_en_reg <= (t_op != ShortBcast)? 1 : (local_rank==0)? (bcast_offset == 9) : (communicator_children == 1)? ({dst_x_bcast,dst_y_bcast,dst_z_bcast} == comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]) : (t_rd_bcast)?1:local_rank[0];
+		ShortBcast: 	 rd_en_reg <= (t_op != ShortBcast)? 1 : (local_rank==0)? (bcast_offset == 9) : (communicator_children == 1)? one_child : (t_rd_bcast)?1:local_rank[0];
 		Scatter: 		 rd_en_reg <= 1'b1;
 		LargeAllGather: rd_en_reg <= ((home_ring) || (!from_guest)||(t_op != LargeAllGather));
 		ShortAllGather: rd_en_reg <= ((t_op!=ShortAllGather)&&(t_op!=ShortAllReduce))? 1 :(from_guest)? ({dst_x_doubling, dst_y_doubling, dst_z_doubling} == {rank_x, rank_y, 3'b100}) : (t_rd_doubling)?1:0;
@@ -368,7 +371,7 @@ always @(posedge clk) begin
 		default: 		 rd_en_reg <= 1'b1;
 	endcase
 
-	case(packetIn[opPos+opWidth-1:opPos])
+	case(t_op)
 		LargeBcast: 	 {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 		MediumBcast: 	 {dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 		ShortBcast: 	 {dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
@@ -420,7 +423,7 @@ always @(posedge clk) begin
  
  else begin
  
-	if((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(packetIn[opPos+opWidth-1:opPos]>4'b0)) begin
+	if((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(t_op>4'b0)) begin
 		children <= lg_numprocs;
 		{dst_x, dst_y, dst_z} <= {root_x, root_y, root_z};
 	end
