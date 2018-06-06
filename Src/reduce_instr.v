@@ -101,9 +101,9 @@ always @(posedge clk) begin
   end	
  end 
  
- //comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
+ comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
  //comm_table[0] <= {9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
- comm_table[0] <= {9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
+ //comm_table[0] <= {9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
  //comm_table[0] <= {9'b000000011, 3'b000, 4'b0011, 9'b000000010, 9'b000000001, 9'b000000111};
 end
 
@@ -205,9 +205,9 @@ always @(posedge clk) begin	//bcast
 		end
 		
 		case(communicator_children)
-			3'b000: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = {rank_x, rank_y, 3'b010};
-			3'b001: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = ((one_child)? {rank_x, rank_y, 3'b010} : comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]);
-			default: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = (send_home_bcast)? {rank_x, rank_y, 3'b010} : comm_table[context][bcast_offset+:DstWidth]; 
+			3'b000: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = {rank_x, rank_y, rank_z};
+			3'b001: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = ((one_child)? {rank_x, rank_y, rank_z} : comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]);
+			default: {dst_x_bcast, dst_y_bcast, dst_z_bcast} = (send_home_bcast)? {rank_x, rank_y, rank_z} : comm_table[context][bcast_offset+:DstWidth]; 
 		endcase
 		
 		send_home_bcast = home_bcast;
