@@ -55,7 +55,17 @@ assign rd_en = (reduction_table[packetIndex][ExtraWaitPos]==0);
 assign wr_en = 1'b1;
 
 
-assign packetIndex = packetA[TagPos+TagWidth-1:TagPos];
+assign packetIndex = (packetA[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})? packetA[TagPos+TagWidth-1:TagPos]:{5'b0,packetA[Dst_ZPos+Dst_ZWidth-1:Dst_ZPos]}; //have to eventually change this
+/*
+IMPORTANT NOTE: Recall that the final router would have separate reduction units for local data and outgoing data, meaning that you don't
+have to worry about overlapping tags between data that is destined for me and data that is destined for someone else.
+Therefore, for data destined for me, I dont have to do any changing of the tags.
+However, for data going elsewhere, remember that in a recursive doubling, I have to send data to multiple destinations.
+So these multiples of data must have different tags because they will have different children counts. So once a packet enters the 
+reduction unit, you must change the location of where in the table you will put it. For now, it is easy to change the table index 
+to whatever the destination is. Keep in mind that we are not chaning the tag within the packet, but just changing where it 
+is being stored in the table. 
+*/
 assign children_count = packetA[ChildrenPos+ChildrenWidth-1:ChildrenPos];
 assign reductiontype = (packetA[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(packetA[ValidBitPos]);
 assign WaitCount = reduction_table[packetIndex][WaitPos+WaitWidth-1:WaitPos];
@@ -73,8 +83,9 @@ they combine the results of the reduction table such as the payload, destination
 dataC is just used for simulation and analysis. */
 assign reduction_table_entry = reduction_table[done_index];
 assign Outpacket[PayloadWidth-1:0] = reduction_table_entry[PayloadWidth-1:0];
-assign Outpacket[opPos+opWidth-1:opPos] = (reduction_table_entry[opPos+opWidth-1:opPos] == 4'b1101)? 4'b1011: 
-														(reduction_table_entry[opPos+opWidth-1:opPos] == 4'b1111)? 4'b1010: reduction_table_entry[opPos+opWidth-1:opPos];	//switch to gathering for long reduce and long allreduce
+
+assign Outpacket[opPos+opWidth-1:opPos] = (reduction_table_entry[AlgTypePos+AlgTypeWidth-1:opPos]=={2'b01, LargeReduce})? Gather :  reduction_table_entry[opPos+opWidth-1:opPos];
+//switch to gathering for long reduce
 assign Outpacket[RankPos+RankWidth-1:AlgTypePos] = reduction_table_entry[RankPos+RankWidth-1:AlgTypePos];
 assign Outpacket[SrcPos+SrcWidth-1:SrcPos] = {rank_z, rank_y, rank_x};	//only if outgoing unit, if local unit, keep the src the same, also dont change for ring allgather
 assign Outpacket[DstPos+DstWidth-1:DstPos] = reduction_table_entry[DstPos+DstWidth-1:DstPos];
@@ -238,4 +249,3 @@ end  //end always
 
 endmodule
 
- 
