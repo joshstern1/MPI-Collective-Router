@@ -84,11 +84,10 @@ dataC is just used for simulation and analysis. */
 assign reduction_table_entry = reduction_table[done_index];
 assign Outpacket[PayloadWidth-1:0] = reduction_table_entry[PayloadWidth-1:0];
 
-assign Outpacket[opPos+opWidth-1:opPos] = (reduction_table_entry[AlgTypePos+AlgTypeWidth-1:opPos]=={2'b01, LargeReduce})? Gather :  reduction_table_entry[opPos+opWidth-1:opPos];
 //switch to gathering for long reduce
-assign Outpacket[RankPos+RankWidth-1:AlgTypePos] = reduction_table_entry[RankPos+RankWidth-1:AlgTypePos];
-assign Outpacket[SrcPos+SrcWidth-1:SrcPos] = {rank_z, rank_y, rank_x};	//only if outgoing unit, if local unit, keep the src the same, also dont change for ring allgather
-assign Outpacket[DstPos+DstWidth-1:DstPos] = reduction_table_entry[DstPos+DstWidth-1:DstPos];
+assign Outpacket[opPos+opWidth-1:opPos] = (reduction_table_entry[AlgTypePos+AlgTypeWidth-1:opPos]=={2'b01, LargeReduce})? Gather :  reduction_table_entry[opPos+opWidth-1:opPos];
+assign Outpacket[AlgTypePos+AlgTypeWidth-1:AlgTypePos] = 0;
+assign Outpacket[DstPos+DstWidth-1:TagPos] = reduction_table_entry[DstPos+DstWidth-1:TagPos];
 assign Outpacket[ValidBitPos] = 1;
 assign dataC = Outpacket[PayloadWidth-1:0];
 assign valid_out = !rst; //change this
