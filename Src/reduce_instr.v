@@ -101,8 +101,8 @@ always @(posedge clk) begin
   end	
  end 
  
- comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
- //comm_table[0] <= {9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
+ //comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
+ comm_table[0] <= {9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
  //comm_table[0] <= {9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
  //comm_table[0] <= {9'b000000011, 3'b000, 4'b0011, 9'b000000010, 9'b000000001, 9'b000000111};
 end
@@ -161,7 +161,7 @@ end
 
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [DstWidth:0]uptree_offset = (lg_commsize-communicator_children-1)*DstWidth;
-assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (local_rank == root)? {rank_x, rank_y, rank_z} : comm_table[context][uptree_offset+:DstWidth]; //short reduction, gather, barrier
+assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (local_rank == 0)? {rank_x, rank_y, rank_z} : comm_table[context][uptree_offset+:DstWidth]; //short reduction, gather, barrier
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@ reg [lg_numprocs-1:0]bitmask;
 reg [DstWidth:0]halving_offset;
 reg [lg_numprocs:0]k, p;
 reg rd_halving;	//used for testing
-wire [TagWidth-1:0]t_halving_tag = t_tag - local_rank;
+wire [TagWidth-1:0]t_halving_tag = (((t_tag < (commsize/2))&&(local_rank<(commsize/2)))||((t_tag >= (commsize/2))&&(local_rank>=(commsize/2))))? t_tag - local_rank : local_rank - t_tag;
 
 reg home_halving;
 reg [DstWidth-1:0]new_gather_dst;
@@ -264,7 +264,7 @@ always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, 
 			default: 	{dst_x_halving, dst_y_halving, dst_z_halving} = (t_tag == local_rank)? {rank_z, rank_y, rank_z} : comm_table[context][halving_offset+:DstWidth];
 		endcase													
 
-		home_halving_bcast = ((t_tag == local_rank)&&(t_op == LargeBcast)&&(!home_halving));
+		home_halving = ((t_tag == local_rank)&&(t_op == LargeBcast)&&(!home_halving));
 		rd_halving <= ((home_halving)||(!start_gather));	//used for testing
 	end
 	
@@ -359,10 +359,10 @@ always @(posedge clk) begin
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			MediumBcast: 	begin
-									op <= t_op; /////////////////////////////////////////////////////////////////////////
+									op <= t_op; 
 									algtype <= 0;
 									children <= 0;
-									rd_en_reg <= ((home_halving)||(!start_gather));
+									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			ShortBcast: 	begin
@@ -417,15 +417,15 @@ always @(posedge clk) begin
 			ShortAllReduce:begin
 									op <= ShortAllReduce;
 									algtype <= 0;
-									children <= (home_doubling)? lg_commsize : ((lg_commsize-1)-(doubling_offset/DstWidth));
+									children <= ((send_home_doubling)||(diff==(commsize/2)))? lg_commsize : ((lg_commsize-1)-(doubling_offset/DstWidth));
 									rd_en_reg <= (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
 								end
 			LargeAllReduce:begin 	
-									op <= t_op; /////////////////////////////////////////////////////////////////////////
+									op <= t_op; 
 									algtype <= 0;
 									children <= 0;
-									rd_en_reg <= ((home_halving)||(!start_gather));
+									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			default: 		begin
