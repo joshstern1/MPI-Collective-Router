@@ -23,48 +23,6 @@ inside the fifo
 
 module packeter(packeterOut, payload, op, algtype, tag, contextId, rank, src_x, src_y, src_z, dst_x, dst_y, dst_z, valid);
 
-parameter cur_rank = 9'b0;
-parameter root = 9'b0;
-parameter rank_z = 3'b0;
-parameter rank_y = 3'b0;
-parameter rank_x = 3'b0;
-parameter root_z = 3'b0;
-parameter root_y = 3'b0;
-parameter root_x = 3'b0;
-
-parameter Comm_world_size = 8;
-
-parameter FlitWidth = 82;
-parameter PayloadWidth=32;
-parameter opPos = 32;
-parameter opWidth = 4;
-parameter AlgTypePos = 36;
-parameter AlgTypeWidth = 2;
-parameter TagPos=38;
-parameter TagWidth = 8;
-parameter ContextIdPos = 46;
-parameter ContextIdWidth = 8;
-parameter RankPos = 54;
-parameter RankWidth = 9;
-parameter Src_XPos = 63;
-parameter Src_YPos = 66;
-parameter Src_ZPos = 69;
-parameter Src_XWidth = 3;
-parameter Src_YWidth = 3;
-parameter Src_ZWidth = 3;
-parameter Dst_XPos = 72;
-parameter Dst_YPos = 75;
-parameter Dst_ZPos = 78;
-parameter Dst_XWidth = 3;
-parameter Dst_YWidth = 3;
-parameter Dst_ZWidth = 3;
-parameter SrcPos = 63;
-parameter SrcWidth = 9;
-parameter DstPos = 72;
-parameter DstWidth = 9;
-parameter ValidBitPos = 81;
-
-
 input [PayloadWidth-1:0]payload;
 input [opWidth-1:0] op;
 input [AlgTypeWidth-1:0] algtype;
@@ -94,4 +52,3 @@ assign packeterOut[ValidBitPos] = valid;
 
 endmodule
 
- 
