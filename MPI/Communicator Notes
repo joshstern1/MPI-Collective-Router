@@ -1,0 +1,75 @@
+COMMUNICATORS
+
+	Communicators provides a separate communication space. It is possible to treat a subset of processes as a communication universe.
+
+	A communicator is an object describing a group of processes. In many applications all processes work together closely coupled, 
+	and the only communicator you need is MPI_COMM_WORLD , the group describing all processes that your job starts with.
+
+	An important reason for using communicators is the development of software libraries. If the routines in a library use their 
+	own communicator (even if it is a duplicate of the `outside' communicator), there will never be a confusion between message tags inside and outside the library.
+
+	There are three predefined communicators:
+
+	MPI_COMM_WORLD
+	comprises all processes that were started together by mpirun (or some related program).
+
+	MPI_COMM_SELF
+	is the communicator that contains only the current process.
+
+	MPI_COMM_NULL
+	is the invalid communicator. Routines that construct communicators can give this as result if an error occurs
+
+SUBCOMMUNICATORS
+
+	In many scenarios you divide a large job over all the available processors. It makes sense to divide your processors into subgroups accordingly.
+	As long as you only do sends and receives, this division works fine. However, if one group of processes needs to perform a collective operation, 
+	you don't want the other groups involved in this. Thus, you really want all the groups to be really distinct from each other.
+
+	In order to make such subsets of processes, MPI has the mechanism of taking a subset of MPI_COMM_WORLD and turning that subset into a new communicator.
+	By making a communicator that contains a subset of all available processes, you can do a collective on that subset.
+
+	Communicator constructors are collective routines, meaning they must be called by all processes in the group associated with the comm
+
+DUPLICATING COMMUNICATORS
+	
+	With MPI_Comm_dup you can make an exact duplicate of a communicator. This may seem pointless, but it is actually very useful for the design of software libraries. 
+	Image that you have a code:
+
+	MPI_Isend(...); MPI_Irecv(...);
+	// library call
+	MPI_Waitall(...);
+	and suppose that the library has receive calls. Now it is possible that the receive in the library inadvertently catches the message that was sent in the outer environment.
+
+SPLITTING COMMUNICATORS
+
+	Splitting a communicator into multiple disjoint communicators can be done with MPI_Comm_split And all processes in the old communicator with 
+	the same colour wind up in a new communicator together. The old communicator still exists, so processes now have two different contexts in which to communicate.
+	The ranking of processes in the new communicator is determined by a `key' value. Most of the time, there is no reason to use 
+	a relative ranking that is different from the global ranking, so the MPI_Comm_rank value of the global communicator is a good choice.
+
+GROUPS
+
+	The most general mechanism is based on groups: you can extract the group from a communicator, combine different groups, and form a new communicator from the resulting group.
+
+INTRA-COMMUNICATORS
+
+	Intra-communicator : a collection of processes that can send messages to each other and engage in collective communication operations
+	Composed of:
+		group: ordered collection of processes, with each process assigned a unique rank
+		context: system-defined object that uniquely identifies a communicators
+		attributes: toplogy
+
+INTER-COMMUNICATORS
+
+	Inter-communicator: are used for sending messages between	processes belonging to disjoint intra-communicators. 
+	If two disjoint communicators exist, it may be necessary to communicate between them. This can of course be done by creating a new communicator that overlaps them, 
+	but this would be complicated: since the `inter' communication happens in the overlap communicator, you have to translate its ordering into those of the two worker communicators. 
+	It would be easier to express messages directly in terms of those communicators, and this can be done with `inter-communicators'.
+
+VIRTUAL TOPOLOGIES
+
+	It is possible to associate additional information (beyond group and context) with a communicator.
+	Topology is one of the attributes for communicator:
+		-In MPI, a topology is a mechanism for associating different addressing schemes with the processes belonging to a group.
+		-MPI topology is a virtual topology: there is no simple relation between the process structure and actual underlying physical structure of the parallel system.
+		-Two main topology types: Cartesian (or grid) and graphs. Graphs are the more general case. 
