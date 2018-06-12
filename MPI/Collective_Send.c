@@ -121,9 +121,73 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 #define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)]
 
 #define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           
-        *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)];                
-        if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE){    
-            MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                  
-        }                                                               
-    }while(0)
+    *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)];                
+    if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE){    
+        MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                  
+    }                                                               
+}while(0)
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* Setting a process's connection information 
+   
+   This is a collective call (for scalability) over all of the processes in 
+   the same MPI_COMM_WORLD.
+*/
+
+/*MPIDI_PG_SetConnInfo
+    This is a collective call over the processes in MPI_COMM_WORLD that takes the rank of the calling process and its connection information, and makes 
+    it available for the other processes. It is implemented using the PMI_KVS_Put and PMI_Barrier calls.
+*/
+
+int MPIDI_PG_SetConnInfo( int rank, const char *connString ){
+
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int len;
+    char key[128];
+
+    MPIU_Assert(pg_world->connData);
+    
+    len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
+
+    if (len < 0 || len > sizeof(key)) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
+    }
+
+    pmi_errno = PMI_KVS_Put(pg_world->connData, key, connString );
+
+    if (pmi_errno != PMI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
+    }
+
+    pmi_errno = PMI_KVS_Commit(pg_world->connData);
+
+    if (pmi_errno != PMI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
+    }
+}
+
+
+/*MPIDI_PG_GetConnString
+    This is an independent (i.e., not collective) call that returns the connection string for the process identified by a process 
+    group and a rank in that process group. This may use PMI_KVS_Get for processes in the same MPI_COMM_WORLD or another mechanism 
+    for processes not in the same MPI_COMM_WORLD (specifically, a cache of connection names that is maintained as part of the process 
+    group structure, at least until PMI is enhanced).
+
+Temp to get connection value for rank r */
+
+int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (pg->getConnInfo) {
+     mpi_errno = (*pg->getConnInfo)( rank, val, vallen, pg );
+    }
+
+    return mpi_errno;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
