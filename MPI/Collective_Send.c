@@ -131,8 +131,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 
 /* Setting a process's connection information 
    
-   This is a collective call (for scalability) over all of the processes in 
-   the same MPI_COMM_WORLD.
+   This is a collective call (for scalability) over all of the processes in the same MPI_COMM_WORLD.
 */
 
 /*MPIDI_PG_SetConnInfo
@@ -191,3 +190,4 @@ int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
