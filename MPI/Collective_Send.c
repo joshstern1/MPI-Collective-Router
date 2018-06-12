@@ -118,15 +118,12 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 #define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)]
 
 #define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           
         *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)];                
-        if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE){
-            MPIDI_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     
+        if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE){    
             MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                  
         }                                                               
     }while(0)
-
 
