@@ -1,3 +1,14 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+comm_ptr contains:
+	rank
+	comm_size
+	context_id
+	intercommunicator vs. intracommunicator
+
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 COMMUNICATORS
 
 	Communicators provides a separate communication space. It is possible to treat a subset of processes as a communication universe.
@@ -66,6 +77,8 @@ INTER-COMMUNICATORS
 	but this would be complicated: since the `inter' communication happens in the overlap communicator, you have to translate its ordering into those of the two worker communicators. 
 	It would be easier to express messages directly in terms of those communicators, and this can be done with `inter-communicators'.
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 VIRTUAL TOPOLOGIES
 
 	It is possible to associate additional information (beyond group and context) with a communicator.
@@ -73,3 +86,176 @@ VIRTUAL TOPOLOGIES
 		-In MPI, a topology is a mechanism for associating different addressing schemes with the processes belonging to a group.
 		-MPI topology is a virtual topology: there is no simple relation between the process structure and actual underlying physical structure of the parallel system.
 		-Two main topology types: Cartesian (or grid) and graphs. Graphs are the more general case. 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+MPID_REQUESTS
+
+	MPI Requests are handles to MPID_Request structures. These are used for most communication operations to provide a uniform way in which to
+	define pending operations.  As such, they contain many fields that are only used by some operations (logically, an MPID_Request is a union type).
+	There are several kinds of requests.  They are:
+		Send, Receive, RMA, User, Persistent
+
+	Also, requests that are used internally within blocking MPI routines (only Send and Receive requests) do not require references to
+	(or increments of the reference counts) communicators or datatypes. Thus, freeing these requests also does not require testing or 
+	decrementing these fields.
+
+	A posted (unmatched) receive queue entry needs only:
+		match info
+		buffer info (address, count, datatype)
+		if nonblocking, communicator (used for finding error handler)
+		if nonblocking, cancelled state
+
+	Once matched, a receive queue entry also needs
+		actual match info
+	    message type (eager, rndv, eager-sync)
+	    completion state (is all data available)
+
+	An unexpected message (in the unexpected receive queue) needs only:
+	    match info
+	    message type (eager, rndv, eager-sync)
+	    if (eager, eager-sync), data completion state (is all data available?)
+
+	A send request requires only
+	    message type (eager, rndv, eager-sync)
+	    completion state (has all data been sent?)
+	    canceled state
+	    if nonblocking, communicator (used for finding error handler)
+	    if the initial envelope is still pending (e.g., could not write yet), match info
+	    if the data is still pending (rndv or would not send eager), buffer info (address, count, datatype)
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+MPIDI ProcessGroups
+
+	typedef struct MPIDI_PG
+	{
+	    MPIU_OBJECT_HEADER;  
+	    	(adds handle and ref_count fields)
+	    
+	    struct MPIDI_PG * next; 
+	    	(Next pointer used to maintain a list of all process groups known to this process )
+	    
+	    int size;	
+	    	(Number of processes in the process group)
+
+	    struct MPIDI_VC * vct;
+	        (VC table.  At present this is a pointer to an array of VC structures. Someday we may want make this a pointer to an array
+	        of VC references.  Thus, it is important to use MPIDI_PG_Get_vc() instead of directly referencing this field.)
+
+	    void * id;
+		    (Pointer to the process group ID.  The actual ID is defined and allocated by the process group.)
+
+	    int finalize;
+	        (Flag to mark a procress group which is finalizing. This means thay the VCs for this process group are closing, normally becuase
+	        MPI_Finalize was called.) 
+
+
+	    Connection information needed to access processes in this process group and to share the data with other processes.  
+	    
+	    void *connData;
+	    	(pointer to an array of process group info)
+
+	    int  (*getConnInfo)( int rank, char *buf, int bufsize, struct MPIDI_PG *self);
+			(function to store into buf the connection information for rank in this process group)
+
+	    int  (*connInfoToString)( char **buf_p, int *size, struct MPIDI_PG *self);
+			(return in buf_p a string containing the info needed to support getConnInfo that can then be sent to another process to 
+			recreate the connection information)
+
+	    int  (*connInfoFromString)( const char *buf,  struct MPIDI_PG *self);
+			(setup the information needed to implement getConnInfo)
+
+	    int  (*freeConnInfo)( struct MPIDI_PG *self);
+			(free any storage or resources associated with the connection information.)
+
+	}
+
+	  
+	typedef struct MPIDI_Process
+	{
+	    MPIDI_PG_t * my_pg;
+	    int my_pg_rank;
+	}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+VIRTUAL CONNECTION
+
+ 
+	typedef struct MPIDI_VC
+	{
+	 	MPIU_Object fields.  MPIDI_VC_t objects are not allocated using the MPIU_Object system, but we do use the associated reference counting routines.  
+	    The handle value is required when debugging objects (the handle kind is used in reporting on changes to the object).
+	    
+	    MPIU_OBJECT_HEADER; 
+	    	(adds handle and ref_count fields)
+	    
+	    MPIDI_VC_State_t state;
+	    	(state of the VC)
+
+	        struct MPIDI_PG * pg;
+	    	(Process group to which this VC belongs)
+
+	    int pg_rank;
+			(Rank of the process in that process group associated with this VC)
+
+	    int lpid;
+			(Local process ID)
+	    
+	    MPID_Node_id_t node_id;
+	    	(The node id of this process, used for topologically aware collectives.)
+
+	    int port_name_tag; 
+	    	(added to handle dynamic process mgmt)
+	    
+
+	    MPID_Seqnum_t seqnum_send;
+	    	(Sequence number of the next packet to be sent)
+
+		int (* rndvSend_fn)( ... );
+			(rendezvous function pointer, called to send a rendevous message or when one is matched)
+
+	    int eager_max_msg_sz;
+	    	(eager message threshold)
+
+	}
+
+
+	MPIDI_VCRT - virtual connection reference table
+
+	handle - this element is not used, but exists so that we may use the
+	MPIU_Object routines for reference counting
+
+	ref_count - number of references to this table
+
+	vcr_table - array of virtual connection references
+
+	typedef struct MPIDI_VCRT
+	{
+	    MPIU_OBJECT_HEADER; (adds handle and ref_count fields)
+	    int size;
+	    MPIDI_VC_t * vcr_table[1];
+	}
+	MPIDI_VCRT_t;
+
+
+	extern int MPIDI_Failed_vc_count;
+		(number of VCs that are in MORIBUND state)
+
+	int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
+		(Initialize a new VC)
+
+	#define MPIDI_VC_add_ref( _vc )                                 
+	    do { MPIU_Object_add_ref( _vc ); } while (0)
+
+	#define MPIDI_VC_release_ref( _vc, _inuse ) 
+	    do { MPIU_Object_release_ref( _vc, _inuse ); } while (0)
+
+
+*/
