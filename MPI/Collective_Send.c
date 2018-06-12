@@ -1,6 +1,6 @@
 int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm){
 
-    MPID_Comm *comm_ptr = NULL;	
+    MPID_Comm *comm_ptr = NULL; 
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     /* Convert MPI object handles to object pointers 
@@ -14,7 +14,9 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
 }
 
-MPIC_Send(recvbuf, count, datatype, source, MPIR_REDUCE_TAG, comm_ptr, errflag);	//Tag = MPIR_REDUCE_TAG
+
+
+MPIC_Send(recvbuf, count, datatype, source, MPIR_REDUCE_TAG, comm_ptr, errflag);    //Tag = MPIR_REDUCE_TAG
 
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do
@@ -24,13 +26,11 @@ MPIC_Send(recvbuf, count, datatype, source, MPIR_REDUCE_TAG, comm_ptr, errflag);
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                  MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-
-	//#define MPID_CONTEXT_INTRA_COLL  (1)
-	//#define MPID_CONTEXT_INTER_COLL  (1)
+    //#define MPID_CONTEXT_INTRA_PT2PT (0)
+    //#define MPID_CONTEXT_INTRA_COLL  (1)
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?  MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
-    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr,
-                          context_id, &request_ptr);
+    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr, context_id, &request_ptr);
 
 }
 
@@ -52,23 +52,21 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 
 
     if (dt_contig && data_sz <= (MPIDI_EAGER_SHORT_SIZE)) {
-		mpi_errno = MPIDI_CH3_EagerContigShortSend( &sreq, MPIDI_CH3_PKT_EAGERSHORT_SEND, (char *)buf + dt_true_lb, count, data_sz, rank, tag, comm, context_offset );
+        mpi_errno = MPIDI_CH3_EagerContigShortSend( &sreq, MPIDI_CH3_PKT_EAGERSHORT_SEND, (char *)buf + dt_true_lb, count, data_sz, rank, tag, comm, context_offset );
     }
     else{
-	    if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_send_t) <= eager_threshold){
-			if (dt_contig){
-		 	    mpi_errno = MPIDI_CH3_EagerContigSend( &sreq, MPIDI_CH3_PKT_EAGER_SEND, (char *)buf + dt_true_lb, data_sz, rank, tag, comm, context_offset );
-			}
-	    }
-	    else {
-			MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
-			MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
-			mpi_errno = vc->rndvSend_fn( &sreq, buf, count, datatype, dt_contig, data_sz, dt_true_lb, rank, tag, comm, context_offset );
-			/* Note that we don't increase the ref count on the datatype
-			   because this is a blocking call, and the calling routine 
-			   must wait until sreq completes */
-	    }
-	}
+        if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_send_t) <= eager_threshold){
+            if (dt_contig){
+                mpi_errno = MPIDI_CH3_EagerContigSend( &sreq, MPIDI_CH3_PKT_EAGER_SEND, (char *)buf + dt_true_lb, data_sz, rank, tag, comm, context_offset );
+            }
+        }
+        else {
+            MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
+            MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
+            mpi_errno = vc->rndvSend_fn( &sreq, buf, count, datatype, dt_contig, data_sz, dt_true_lb, rank, tag, comm, context_offset );
+            /* Note that we don't increase the ref count on the datatype because this is a blocking call, and the calling routine must wait until sreq completes */
+        }
+    }
 
 }
 
@@ -84,7 +82,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p, MPIDI_CH3_Pkt_type_t reqty
     MPL_IOV iov[2];
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.rank = comm->rank;
     eager_pkt->match.parts.tag = tag;
     eager_pkt->match.parts.context_id = comm->context_id + context_offset;
     eager_pkt->sender_req_id = MPI_REQUEST_NULL;
@@ -92,7 +90,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p, MPIDI_CH3_Pkt_type_t reqty
     
     iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)eager_pkt;
     iov[0].MPL_IOV_LEN = sizeof(*eager_pkt);
-	    
+        
     iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) buf;
     iov[1].MPL_IOV_LEN = data_sz;
     
@@ -104,8 +102,8 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p, MPIDI_CH3_Pkt_type_t reqty
 
     sreq = *sreq_p;
     if (sreq != NULL) {
-	MPIDI_Request_set_seqnum(sreq, seqnum);
-	MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
+    MPIDI_Request_set_seqnum(sreq, seqnum);
+    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
     }
 }
 
@@ -117,3 +115,34 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
         mpi_errno = vc->ch.iStartContigMsg(vc, hdr, hdr_sz, NULL, 0, sreq_ptr);
     }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*------------------
+  BEGIN COMM SECTION
+  ------------------*/
+#define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)]
+
+#ifdef USE_MPIDI_DBG_PRINT_VC
+void MPIDI_DBG_PrintVC(MPIDI_VC_t *vc);
+void MPIDI_DBG_PrintVCState2(MPIDI_VC_t *vc, MPIDI_VC_State_t new_state);
+void MPIDI_DBG_PrintVCState(MPIDI_VC_t *vc);
+#else
+#define MPIDI_DBG_PrintVC(vc)
+#define MPIDI_DBG_PrintVCState2(vc, new_state)
+#define MPIDI_DBG_PrintVCState(vc)
+#endif
+
+#define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           \
+        *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)];                \
+        if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
+        {                                                               \
+            MPIDI_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
+            MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                   \
+        }                                                               \
+    } while(0)
+
+/*----------------
+  END COMM SECTION
+  ----------------*/
