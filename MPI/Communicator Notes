@@ -187,6 +187,28 @@ MPIDI ProcessGroups
 
 VIRTUAL CONNECTION
 
+	In MPICH, connections are described by virtual connections. In many cases, these connections are not established until communication along
+	that connection is required (for a more scalable approach). These virtual connections are associated with a single process group. Virtual connections
+	are identified by their process group and a rank in that process group. 
+
+	For each of their process groups, MPI communicators contain a virtual connection reference table (VCRT), which is basically a structure that contains
+	an int number of virtual connections and a pointer to an array of virtual connections, indexed by rank in that communicator. There is also a reference
+	count, allowing MPI_Comm_dup to make a shallow copy (refer to the VCRT rather than duplicating it). If a new communicator is not a dup, then a new
+	VCRT is created.
+
+	MPIDI_VC is a single virtual connection while a MPIDI_VCRT is a table of connections. Tables and connections are each reference counted; tables are used 
+	within communicators, and connections are used during communication.
+
+	To instantiate a virtual connection, the implementation can use the "KVS" (Key-value space) that the process manager associates with this process group
+	to retreive connection information. For example, in the CH3 implementation of the ADI interface, each process inserts in the KVS space a "business card"
+	that contains informaton (often a IP address and port for socket communication). Because the calling process is a member of the same process group,
+	it can access this information with PMI_KVS_Get.
+
+	int MPIDI_CH3_Get_business_card(int myRank, char *value, int length);
+
+	vc - virtual connection to send the message over
+	iov - a vector of a structure contains a buffer pointer and length
+	iov_n - number of elements in the vector
  
 	typedef struct MPIDI_VC
 	{
@@ -199,7 +221,7 @@ VIRTUAL CONNECTION
 	    MPIDI_VC_State_t state;
 	    	(state of the VC)
 
-	        struct MPIDI_PG * pg;
+	    struct MPIDI_PG * pg;
 	    	(Process group to which this VC belongs)
 
 	    int pg_rank;
@@ -214,7 +236,6 @@ VIRTUAL CONNECTION
 	    int port_name_tag; 
 	    	(added to handle dynamic process mgmt)
 	    
-
 	    MPID_Seqnum_t seqnum_send;
 	    	(Sequence number of the next packet to be sent)
 
@@ -229,33 +250,71 @@ VIRTUAL CONNECTION
 
 	MPIDI_VCRT - virtual connection reference table
 
-	handle - this element is not used, but exists so that we may use the
-	MPIU_Object routines for reference counting
-
+	handle - this element is not used, but exists so that we may use the MPIU_Object routines for reference counting
 	ref_count - number of references to this table
-
 	vcr_table - array of virtual connection references
 
 	typedef struct MPIDI_VCRT
 	{
 	    MPIU_OBJECT_HEADER; (adds handle and ref_count fields)
-	    int size;
-	    MPIDI_VC_t * vcr_table[1];
+	    int size;	(Number of entries in the table)
+	    MPIDI_VC_t * vcr_table[1];	(array of virtual connection references)
 	}
-	MPIDI_VCRT_t;
 
 
-	extern int MPIDI_Failed_vc_count;
-		(number of VCs that are in MORIBUND state)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
-		(Initialize a new VC)
+CONTEXT ID
 
-	#define MPIDI_VC_add_ref( _vc )                                 
-	    do { MPIU_Object_add_ref( _vc ); } while (0)
+MPI evelope contains source, tag, communicator. The communicator is a logical construct indicating a particular communication context. In MPICH, this context is 
+implemented via an additional tag field known as the context id.
+The MPICH context ID is a 16-bit integer field that is structured as follows:
 
-	#define MPIDI_VC_release_ref( _vc, _inuse ) 
-	    do { MPIU_Object_release_ref( _vc, _inuse ); } while (0)
+		V W W W W W W X X X X X L Y Y Z
 
+	Dynamic Process Context Bit(V)
+		If 0, this is a tradional context ID from the context ID mask. If 1, this is a context ID used for dynamic processes.
+	Mask Word Index (W)
+		This is the index into the context ID mask.
+	Bit Index(X)
+		This is which bit index within the mask that this ID refers to.
+	Is Localcomm(L)
+		Set to 1 if this communicator is a local communicator for an intercommunicator. 
+	Sub-communicator Type(Y)
+		Used to distinguish a "parent" communicaotr from any "child communicators" (Used for SMP-aware collective operations).
+	Context Type Suffix(Z)
+		Used to indicate different communication contexts within a communicator (point-to-point messages versus collective messages).
+
+All members of a communicator use the same context ID for that communicator, but a context ID is not a globally unique ID. 
+The communicator's group information combined with the context ID constitute a unique ID. 
+
+The context ID mask is a bit vector used to keep track of which context IDs have been allocated. Currently it is an array of
+64 32-bit unsigned ints for a total of 2048 bits. 
+	
+		IDs are allocated from the lowest available mask integer index but the highest available bit index within that integer.
+
+MPI_Comm_create
+	Just call MPIR_Get_contextid(old_comm_ptr).
+MPI_Comm_split
+	Call MPIR_Get_contextid(comm_ptr). This ID is the same across all the disjoint communicators that are created. 
+	That is, if MPI_Comm_split is called such that three new communicators are created, the context ID will be the 
+	same in all three communicators (although the groups will obviously be different between communicators).
+MPI_Comm_dup
+	This calls MPIR_Comm_copy which in turn calls MPIR_Get_contextid over the source communicator. This new 
+	context ID is used for the duplicate communicator.
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+LOCAL AND GLOBAL MPI PROCESS IDS
+
+	In order to indetify other processes in an MPI job, each MPI process maintains a "local" and a "global" process id.
+	These process IDs are not related to any process ids managed by the underlying OS. Instead, they are used to manage
+	the relationship between ranks in groups (and communicators) and processes.
+
+	Local pids are used for all group operations and for identifying a particular remote process from a process. Different
+	processes may use different local pids to refer to the same remote process; local processes only have meaning to the 
+	process that is using them (ie. why they are called local).
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 */
