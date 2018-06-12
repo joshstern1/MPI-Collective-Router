@@ -315,6 +315,10 @@ LOCAL AND GLOBAL MPI PROCESS IDS
 	processes may use different local pids to refer to the same remote process; local processes only have meaning to the 
 	process that is using them (ie. why they are called local).
 
+	We assume that when processes are created, they are described by two numbers: (process-group-id)(rank-in-group). 
+	Get the gpid corresponding to the rank of a process in a communicator. The routine MPID_GPID_GetAllInComm provides a single
+	routine to efficiently access of of the gpids in a single communicator. 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 */
