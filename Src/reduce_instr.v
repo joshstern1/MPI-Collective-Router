@@ -22,8 +22,8 @@ inside the fifo
 
 //communicator table
 
-	*|  42-34   | 33-31  |   30-27   |26-18| 17-9 | 8-0 |     	
-	*|local_rank|children|lg_commsize|third|second|first|
+	*|	52  |51-43|	 42-34   | 33-31  |   30-27   |26-18| 17-9 | 8-0 |     	
+	*|valid|root |local_rank|children|lg_commsize|third|second|first|
 
 /////////////////////////////////////////////////////////////////////////////////*/
 
@@ -40,10 +40,10 @@ assign rd_en = rd_en_reg;
 /////////////////////////////////////////////////////////////////////////////////
 //rank table
 
-reg [SrcWidth-1:0] rank_table [num_procs-1:0];	//rank table matches ranks to physical address
-reg [num_procs-1:0]j;
+//reg [SrcWidth-1:0] rank_table [num_procs-1:0];	//rank table matches ranks to physical address
+//reg [num_procs-1:0]j;
 
-always @(posedge clk) begin
+/*always @(posedge clk) begin
 
  if (rst) begin //if rst, set everything to 0
   for(j=0;j<num_procs;j=j+1)begin
@@ -60,7 +60,7 @@ always @(posedge clk) begin
 	 rank_table[5] <= {3'b000, 3'b001, 3'b000};
 	 rank_table[6] <= {3'b000, 3'b000, 3'b001};
 	 rank_table[7] <= {3'b000, 3'b000, 3'b000};
-	 /*
+	 
 	 rank_table[8] <= {3'b001, 3'b001, 3'b010};
 	 rank_table[9] <= {3'b001, 3'b001, 3'b011};
 	 rank_table[10] <= {3'b001, 3'b000, 3'b010};
@@ -85,9 +85,9 @@ always @(posedge clk) begin
 	 rank_table[29] <= {3'b000, 3'b010, 3'b011};
 	 rank_table[30] <= {3'b000, 3'b011, 3'b010};
 	 rank_table[31] <= {3'b000, 3'b011, 3'b011};
-	 */
+	 
  end
-end
+end*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //communicator table
@@ -100,11 +100,13 @@ always @(posedge clk) begin
 	comm_table[i]<=0;
   end	
  end 
- 
- comm_table[0] <= {9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
- //comm_table[0] <= {9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
- //comm_table[0] <= {9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
- //comm_table[0] <= {9'b000000011, 3'b000, 4'b0011, 9'b000000010, 9'b000000001, 9'b000000111};
+ else if (packetIn[opPos+opWidth-1:opPos] == Communicator)begin
+	comm_table[packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos]] <= packetIn[CommTableWidth-1:0];
+ end 
+ comm_table[0] <= {1'b1, 9'b0, 9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
+ //comm_table[0] <= {1'b1, 9'b0, 9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
+ //comm_table[0] <= {1'b1, 9'b0, 9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
+ //comm_table[0] <= {1'b1, 9'b0, 9'b000000011, 3'b000, 4'b0011, 9'b000000010, 9'b000000001, 9'b000000111};
 end
 
 wire [ContextIdWidth-1:0]context;
@@ -331,7 +333,7 @@ end
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //mux
 
-wire meant_for_me = (packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x});
+wire meant_for_me = ((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(comm_table[context][CommTableWidth-1]));
 reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [opWidth-1:0]op;
 reg [AlgTypeWidth-1:0]algtype;
@@ -348,6 +350,13 @@ always @(posedge clk) begin
 	end
 	else if((meant_for_me)&&(t_op>4'b0)) begin
 		case(t_op)
+			Communicator:	begin
+									op <= 0;
+									algtype <= 0;
+									children <= 0;
+									rd_en_reg <= 1;
+									{dst1, dst2, dst3} <= 0;
+								end		
 			LargeBcast: 	begin
 									op <= (!home_halving)? LargeBcast : LargeAllGather;
 									algtype <= 0;
@@ -430,7 +439,7 @@ always @(posedge clk) begin
 									algtype <= 0;
 									children <= 0;
 									rd_en_reg <= 1'b1;
-									{dst1, dst2, dst3} <= {root_x, root_y, root_z};
+									{dst1, dst2, dst3} <= packetIn[DstPos+DstWidth-1:DstPos];
 								end
 		endcase
 
