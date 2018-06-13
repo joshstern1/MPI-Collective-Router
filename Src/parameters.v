@@ -50,7 +50,7 @@ parameter ValidBitPos = 81;
 //////////////////////////////////////////
 //reduce unit table and adder
 parameter ReductionTableWidth = 91;
-parameter ReductionTableSize = 6;
+parameter ReductionTableSize = 8;
 parameter AdderLatency = 14;
 parameter ReductionBitPos=35;
 
@@ -71,7 +71,7 @@ parameter FifoSize = 1<<fifo_lg_size;
 
 /////////////////////////////////////
 //communicator table
-parameter CommTableWidth = 43;
+parameter CommTableWidth = 53;
 parameter CommTableSize = 4;
 parameter lgCommSizePos = 27;
 parameter CommChildrenPos = 31;
@@ -79,6 +79,9 @@ parameter LocalRankPos = 34;
 
 ////////////////////////////////////
 //algorithmic opcodes
+parameter Communicator = 4'b0010;
+parameter Scan = 4'b0011;
+parameter AlltoAll = 4'b0100;
 parameter LargeBcast = 4'b0101;
 parameter MediumBcast = 4'b0110;
 parameter ShortBcast = 4'b0111;
