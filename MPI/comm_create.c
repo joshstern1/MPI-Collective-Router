@@ -65,8 +65,7 @@ int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr, MPID_Comm
         (*newcomm_ptr)->context_id     = (*newcomm_ptr)->recvcontext_id;
         (*newcomm_ptr)->remote_size    = (*newcomm_ptr)->local_size = n;
 
-        /* Setup the communicator's network address mapping.  This is for the remote group,
-           which is the same as the local group for intracommunicators */
+        /* Setup the communicator's network address mapping.  This is for the remote group, which is the same as the local group for intracommunicators */
         mpi_errno = MPIR_Comm_create_map(n, 0, mapping, NULL, mapping_comm, *newcomm_ptr);
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
@@ -115,7 +114,7 @@ int MPIR_Comm_create_calculate_mapping(MPID_Group *group_ptr, MPID_Comm *comm_pt
     if (comm_ptr->comm_kind == MPID_INTRACOMM) {
         int wsize;
         subsetOfWorld = 1;
-        wsize         = MPIR_Process.comm_world->local_size;
+        wsize = MPIR_Process.comm_world->local_size;
         for (i=0; i<n; i++) {
             int g_lpid = group_ptr->lrank_to_lpid[i].lpid;
 
@@ -149,7 +148,7 @@ int MPIR_Comm_create_calculate_mapping(MPID_Group *group_ptr, MPID_Comm *comm_pt
         }
     }
 
-    *mapping_out     = mapping;
+    *mapping_out = mapping;
 
     return mpi_errno;
 
@@ -198,8 +197,7 @@ int MPIR_Comm_map_irregular(MPID_Comm * newcomm, MPID_Comm * src_comm, int *src_
         mapper->free_mapping = 0;
     }
     else {
-        MPIU_CHKPMEM_MALLOC(mapper->src_mapping, int *,
-                            src_mapping_size * sizeof(int), mpi_errno, "mapper mapping");
+        MPIU_CHKPMEM_MALLOC(mapper->src_mapping, int *, src_mapping_size * sizeof(int), mpi_errno, "mapper mapping");
         mapper->free_mapping = 1;
     }
 
@@ -211,4 +209,4 @@ int MPIR_Comm_map_irregular(MPID_Comm * newcomm, MPID_Comm * src_comm, int *src_
         *map = mapper;
 
     return mpi_errno;
-}
+} 
