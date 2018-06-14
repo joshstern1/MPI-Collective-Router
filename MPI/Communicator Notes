@@ -199,6 +199,8 @@ VIRTUAL CONNECTION
 	MPIDI_VC is a single virtual connection while a MPIDI_VCRT is a table of connections. Tables and connections are each reference counted; tables are used 
 	within communicators, and connections are used during communication.
 
+  	The virtual connection table contains the information used to contact a particular process, indexed by the rank relative to this communicator.
+
 	To instantiate a virtual connection, the implementation can use the "KVS" (Key-value space) that the process manager associates with this process group
 	to retreive connection information. For example, in the CH3 implementation of the ADI interface, each process inserts in the KVS space a "business card"
 	that contains informaton (often a IP address and port for socket communication). Because the calling process is a member of the same process group,
@@ -319,6 +321,108 @@ LOCAL AND GLOBAL MPI PROCESS IDS
 	Get the gpid corresponding to the rank of a process in a communicator. The routine MPID_GPID_GetAllInComm provides a single
 	routine to efficiently access of of the gpids in a single communicator. 
 
+	The local pids for the processes in MPI_COMM_WORLD have the same values as the ranks of those processes.
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+PMI = Process Management Interface
+
+	
+        MPIDI_CH3I_VC_post_connect(vc) -> MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
+        	Form a new connection 
+
+        MPIDI_PG_GetConnString( vc->pg, vc->pg_rank, val, sizeof(val));
+	       	This is an independent (not collective) call that returns the connection string for the process identified by a process 
+	    	group and a rank in that process group. This may use PMI_KVS_Get for processes in the same MPI_COMM_WORLD
+
+ 			
+ 		getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
+			Function to store into buf the connection information for rank in this process group	
+			Format of the process group description that is created and used by the connTo/FromString routines is (All items are strings, terminated by null):
+
+			   process group id string
+			   sizeof process group (as string)
+			   conninfo for rank 0
+			   conninfo for rank 1
+			   ...
+
+			   The "conninfo for rank 0" etc. for the original (MPI_COMM_WORLD) process group are stored in the PMI_KVS space with the keys p<rank>-businesscard . 
+
+
+		PMI_KVS_Get( const char kvsname[], const char key[], char value[], int length) 
+			Returns the key and connection information
+
+	
+		GetResponse( const char request[], const char expectedCmd[], int checkRc )
+
+			This function is used to request information from the server and check that the response uses the expected command name.  On a successful
+			return from this routine, additional PMIU_getval calls may be used to access information about the returned value.
+ 
+ 		
+ 		PMIU_getval( const char *keystr, char *valstr, int vallen )
+	
+	To instantiate a virtual connection, the implementation can use the "KVS" (Key-value space) that the process manager associates with this process group 
+	to retreive connection information. In the CH3 implementation of the ADI interface, each process inserts into the KVS space a "business card" 
+	that contains connection information (often a IP address and port for socket communication; it could be a shared memory segment id for shared-memory communication). 
+	Because the calling process is a member of the same process group, it can access this information with PMI_KVS_Get.
+
+	All interactions with external processes and resource managers, as well as the exchange of any information requried to contact other processes in the same parallel
+	job, take place through the process management interface, or PMI. There are 4 separate sets of functionalities:
+		1. Creating, connecting with, and exiting parallel jobs
+		2. Accessing information about the parallel job or the node on which a process in running
+		3. Exchanging information used to connect processes together
+		4. Exchanging information related to the MPI Name publishing interface
+
+	There are 3 groupings of processes that are important in understanding the process management interface:
+		1. Process - An MPI process; usually an OS process
+		2. Job - A collection of processes managed together by a process manager that understands parallel applications. A job contains all of the processes in a single
+				 MPI_COMM_WORLD and no more.
+		3. Connected Jobs - Collection of jobs that have established a connection through the use of PMI__Job_Connect
+
+
+	Proceses in a parallel job often need a way to exchange information, such as how to establish a connection to a remote process. These routines establish a single 
+	"key-value" space associated with each MPI_COMM_WORLD. One of these routines accepts a jobId; processes that are connected may read the "key-value" space of 
+	another MPI_COMM_WORLD.
+
+	Process Mangement comprises 3 primary components:
+		1. The parallel programming library (MPICH, MVAPICH2, Intel-MPI)
+		2. The PMI library (Simple PMI, SLURM PMI, SMPD MPI, BG/L MPI)
+		3. The process manager (Hydra, MPD, SLURM, SMPD) - a logically centralized process (but often a distributed set of process in practice) that manages:
+			a. process launching, providing the environmental information to each process
+			b. information exchange between processes in a parallel application (setting yp communication channels)
+
+	The PMI library provides the PMI API. The implementation of the PMI library, however, might depend on the system itself. While the PMI library can be implemented
+	in any way that the particular implementation prefers, in both PMI-1 and PMI-2, there is a pre-defined "wire protocol" where data is exchanged through the socket interface.
+	The advantage of using this protocol is that any application using the PMI API with the predefined wire protocol is compatible with any PMI process manager that 
+	accepts the wire protocol. The PMI API and the PMI wire protocol are separaate entities; an implementation may choose to implement both or just one.
+
+	Processes of a parallel application need to communicate with each other. Establishing this communication typically
+	requires publishing a contact address, which may be ann IP address, a remotely accessible memory segment, or any other 
+	interconnect-specific identifier. 
+
+	In the case of MPI, PMI deals with aspects such as providing each MPI process with information about itself (such as its rank)
+	as well as about the other processes in the application (ex: size of MPI_COMM_WORLD). Each PMI process manager that launches parallel
+	applications is expected to maintain a database of all information. PMI defines a portable interface that allows the MPI process 
+	to interact with the process manager by adding information to the database ("put" operations) and query information about
+	other processes ("get" operations). The PMI functions are translated into the appropiate wire protocol by the PMI provider
+	library and exchanged with the process manager. Most of the database is exchanged using "key-value" pairs.
+
+	MPI processes cannot query key-value database information from the process manager in PMI-1. PMI-2 introduces the concept of 
+	job attributes, which are predefined keys provided by the process manager. Using such keys, the process manager can pass system-specific 
+	information to the MPI processes; this is, these keys are added into the key-value database directly by the process manager, 
+	allowing each MPI process to get information about the layout of all MPI processes in a single operation.
+
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
