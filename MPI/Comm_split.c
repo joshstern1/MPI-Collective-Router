@@ -244,7 +244,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
     int *local_procs = NULL, *external_procs = NULL;
 
     /* It's OK to relax these assertions, but we should do so very intentionally.  For now this function is the only place that we create
-     * our hierarchy of communicators */
+       our hierarchy of communicators */
     MPIU_Assert(comm->node_comm == NULL);
     MPIU_Assert(comm->node_roots_comm == NULL);
 
@@ -255,76 +255,74 @@ int MPIR_Comm_commit(MPID_Comm * comm)
 
     MPIR_Comm_map_free(comm);
 
-    mpi_errno = MPIU_Find_local_and_external(comm, &num_local, &local_rank, &local_procs, &num_external, &external_rank, &external_procs, &comm->intranode_table, &comm->internode_table);
+    if (comm->comm_kind == MPID_INTRACOMM) {
 
-    /* defensive checks */
-    MPIU_Assert(num_local > 0);
-    MPIU_Assert(num_local > 1 || external_rank >= 0);
-    MPIU_Assert(external_rank < 0 || external_procs != NULL);
+        mpi_errno = MPIU_Find_local_and_external(comm, &num_local, &local_rank, &local_procs, &num_external, &external_rank, &external_procs, &comm->intranode_table, &comm->internode_table);
 
-    /* if the node_roots_comm and comm would be the same size, then creating the second communicator is useless and wasteful. */
-    if (num_external == comm->remote_size) {
-        MPIU_Assert(num_local == 1);
-        goto fn_exit;
+        /* defensive checks */
+        MPIU_Assert(num_local > 0);
+        MPIU_Assert(num_local > 1 || external_rank >= 0);
+        MPIU_Assert(external_rank < 0 || external_procs != NULL);
+
+        /* if the node_roots_comm and comm would be the same size, then creating the second communicator is useless and wasteful. */
+        if (num_external == comm->remote_size) {
+            MPIU_Assert(num_local == 1);
+            goto fn_exit;
+        }
+
+        /* we don't need a local comm if this process is the only one on this node */
+        if (num_local > 1) {
+            mpi_errno = MPIR_Comm_create(&comm->node_comm);
+
+            comm->node_comm->context_id = comm->context_id + MPID_CONTEXT_INTRANODE_OFFSET;
+            comm->node_comm->recvcontext_id = comm->node_comm->context_id;
+            comm->node_comm->rank = local_rank;
+            comm->node_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_comm->hierarchy_kind = MPID_HIERARCHY_NODE;
+            comm->node_comm->local_comm = NULL;
+
+            comm->node_comm->local_size = num_local;
+            comm->node_comm->remote_size = num_local;
+
+            MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local, MPIR_COMM_MAP_DIR_L2L, NULL);
+
+            mpi_errno = set_collops(comm->node_comm);
+
+            /* Notify device of communicator creation */
+            mpi_errno = MPID_Dev_comm_create_hook(comm->node_comm);
+
+            MPIR_Comm_map_free(comm->node_comm);
+        }
+
+
+        /* this process may not be a member of the node_roots_comm */
+        if (local_rank == 0) {
+            mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
+
+            comm->node_roots_comm->context_id = comm->context_id + MPID_CONTEXT_INTERNODE_OFFSET;
+            comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
+            comm->node_roots_comm->rank = external_rank;
+            comm->node_roots_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_roots_comm->hierarchy_kind = MPID_HIERARCHY_NODE_ROOTS;
+            comm->node_roots_comm->local_comm = NULL;
+
+            comm->node_roots_comm->local_size = num_external;
+            comm->node_roots_comm->remote_size = num_external;
+
+            MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external, MPIR_COMM_MAP_DIR_L2L, NULL);
+
+            mpi_errno = set_collops(comm->node_roots_comm);
+
+            /* Notify device of communicator creation */
+            mpi_errno = MPID_Dev_comm_create_hook(comm->node_roots_comm);
+
+            MPIR_Comm_map_free(comm->node_roots_comm);
+        }
+
+        comm->hierarchy_kind = MPID_HIERARCHY_PARENT;
     }
 
-    /* we don't need a local comm if this process is the only one on this node */
-    if (num_local > 1) {
-        mpi_errno = MPIR_Comm_create(&comm->node_comm);
-
-        comm->node_comm->context_id = comm->context_id + MPID_CONTEXT_INTRANODE_OFFSET;
-        comm->node_comm->recvcontext_id = comm->node_comm->context_id;
-        comm->node_comm->rank = local_rank;
-        comm->node_comm->comm_kind = MPID_INTRACOMM;
-        comm->node_comm->hierarchy_kind = MPID_HIERARCHY_NODE;
-        comm->node_comm->local_comm = NULL;
-
-        comm->node_comm->local_size = num_local;
-        comm->node_comm->remote_size = num_local;
-
-        MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local, MPIR_COMM_MAP_DIR_L2L, NULL);
-
-        mpi_errno = set_collops(comm->node_comm);
-
-        /* Notify device of communicator creation */
-        mpi_errno = MPID_Dev_comm_create_hook(comm->node_comm);
-
-        /* don't call MPIR_Comm_commit here */
-
-        MPIR_Comm_map_free(comm->node_comm);
-    }
-
-
-    /* this process may not be a member of the node_roots_comm */
-    if (local_rank == 0) {
-        mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
-
-        comm->node_roots_comm->context_id = comm->context_id + MPID_CONTEXT_INTERNODE_OFFSET;
-        comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
-        comm->node_roots_comm->rank = external_rank;
-        comm->node_roots_comm->comm_kind = MPID_INTRACOMM;
-        comm->node_roots_comm->hierarchy_kind = MPID_HIERARCHY_NODE_ROOTS;
-        comm->node_roots_comm->local_comm = NULL;
-
-        comm->node_roots_comm->local_size = num_external;
-        comm->node_roots_comm->remote_size = num_external;
-
-        MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external, MPIR_COMM_MAP_DIR_L2L, NULL);
-
-         mpi_errno = set_collops(comm->node_roots_comm);
-
-        /* Notify device of communicator creation */
-        mpi_errno = MPID_Dev_comm_create_hook(comm->node_roots_comm);
-
-        /* don't call MPIR_Comm_commit here */
-
-        MPIR_Comm_map_free(comm->node_roots_comm);
-    }
-
-    comm->hierarchy_kind = MPID_HIERARCHY_PARENT;
-    
-
-
+  fn_exit:
     if (external_procs != NULL)
         MPIU_Free(external_procs);
     if (local_procs != NULL)
@@ -333,4 +331,115 @@ int MPIR_Comm_commit(MPID_Comm * comm)
     return mpi_errno;
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* MPIU_Find_local_and_external -- from the list of processes in comm, builds a list of local processes, i.e., processes on this same
+   node, and a list of external processes, i.e., one process from each node.
+
+   Note that this will not work correctly for spawned or attached processes.
+
+   external processes: For a communicator, there is one external process per node.  You can think of this as the root or master process for that node.
+
+   OUT:
+     local_size_p      - number of processes on this node
+     local_rank_p      - rank of this processes among local processes
+     local_ranks_p     - (*local_ranks_p)[i] = the rank in comm of the process with local rank i. This is of size (*local_size_p) external_size_p - number of external processes
+     external_rank_p   - rank of this process among the external processes, or -1 if this process is not external
+     external_ranks_p  - (*external_ranks_p)[i] = the rank in comm of the process with external rank i. This is of size (*external_size_p)
+     intranode_table_p - (*internode_table_p)[i] gives the rank in *local_ranks_p of rank i in comm or -1 if not applicable.  It is of size comm->remote_size.
+     internode_table_p - (*internode_table_p)[i] gives the rank in *external_ranks_p of the root of the node containing rank i in comm.  It is of size comm->remote_size.
+*/
+
+int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
+                                 int *external_size_p, int *external_rank_p, int **external_ranks_p,
+                                 int **intranode_table_p, int **internode_table_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int *nodes;
+    int external_size, external_rank;
+    int *external_ranks;
+    int local_size, local_rank;
+    int *local_ranks;
+    int *internode_table, *intranode_table;
+    int i;
+    MPID_Node_id_t max_node_id, node_id, my_node_id;
+
+    /* Scan through the list of processes in comm and add one process from each node to the list of "external" processes.  We add the first process 
+    we find from each node.  nodes[] is an array where we keep track of whether we have already added that node to the list. */
+    
+    /* these two will be realloc'ed later to the appropriate size (currently unknown) */
+    MPIU_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "external_ranks");
+    MPIU_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
+
+    MPIU_CHKPMEM_MALLOC (internode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "internode_table");
+    MPIU_CHKPMEM_MALLOC (intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "intranode_table");
+
+    mpi_errno = MPID_Get_max_node_id(comm, &max_node_id);
+    MPIU_Assert(max_node_id >= 0);
+    MPIU_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * (max_node_id + 1), mpi_errno, "nodes");
+
+    /* nodes maps node_id to rank in external_ranks of leader for that node */
+    for (i = 0; i < (max_node_id + 1); ++i)
+        nodes[i] = -1;
+
+    for (i = 0; i < comm->remote_size; ++i)
+        intranode_table[i] = -1;
+    
+    external_size = 0;
+
+    mpi_errno = MPID_Get_node_id(comm, comm->rank, &my_node_id);
+    MPIU_Assert(my_node_id >= 0);
+    MPIU_Assert(my_node_id <= max_node_id);
+
+    local_size = 0;
+    local_rank = -1;
+    external_rank = -1;
+    
+    for (i = 0; i < comm->remote_size; ++i)
+    {
+        mpi_errno = MPID_Get_node_id(comm, i, &node_id);
+        MPIU_Assert(node_id <= max_node_id);
+
+        /* build list of external processes */
+        if (nodes[node_id] == -1){
+            if (i == comm->rank)
+                external_rank = external_size;
+            nodes[node_id] = external_size;
+            external_ranks[external_size] = i;
+            ++external_size;
+        }
+
+        /* build the map from rank in comm to rank in external_ranks */
+        internode_table[i] = nodes[node_id];
+
+        /* build list of local processes */
+        if (node_id == my_node_id){
+             if (i == comm->rank)
+                 local_rank = local_size;
+
+             intranode_table[i] = local_size;
+             local_ranks[local_size] = i;
+             ++local_size;
+        }
+    }
+
+    *local_size_p = local_size;
+    *local_rank_p = local_rank;
+    *local_ranks_p =  MPIU_Realloc (local_ranks, sizeof(int) * local_size);
+
+    *external_size_p = external_size;
+    *external_rank_p = external_rank;
+    *external_ranks_p = MPIU_Realloc (external_ranks, sizeof(int) * external_size);
+
+    /* no need to realloc */
+    if (intranode_table_p)
+        *intranode_table_p = intranode_table;
+    if (internode_table_p)
+        *internode_table_p = internode_table;
+    
+    MPIU_CHKPMEM_COMMIT();
+
+ fn_exit:
+    return mpi_errno;
+}
