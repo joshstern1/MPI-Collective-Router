@@ -441,4 +441,4 @@ int MPIR_Comm_commit(MPID_Comm * comm)
         comm->hierarchy_kind = MPID_HIERARCHY_PARENT;
     }
     return mpi_errno;
-}
+} 
