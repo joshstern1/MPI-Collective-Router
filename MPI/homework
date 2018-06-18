@@ -1,0 +1,8 @@
+possible callers of PMI_KVS_GET:
+
+MPIDI_CH3U_Check_for_failed_procs (ch3u_handle_connections.c)
+MPIDI_CH3_GetParentPort (ch3u_comm_spawn_multiple.c)
+MPIDI_getConnInfoKVS (mpid/pamid/src/dyntask/mpidi_pg.c) ????????????????????????????????????????????
+getConnInfoKVS (mpid/ch3/src/mpid_pg.c) xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MPIDI_Populate_vc_node_ids (mpid/ch3/src/mpid_vc.c) -----------------------------------------
+MPID_nem_llc_kvs_get_binary (mpid/ch3/channels/nemsis/netmod/llc/llc_init.c)
