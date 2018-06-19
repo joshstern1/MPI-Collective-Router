@@ -27,6 +27,7 @@ About to call GetResponse
 About to call PMIU_getval from PMI
 value = (vector,(0,1,1))
 
+//i think this happens in mpid_nem_alloc.c (mpid/ch3/channels/nemesis/src/mpid_nem_alloc.c)
 In PMI_KVS_GET
 kvsname = kvs_22816_0
 key = sharedFilename[0]
