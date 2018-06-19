@@ -6,3 +6,38 @@ MPIDI_getConnInfoKVS (mpid/pamid/src/dyntask/mpidi_pg.c) ???????????????????????
 getConnInfoKVS (mpid/ch3/src/mpid_pg.c) xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 MPIDI_Populate_vc_node_ids (mpid/ch3/src/mpid_vc.c) -----------------------------------------
 MPID_nem_llc_kvs_get_binary (mpid/ch3/channels/nemsis/netmod/llc/llc_init.c)
+
+In MPIDI_Populate_vc_node_ids
+About go call PMI_KVS_GET from mpid_vc1
+In PMI_KVS_GET
+kvsname = kvs_22816_0 //always changing, pg_world->connData;
+key = PMI_process_mapping
+length = 1024
+About to call GetResponse
+About to call PMIU_getval from PMI
+value = (vector,(0,1,1))
+
+In MPIDI_Populate_vc_node_ids
+About go call PMI_KVS_GET from mpid_vc1
+In PMI_KVS_GET
+kvsname = kvs_22816_0
+key = PMI_process_mapping
+length = 1024
+About to call GetResponse
+About to call PMIU_getval from PMI
+value = (vector,(0,1,1))
+
+In PMI_KVS_GET
+kvsname = kvs_22816_0
+key = sharedFilename[0]
+length = 1024
+About to call GetResponse
+About to call PMIU_getval from PMI
+value = /dev/shm/mpich_shar_tmpMEnPTw
+
+Hi its me
+MPIDI_CH3_iStartMsg
+Hi its me
+MPIDI_CH3_iStartMsg
+MPIDI_CH3_iStartMsg
+MPIDI_CH3_iStartMsg
