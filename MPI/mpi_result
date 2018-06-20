@@ -1,0 +1,22 @@
+In MPIDI_PG_INIT
+In MPIDI_PG_CREATE
+In MPIDI_PG_INIT
+In MPIDI_PG_CREATE
+In MPIDI_CH3_Init, nemesis
+In MPIDI_CH3_Init, nemesis
+In MPIDI_CH3_InitCompleted, nemesis
+In hook function
+In MPIDI_CH3_InitCompleted, nemesis
+In hook function
+IN GETCONNSTRING
+key = P0-businesscard
+joshbuf = description#joshuastern-Lenovo-G50-80-Touch$port#47363$ifname#127.0.1.1$
+IN GETCONNSTRING
+key = P1-businesscard
+joshbuf = description#joshuastern-Lenovo-G50-80-Touch$port#55525$ifname#127.0.1.1$
+context_id = 0
+context_id_self = 16
+In MPID_SEND
+Hi its me
+In MPID_SEND
+Hi its me
