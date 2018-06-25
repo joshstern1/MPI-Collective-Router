@@ -103,8 +103,8 @@ IV. Implementation
 				-In this scheme, the detector is triggered when the voltage rises above a fixed threshold on a single
 				channel. These thresholds are pre-determined and stored in BRAM. For each FE, a 125 x 12 bit BRAM module 
 				is implemented.	As the index for each datum is only 4-bit, we keep a 3-bit external counter in the 
-				controller. Whenever an index overflow is detected, we increment the external counter. Hence, this combined 
-				7-bit index can address	125 data sampels inside a packet.
+				controller. Whenever an index overflow is detected, we increment the external counter. Hence, this 
+				combined 7-bit index can address 125 data sampels inside a packet.
 
 			2. Integral trigger, individual channel
 				-A better trigger takes into account the integral of the waveform. We integrate over 5 samples, so we use
