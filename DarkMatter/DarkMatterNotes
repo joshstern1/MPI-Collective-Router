@@ -1,1 +1,29 @@
-hi
+An FPGA-based Data Acquisition System for Directional Dark Matter Detection
+
+I. Introduction
+	
+	-Directional dark matter detection seeks to reconstruct the angular distribution of dark matter particles traveling through the 
+	labratory.
+
+	-This paper describes an FPGA-based digital BE system to handle a 16 Gbps data stream from 1000 different independent detector
+	channels sampled at 1 MHz.
+
+	-We are trying to detect the evidence of an interaction between a Weakly Interacting Massive Particle (WIMP) and a target nucleus.
+	The interaction is an elastic collision that creates a recoiling nucleus. 
+
+	-This collisions occur within a Time Projection Chamber (TPC) in which a nuclear recoil generates a track of ionization that is 
+	drifted to a readout plane using a uniform magnetic field.
+
+
+II. Detection Scheme and Physics Requirements
+
+	-A WIMP may enter the TPC and interact with a fluorine nucleus of a SF6 molecule, generating a fluroine nucleus recoil.
+	As the nucleus comes to rest, 	it generates a track of ionization electrons. The high electronegative SF6 gas will readily 
+	attach the free elections, forming SF6-. This track of these ions then drifts under an applied electric field toward the 
+	readout strips. There are 500 strips in the x and 500 strips in the y directions.
+
+	-From the charge signal, we can reconstruct the recoil energy and track of the geometry of the event. The recoil energy
+	is determined from the total deposited charge in the detector. The different in arrival time between the species at the
+	readout plane is directly proportional to the total drift distance.
+
+	-
