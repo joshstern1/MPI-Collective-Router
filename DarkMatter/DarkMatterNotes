@@ -58,3 +58,9 @@ III. Data Acquisition System (DAQ)
 	FPGA-to-FPGA connections. Upon arrival at the BE, data goes through 3 stages:
 		1. A pattern detector looks for triggering patterns.
 		2. The serial data is aligned by time and channel number using time-stamp data attached to each data packet by the FE. 
+		3. Triggered data is transferred from DRAM to a PC via UDP on Gigabit ethernet for off-line analysis.
+
+
+IV. Implementation
+	
+	
