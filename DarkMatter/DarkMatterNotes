@@ -139,3 +139,26 @@ IV. Implementation
 	-When an entire FE data packet is written into the related fifo and a ready signal is received, the DRAM controller enables
 	the address generator to send a starting address based on the time-stamp and board number pointing to the pre-allocated
 	space for that packet.
+
+	-At a 16 Gbps data generation rate, 512 MB DRAM can only hold 256 ms of data. We must therefore resue the DRAM space,
+	especially at low trigger rates. A replacement mechanism is implemented inside the DRAM address generator. From the 
+	address generator point of view, the DRAM is divided up into units of 8 FE packets that hold data sampled at the
+	same time, resulting in a total of 2^18 (256,000) units. A hash table is used to provide within-unit address offsets 
+	based on the FE board number. Organizing data based on sample time both simplifies the replacement algorithm
+	and minimized DRAM addressing latency.
+
+	-A 1-bit address mask is assigned to each unit. If the data is determined to be useful by the event trigger, then 
+	the related mask bit is set so all the data sampled at the same time will be kept. When the address generator reaches
+	the end of the DRAM address space, the new incoming data is again assigned to address unit 0. Before that address
+	is assigned, the mask bit is examined. If the bit is set, then the controller looks for the next unset mask bit and 
+	uses the related address as the starting point for the following data sets. In this way, we keep the useful triggering
+	data while fully reusing the non-triggering part,
+
+	-We record 20ms of data each trigger (40 MB), which equates to 0.04 GB or 0.32 Gbit. Our DRAM is 512 MB (0.512 GB) or
+	4 Gbit, so we can hold 12 triggering events.
+
+
+
+V. Evaluation
+
+	-
