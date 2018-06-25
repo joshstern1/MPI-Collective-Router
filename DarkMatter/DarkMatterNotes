@@ -71,12 +71,12 @@ IV. Implementation
 		different packets: a starting word, and ending word, and a sampling-time stamp. So each packet is 2048 bits (256 bytes).
 
 						|---- 16 bit ----|
-							StartingWord
-							 TimeStamp
+						    StartingWord
+						     TimeStamp
 						  Algn|SensorData
 						  Algn|SensorData
 						  Algn|SensorData
-						  	EndingWord
+						    EndingWord
 
 	B. Transceiver Controller
 
@@ -156,9 +156,5 @@ IV. Implementation
 
 	-We record 20ms of data each trigger (40 MB), which equates to 0.04 GB or 0.32 Gbit. Our DRAM is 512 MB (0.512 GB) or
 	4 Gbit, so we can hold 12 triggering events.
-
-
-
-V. Evaluation
 
 	-
