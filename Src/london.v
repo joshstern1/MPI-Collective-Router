@@ -40,6 +40,7 @@ module london;
 	reg [1:0] algtype;
 	reg [3:0] op;
 	reg [31:0] payload;
+	reg [61:0] new_comm;
 
 	// Outputs
 	wire [81:0] Outpacket;
@@ -65,7 +66,8 @@ module london;
 		.tag(tag), 
 		.algtype(algtype), 
 		.op(op), 
-		.payload(payload)
+		.payload(payload),
+		.new_comm(new_comm)
 	);
 
 	initial begin
@@ -81,10 +83,11 @@ module london;
 		src_x = 0;
 		rank=0;
 		contextId = 0;
-		tag = 0;
+		tag = 1;
 		algtype = 0;
-		op = 4'b0;
+		op = 4'b1000;
 		payload = 0;
+		new_comm = 0;
 
 		// Wait 100 ns for global reset to finish
 		#100;
@@ -92,7 +95,7 @@ module london;
 		
 		#10;
 		valid_in = 1;
-		op = 4'b1111;
+		op = 4'b1000;
       //src_x = 1;
 		payload=6;
  
