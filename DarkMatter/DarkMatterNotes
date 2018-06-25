@@ -71,12 +71,12 @@ IV. Implementation
 		different packets: a starting word, and ending word, and a sampling-time stamp. So each packet is 2048 bits (256 bytes).
 
 						|---- 16 bit ----|
-						   StartingWord
-						     TimeStamp
+							StartingWord
+							 TimeStamp
 						  Algn|SensorData
 						  Algn|SensorData
 						  Algn|SensorData
-						    EndingWord
+						  	EndingWord
 
 	B. Transceiver Controller
 
@@ -100,4 +100,42 @@ IV. Implementation
 
 		-We implement 2 triggering schemes: a per-channel voltage threshold trigger and a per-channel integral trigger:
 			1. Threshold trigger, individual channel
-				-
+				-In this scheme, the detector is triggered when the voltage rises above a fixed threshold on a single channel.
+				These thresholds are pre-determined and stored in BRAM. For each FE, a 125 x 12 bit BRAM module is implemented.
+				As the index for each datum is only 4-bit, we keep a 3-bit external counter in the controller. Whenever an
+				index overflow is detected, we increment the external counter. Hence, this combined 7-bit index can address
+				125 data sampels inside a packet.
+
+			2. Integral trigger, individual channel
+				-A better trigger takes into account the integral of the waveform. We integrate over 5 samples, so we use
+				125 12 x 5-bit shift registers to buffer the data. When a new sample arrives from the FE, the 60-bit word
+				is updated by shifting the new data into the 12 MSB and discarding the 12 LSB. The 60-bit data is sent to a 
+				4 stage pipeline for summation and comparison.
+
+	D. DRAM controller
+
+	-Buffering 5 ms of pre-trigger data for 1000 channels at 1 MHz requires (5000 packets * 256 bytes per packet * 8 channels)
+	10MB. This is larger than the BRAM capacity, but the Cyclone V has 4 x16 SDRAM chips, which provides 512 MB of storage.
+	The total data generation rate from the FE is 16 Gbps. At 300 MHz, the theoretical read and write bandwidth is 38.4 Gbps, 
+	fast enough to write all received data directly to DRAM.
+		-If 10MB is required for pre-trigger, means 30 MB is required for post-triggerm for a total of 40 MB per trigger.
+		At 512 MB capacity, the DRAM can hold 12 triggering events.
+
+	-In our design, we put the DRAM IP on the Avalon bus, which is an interface that simplifies the communication between 
+	modules. The Avalon bus organizes the DRAM into 256-bit words. The 300 MHz DRAM working frequency is different from
+	the transceiver block, so we implement asynchronous fifos between these two modules to deal with the metastability.
+	The fifo write port has 16-bit width, while the ouput port is 256-bit, which matches the transceiver output port and
+	DRAM interface, respectively. The buffer depth is set to 130 16-bit words to hold an entire packet from an FE board.
+
+	-For easy data alignment, and to avoid data congestion, a double buffering mechanism is used. A one-bit global flag
+	is implemented to bias the read and write fifos. Whenever the transceiver detects a FE packet header, the fifo
+	selection flga is reversed to write to the other fifo, while the fifo that was previously being written to will
+	be used as input for the DRAM.
+
+	-Writes to DRAM are organized by sample time and aligned by the FE board number-of-origin. The 512 MB DRAM is 
+	pre-allocated into 2^21 (2 million) slots, each slot holds 8 256-bit words to fit a single FE packet (2048 bits).
+		-2^21 slots * 2^8 bytes per slot = 2^29 bytes = 512 MB
+
+	-When an entire FE data packet is written into the related fifo and a ready signal is received, the DRAM controller enables
+	the address generator to send a starting address based on the time-stamp and board number pointing to the pre-allocated
+	space for that packet.
