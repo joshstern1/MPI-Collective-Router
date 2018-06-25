@@ -22,8 +22,39 @@ II. Detection Scheme and Physics Requirements
 	attach the free elections, forming SF6-. This track of these ions then drifts under an applied electric field toward the 
 	readout strips. There are 500 strips in the x and 500 strips in the y directions.
 
-	-From the charge signal, we can reconstruct the recoil energy and track of the geometry of the event. The recoil energy
-	is determined from the total deposited charge in the detector. The different in arrival time between the species at the
-	readout plane is directly proportional to the total drift distance.
+	-From the charge signal, we can reconstruct the recoil energy and track of the geometry of the event. The recoil energy is
+	determined from the total deposited charge in the detector. The different in arrival time between the species at the readout
+	plane is directly proportional to the total drift distance.
 
-	-
+	-The event trigger is a critical piece of the Data Acquisition System (DAQ). Ideally, the event trigger would sense the total
+	ionization of a recoil, not just a threshold voltage on a single channel. This requires that the trigger examine the integral
+	of a waveform and incorporate the signal from several adjacent detector channels.
+
+	-The DAQ must preserve 5 ms of pre-trigger and 15 ms of post-trigger data. The DAQ need only transfer data from a small subset
+	of the channels to disk (e,g., the channels involved in the trigger, plus a few neighbors).
+
+
+III. Data Acquisition System (DAQ)
+
+	-The detector system consists of 3 major parts:
+		1. TPC
+		2. FE electronics for signal conditioning and digitization
+		3. BE that handles the real time data stream, applies trigger conditions, and saves interesting events to a computer
+
+	-FE consists of 8 FE boards the measure the charge signal on each of the 1000 strips. Each FE board provides analog signal
+	conditioning and digitization, and outputs a single serialized stream of the digital data. The charge signal is first 
+	conditioned by an custom analog ASIC and then digitized by a second custom ASIC. One FE board contains 8 analog and 8 ADC
+	ASICS and a single Cyclone IV FPGA that handles the digital stream from the digitizer ASICs. 
+
+	-The FE FPGA serializes the digital data for transmission on a single transceiver line. The result is a digital stream of 
+	data from 125 detector channels. Each FE board operates independently, sending its data stream to a single BE at a data
+	generation rate of 2 Gbps.
+
+	-The BE must receive the digital data stream from 8 FE board (total data generation rate of 16 Gbps), store the data in a 
+	circular buffer, apply triggering conditions, and save triggered data to a PC for off-line analysis. We use an Alter Cyclone V
+	FPGA development board. The board has 8 transceiver ports, and 512 MB of DDR3 SDRAM with a x64 soft memory controller.
+
+	-The FE-BE data link is a MGT, which is a serial link that provides low latency, high bandwidth, and low energy cost for
+	FPGA-to-FPGA connections. Upon arrival at the BE, data goes through 3 stages:
+		1. A pattern detector looks for triggering patterns.
+		2. The serial data is aligned by time and channel number using time-stamp data attached to each data packet by the FE. 
