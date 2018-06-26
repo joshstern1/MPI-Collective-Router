@@ -73,7 +73,7 @@ module top
 
 
 	wire 				rx_std_clkout_B0;				// clock recovered from transceiver Board 0
-	wire [15:0] 	rx_parallel_data_B0;			// data received from RX Board 0
+	wire [15:0] 	rx_parallel_data_B0;			// --------------------------------------------------------------------data received from RX Board 0
 	wire 				rx_std_clkout_B1;				// clock recovered from transceiver Board 1
 	wire [15:0] 	rx_parallel_data_B1;			// data received from RX Board 1
 
@@ -98,7 +98,7 @@ module top
 		.rx_std_clkout_0(rx_std_clkout_B0),							// clk signal for RX data receiving
 		.rx_syncstatus_0(rx_syncstatus_0),							// syncstatus connect to transceiver IP
 		.rx_datak_0(rx_datak_0),									// signify the control word or data word
-		.RX_data_0(rx_parallel_data_B0),	
+		.RX_data_0(rx_parallel_data_B0),			--------------------------------------------------------------------data received from RX Board 0
 		.rx_std_clkout_1(rx_std_clkout_B1),							// clk signal for RX data receiving
 		.rx_syncstatus_1(rx_syncstatus_1),							// syncstatus connect to transceiver IP
 		.rx_datak_1(rx_datak_1),									// signify the control word or data word
@@ -139,11 +139,11 @@ module top
 	wire DRAM_Wait_Request;
 	
 	// FIFO read out data to DRAM controller
-	wire [255:0] Buffer_RD_Data_0;
+	wire [255:0] Buffer_RD_Data_0;	--------------------------------------data outputted from channel reordering
 	wire [255:0] Buffer_RD_Data_1;
 	reg [255:0] Selected_Data_to_DRAM;
 	
-	wire [15:0] FIFO_RD_Data_0;
+	wire [15:0] FIFO_RD_Data_0; --------------------------------------data outputted from transceiver
 	wire [15:0] FIFO_RD_Data_1;
 
 	
@@ -152,7 +152,7 @@ module top
 		if(!rst_n)
 			Selected_Data_to_DRAM <= 256'd0;
 		else
-			case(BRAM_Sel)
+			case(BRAM_Sel)	-------------------------------------select comes from DRAM_Addr_Gen
 				0: Selected_Data_to_DRAM <= Buffer_RD_Data_0;
 				1: Selected_Data_to_DRAM <= Buffer_RD_Data_1;
 			endcase
@@ -191,7 +191,7 @@ module top
 		.clk_trans(clk_trans),
 		.SMA_GXB_RX_p(SMA_GXB_RX_B0_p),
 		.rx_std_clkout(rx_std_clkout_B0),				// output clk for DRAM controller
-		.rx_parallel_data(rx_parallel_data_B0),		// output received data
+		.rx_parallel_data(rx_parallel_data_B0),		// output received data 		--------------------------------------------data received from RX Board 0
 		.rx_syncstatus(rx_syncstatus_0),
 		.rx_datak(rx_datak_0),
 		.RX_reconfig_to_xcvr(ch0_0_to_xcvr),
@@ -199,7 +199,7 @@ module top
 		.DRAM_RD_clk(rx_std_clkout_B0),							// reorder buffer readout clk
 		.DRAM_RD_req(FIFO_rd_request[0]),						// reorder buffer read request
 		.RX_Buffer_empty(FIFO_empty[0]),							// Buffer empty
-		.Buffer_RD_Data(FIFO_RD_Data_0),							// Read out data to DRAM
+		.Buffer_RD_Data(FIFO_RD_Data_0),							// Read out data to DRAM   	--------------------------------------data outputted from transceiver
 		.Buffer_Data_Ready(FIFO_ready_mask[0])	
 		);
 		
@@ -215,42 +215,8 @@ module top
 
 		// Signal to DRAM user controller
 		.BRAM_ready_mask(BRAM_ready_mask[0]),			// bit mask for those ready Reorder Buffers. Each connect to the DRAM_Addr_Gen module's BRAM_ready_mask pin
-		.DRAM_wr_data(Buffer_RD_Data_0),
+		.DRAM_wr_data(Buffer_RD_Data_0),					--------------------------------------data outputted from channel reordering
 		.BRAM_rd_request(BRAM_rd_request[0])		   // bit mask for rd_request, each bit connect to DRAM_Addr_Gen module's BRAM_rd_request pin
-		);
-	
-	// Transceiver RX for Board 1
-	Trans_RX B1_RX(
-		.rst_n(rst_n),
-		.clk_trans(clk_trans),
-		.SMA_GXB_RX_p(SMA_GXB_RX_B1_p),
-		.rx_std_clkout(rx_std_clkout_B1),				// output clk for DRAM controller
-		.rx_parallel_data(rx_parallel_data_B1),		// output received data
-		.rx_syncstatus(rx_syncstatus_1),
-		.rx_datak(rx_datak_1),
-		.RX_reconfig_to_xcvr(ch1_1_to_xcvr),
-		.RX_reconfig_from_xcvr(ch1_1_from_xcvr),
-		.DRAM_RD_clk(rx_std_clkout_B1),							// reorder buffer readout clk
-		.DRAM_RD_req(FIFO_rd_request[1]),						// reorder buffer read request
-		.RX_Buffer_empty(FIFO_empty[1]),							// Buffer empty
-		.Buffer_RD_Data(FIFO_RD_Data_1),							// Read out data to DRAM
-		.Buffer_Data_Ready(FIFO_ready_mask[1])	
-		);
-	
-	Channel_Data_Reorder_Buffer Channel_Data_Reorder_Buffer_1(
-		.inclk(rx_std_clkout_B1),
-		.outclk(avalon_clk),
-		.rst_n(rst_n),
-		
-		// Signal to buffer
-		.FIFO_ready_mask(FIFO_ready_mask[1]),			// bit mask for those ready FIFOs. Each connect to the RX_buf_ctrl module's Buffer_Data_Ready pin
-		.FIFO_rd_data(FIFO_RD_Data_1),
-		.FIFO_rd_request(FIFO_rd_request[1]),		   // bit mask for rd_request, each bit connect to RX_buf_ctrl module's DRAM_RD_req pin
-
-		// Signal to DRAM user controller
-		.BRAM_ready_mask(BRAM_ready_mask[1]),			// bit mask for those ready Reorder Buffers. Each connect to the DRAM_Addr_Gen module's BRAM_ready_mask pin
-		.DRAM_wr_data(Buffer_RD_Data_1),
-		.BRAM_rd_request(BRAM_rd_request[1])		   // bit mask for rd_request, each bit connect to DRAM_Addr_Gen module's BRAM_rd_request pin
 		);
 	
 	
