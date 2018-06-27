@@ -41,7 +41,7 @@ III. Data Acquisition System (DAQ)
 		2. FE electronics for signal conditioning and digitization
 		3. BE that handles the real time data stream, applies trigger conditions, and saves interesting events to a computer
 
-	-FE consists of 8 FE boards the measure the charge signal on each of the 1000 strips. Each FE board provides analog signal
+	-FE consists of 8 FE boards that measure the charge signal on each of the 1000 strips. Each FE board provides analog signal
 	conditioning and digitization, and outputs a single serialized stream of the digital data. The charge signal is first 
 	conditioned by an custom analog ASIC and then digitized by a second custom ASIC. One FE board contains 8 analog and 8 ADC
 	ASICS and a single Cyclone IV FPGA that handles the digital stream from the digitizer ASICs. 
@@ -71,12 +71,12 @@ IV. Implementation
 		different packets: a starting word, and ending word, and a sampling-time stamp. So each packet is 2048 bits (256 bytes).
 
 						|---- 16 bit ----|
-						    StartingWord
-						     TimeStamp
+							StartingWord
+							 TimeStamp
 						  Algn|SensorData
 						  Algn|SensorData
 						  Algn|SensorData
-						    EndingWord
+						  	EndingWord
 
 	B. Transceiver Controller
 
@@ -157,4 +157,83 @@ IV. Implementation
 	-We record 20ms of data each trigger (40 MB), which equates to 0.04 GB or 0.32 Gbit. Our DRAM is 512 MB (0.512 GB) or
 	4 Gbit, so we can hold 12 triggering events.
 
-	-
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Emails with Professor Battat
+
+June 6 (James):
+	The following channel-by-channel asynchronous (local) triggering scheme is quite appealing to me.
+
+	The guiding principles are:
+		-trigger is spatially local, and is based on a single channel (either threshold or integral)
+		-only triggered channels (plus neighbors) are read out
+		-only triggered channels are held in triggered state
+
+	Simplistic Implementation:
+		-1000 detector channels
+		-Each channel has:
+		   - circular buffer in DRAM for data (e.g. 2000 samples long)
+		   - trigger (threshold or integral) based only on its own data with "data ready" bit that gets set on trigger
+		   - data index value that points to the start of the triggered waveform in the circular buffer.
+		     (typically incremented by one when a new sample arrives, but gets latched on trigger)
+		-On trigger:
+		   - "data ready" bits for the triggered channel and its 2 neighbors are set to disable writing to the circular buffer for these channels
+		   - channel numbers of triggered channel and neighbors are entered into a "look at me" FIFO
+		   - data index value is latched (for triggered channel and neighbors)
+
+		-A "stream to PC" module monitors the "LAM FIFO" looking for the next channel number to be read, gets the channel number
+		and the latched data index, and streams that single channel of triggered waveform from DRAM to PC, along with timestamp.
+		After streaming, the relevant "data ready" bit is reset (allowing new data to populate circular buffer)
+
+		-In this scheme, BE doesn't attempt to construct events -- that's not its job. It just identifies and streams to disk 
+		channel-by-channel waveforms, asynchronously.  The PC is in charge of reconstructing the event.
+
+		-Main drawback of this scheme is the absence of an "integral across many channels" trigger.
+
+
+June 11 (Ethan):
+	-It's a good idea to have independent triggers for each one of the 1000 channels.
+
+	-Currently, we already have 1000 independent checkers that monitor the data from all the channels in parallel. Need to remove
+	global triggering coordinator that controls the entire system.
+
+	-The tricky part:
+		1. Need independent bit masks for each channel. The size of the bit mask is 2^14=16,384 bits. And times 1,000, 
+		this will be a huge resource consumption. (previously we only need a single set).
+
+		2. Now need separate address generators for each channel. The write address input port on the DRAM controller will take input from
+		1000 sources, which requires a big mux, this may affect the timing of the design.
+
+
+June 11 (James):
+	-If each channel has a dedicated region of DRAM for its circular buffer (length = 1 waveform, e.g. 2000 samples),
+	then can't there be a single bit to either allow or prevent the write?
+
+	-Or are you describing a more capable system that can continue to accept data into the buffer for channel N while 
+	waiting for triggered data from channel N to be read out?
+
+
+June 11 (Ethan):
+	-We have 512 MB DRAM on the board, each DRAM read & write word is 256-bits. Thus, for each channel, the available 
+	slot is 512*1024*1024*8 / 1000 / 256 = 2^14 slots. We have a single bit mask for each one of the slot, thus we 
+	need a total of 2^14 bit mask for each channel.
+
+	-Currently the system will write all the data into the DRAM, as long as the reorder buffer has collected enough data samples 
+	that can be combined into a 256-bit word (16*16-bit). But I'm thinking that the system should be capable of accepting new data 
+	while the triggered data is waiting to be read out. That's why we need a bit-mask to keep track of which DRAM slots can be replaced. 
+
+	-Are you suggesting that we should always stream out the data from DRAM to PC whenever a triggered event to captured? If that's 
+	the case, we may not need to worry about the replacement.
+
+
+June 11 (James):
+
+	-Yes, in my straw man scheme, the data from a triggered channel is tagged for immediate readout. Well, since multiple 
+	channels could trigger on the same clock cycle, I had proposed a FIFO that holds the channel numbers to be read out.
+
+
+June 11 (Ethan):
+
+	-In that case, we may not need the bit mask anymore. (Perhaps we still need it since it may not be able to stream 
+	out immediately.) And we need a big MUX and an arbiter to control which channel data to stream off the board.
+ 
