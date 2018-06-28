@@ -237,3 +237,15 @@ June 11 (Ethan):
 	-In that case, we may not need the bit mask anymore. (Perhaps we still need it since it may not be able to stream 
 	out immediately.) And we need a big MUX and an arbiter to control which channel data to stream off the board.
  
+
+ June 28 (Ethan to me):
+ 	-We will implement streaming out data from DRAM to PC whenever a triggered event occurs. This is dependent upon
+ 	the streaming bandwidth to the PC (how was can we stream the data out?).
+ 	
+ 	-If we find that we stream out data faster than we can cycle through the DRAM, then a bitmask won't be necessary
+
+ 	-We are still going to do the independent channels method so that only triggered channels are streamed out
+
+ 	-So I guess that we are dividing the DRAM up into 1000 slots because we have 1000 channels
+
+ 	-We already have triggers that are based on a single channel
