@@ -146,13 +146,6 @@ module router(
     wire [FLIT_SIZE - 1 : 0] flit_xneg_VA;
     wire [FLIT_SIZE - 1 : 0] flit_yneg_VA;
     wire [FLIT_SIZE - 1 : 0] flit_zneg_VA;*/
-	 
-	 wire flit_xpos_VA_valid;
-    /*wire flit_ypos_VA_valid;
-    wire flit_zpos_VA_valid;
-    wire flit_xneg_VA_valid;
-    wire flit_yneg_VA_valid;
-    wire flit_zneg_VA_valid;*/
 
     wire [ROUTE_LEN - 1 : 0] flit_xpos_VA_route;
     /*wire [ROUTE_LEN - 1 : 0] flit_ypos_VA_route;
@@ -202,7 +195,7 @@ module router(
         .flit_before_RC(in_xpos_RC[81:0]),
         .stall(VA_stall_xpos),
         .dir_in(DIR_XPOS),
-        .flit_after_RC(flit_xpos_VA),
+        .flit_after_RC(),
         .flit_valid_out(flit_xpos_VA_valid),
         .dir_out(flit_xpos_VA_route),
         .eject_enable(eject_xpos_valid)
