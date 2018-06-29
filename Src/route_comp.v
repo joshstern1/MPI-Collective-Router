@@ -43,8 +43,8 @@ module route_comp
 	parameter FLIT_SIZE = 82;
 	parameter PHIT_SIZE=256;
 	parameter IN_Q_SIZE=5;
-	parameter VC_SIZE=16; 
-	parameter VC_NUM=9;
+//	parameter VC_SIZE=16; 
+//	parameter VC_NUM=9;
 	parameter XSIZE=4'd4;  
 	parameter YSIZE=4'd4;  
 	parameter ZSIZE=4'd4; 
@@ -83,8 +83,6 @@ module route_comp
     wire [ZW - 1 : 0] dst_z;
     reg [2:0] dir;
 
-    reg new_VC_class; 
-    wire old_VC_class;
 
     reg turn;
 
@@ -95,82 +93,6 @@ module route_comp
     assign dst_z = flit_before_RC[DST_ZPOS : DST_ZPOS - ZW + 1];
     assign dst_y = flit_before_RC[DST_YPOS : DST_YPOS - YW + 1];
     assign dst_x = flit_before_RC[DST_XPOS : DST_XPOS - XW + 1];
-
-    assign old_VC_class = flit_before_RC[VC_CLASS_POS];
-
-    //the VC_class needs to be changed when either crossing the dateline or changing dimension
-
-    always@(*) begin
-        if(dir_in != dir + 3 && dir != dir_in + 3) begin
-            if(dir == DIR_XPOS || dir == DIR_YPOS || dir == DIR_ZPOS) begin
-                new_VC_class = 0;
-            end
-            else begin 
-                new_VC_class = 1;
-            end
-        end
-        else begin 
-            case(dir)
-                DIR_XPOS: begin
-                    if(cur_x == 0) begin
-                        new_VC_class = 1;
-                    end
-                    else begin
-                        new_VC_class = old_VC_class;
-                    end
-                end
-                DIR_XNEG: begin
-                    if(cur_x == XSIZE - 1) begin
-                        new_VC_class = 0;
-                    end
-                    else begin
-                        new_VC_class = old_VC_class;
-                    end
-                
-                end
-                DIR_YPOS: begin
-                    if(cur_y == 0) begin
-                        new_VC_class = 1;
-                    end
-                    else begin
-                        new_VC_class = old_VC_class;
-                    end
-                end
-                DIR_YNEG: begin
-                    if(cur_y == YSIZE - 1) begin
-                        new_VC_class = 0;
-                    end
-                    else begin
-                        new_VC_class = old_VC_class;
-                    end
-                
-                end
-                DIR_ZPOS: begin
-                    if(cur_z == 0) begin
-                        new_VC_class = 1;
-                    end
-                    else begin
-                        new_VC_class = old_VC_class;
-                    end
-                end
-                DIR_ZNEG: begin
-                    if(cur_z == ZSIZE - 1) begin
-                        new_VC_class = 0;
-                    end
-                    else begin
-                        new_VC_class = old_VC_class;
-                    end
-                
-                end
-                default:
-                    new_VC_class = old_VC_class;
-
-
-                
-            endcase
-        end
-    end
-
 
 
     reg ejecting_started;
@@ -234,6 +156,7 @@ module route_comp
 
 
 wire[CMP_LEN-1:0] trash_cmp = 1;
+wire josh = 1'b1;
 
 `ifdef FARTHEST_FIRST
     wire [CMP_LEN - 1 : 0] nxt_priority_field;
@@ -248,9 +171,9 @@ wire[CMP_LEN-1:0] trash_cmp = 1;
         else if(~ejecting) begin
             if(~ stall) begin
 `ifdef FARTHEST_FIRST
-                flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], new_VC_class, flit_before_RC[DST_ZPOS : CMP_POS + 1], trash_cmp, flit_before_RC[CMP_POS - CMP_LEN : 0]};
+                flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], josh, flit_before_RC[DST_ZPOS : CMP_POS + 1], trash_cmp, flit_before_RC[CMP_POS - CMP_LEN : 0]};
 `else
-                flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], new_VC_class, flit_before_RC[FLIT_SIZE - HEADER_LEN - 2  : 0]};
+                flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], josh, flit_before_RC[FLIT_SIZE - HEADER_LEN - 2  : 0]};
 `endif
                 if((flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == HEAD_FLIT) || (flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == SINGLE_FLIT))begin
                     dir_out<=dir;
@@ -258,7 +181,7 @@ wire[CMP_LEN-1:0] trash_cmp = 1;
             end
         end
         else begin //dir equals to eject port
-            flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], new_VC_class, flit_before_RC[FLIT_SIZE - HEADER_LEN - 2  : 0]};
+            flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], josh, flit_before_RC[FLIT_SIZE - HEADER_LEN - 2  : 0]};
             dir_out <= DIR_EJECT;
         end
     end
