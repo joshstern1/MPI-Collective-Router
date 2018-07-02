@@ -1,23 +1,5 @@
 `timescale 1ns / 1ns
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    16:12:40 07/02/2018 
-// Design Name: 
-// Module Name:    switch 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+
 module switch#(
     parameter M_IN = PORT_NUM,	//6
     parameter N_OUT= PORT_NUM					//6
