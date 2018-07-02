@@ -19,7 +19,7 @@ module router(
     input in_yneg_valid,
     input in_zneg_valid,*/
     //interface to 6 MGTs
-   /* output [FLIT_SIZE - 1 : 0] out_xpos,
+    output [FLIT_SIZE - 1 : 0] out_xpos,/*
     output [FLIT_SIZE - 1 : 0] out_ypos,
     output [FLIT_SIZE - 1 : 0] out_zpos,
     output [FLIT_SIZE - 1 : 0] out_xneg,
@@ -39,20 +39,20 @@ module router(
     output [FLIT_SIZE - 1 : 0] eject_xneg,
     output [FLIT_SIZE - 1 : 0] eject_yneg,
     output [FLIT_SIZE - 1 : 0] eject_zneg,*/
-    output eject_xpos_valid/*,
+    output eject_xpos_valid,/*
     output eject_ypos_valid,
     output eject_zpos_valid,
     output eject_xneg_valid,
     output eject_yneg_valid,
-    output eject_zneg_valid,
+    output eject_zneg_valid,*/
 
-    input [FLIT_SIZE - 1 : 0] inject_xpos,
+    input [FLIT_SIZE - 1 : 0] inject_xpos,/*
     input [FLIT_SIZE - 1 : 0] inject_ypos,
     input [FLIT_SIZE - 1 : 0] inject_zpos,
     input [FLIT_SIZE - 1 : 0] inject_xneg,
     input [FLIT_SIZE - 1 : 0] inject_yneg,
-    input [FLIT_SIZE - 1 : 0] inject_zneg,
-    input inject_xpos_valid,
+    input [FLIT_SIZE - 1 : 0] inject_zneg,*/
+    input inject_xpos_valid/*,
     input inject_ypos_valid,
     input inject_zpos_valid,
     input inject_xneg_valid,
@@ -236,14 +236,6 @@ module router(
 
 
     wire [PORT_NUM - 1 : 0] flit_valid_ST;
-
-    wire xpos_avail_ST;
-	 wire ypos_avail_ST;
-    wire zpos_avail_ST;
-	 wire xneg_avail_ST;
-    wire yneg_avail_ST;
-    wire zneg_avail_ST;
-
     wire [PORT_NUM * FLIT_SIZE - 1 : 0] out_ST;
 
 
@@ -259,10 +251,29 @@ module router(
         .in_avail({flit_zneg_SA_grant, flit_yneg_SA_grant, flit_xneg_SA_grant, flit_zpos_SA_grant, flit_ypos_SA_grant, flit_xpos_SA_grant}),	//output
         
         .out_valid(flit_valid_ST),
-        .out_avail({zneg_avail_ST, yneg_avail_ST, xneg_avail_ST, zpos_avail_ST, ypos_avail_ST, xpos_avail_ST}),	//input
+        .out_avail(6'b0),	//input
         .out(out_ST)
     );
 
+
+	 
+	 assign out_xpos = ((flit_valid_ST[0]) && (~inject_xpos_valid))? out_ST[FLIT_SIZE - 1 : 0] : inject_xpos;
+    /*assign out_ypos = ((flit_valid_ST[1]) && (~inject_ypos_valid))? out_ST[2 * FLIT_SIZE - 1 : FLIT_SIZE] : inject_ypos;
+    assign out_zpos = ((flit_valid_ST[2]) && (~inject_zpos_valid))? out_ST[3 * FLIT_SIZE - 1 : 2 * FLIT_SIZE] : inject_zpos;
+    assign out_xneg = ((flit_valid_ST[3]) && (~inject_xneg_valid))? out_ST[4 * FLIT_SIZE - 1 : 3 * FLIT_SIZE] : inject_xneg;
+    assign out_yneg = ((flit_valid_ST[4]) && (~inject_yneg_valid))? out_ST[5 * FLIT_SIZE - 1 : 4 * FLIT_SIZE] : inject_yneg;
+    assign out_zneg = ((flit_valid_ST[5]) && (~inject_zneg_valid))? out_ST[6 * FLIT_SIZE - 1 : 5 * FLIT_SIZE] : inject_zneg;*/
+	 
+	 
+	 assign out_xpos_valid = flit_valid_ST[0] || inject_xpos_valid;
+    /*assign out_ypos_valid = flit_valid_ST[1] || inject_ypos_valid;
+    assign out_zpos_valid = flit_valid_ST[2] || inject_zpos_valid;
+    assign out_xneg_valid = flit_valid_ST[3] || inject_xneg_valid;
+    assign out_yneg_valid = flit_valid_ST[4] || inject_yneg_valid;
+    assign out_zneg_valid = flit_valid_ST[5] || inject_zneg_valid;*/
+
+	
+	//need to add reduce_unit
 
 
     /*large_buffer#(
