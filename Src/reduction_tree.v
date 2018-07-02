@@ -35,6 +35,11 @@ module reduction_tree#(
 	 parameter PORT_NUM = 6;
 	 parameter VC_NUM = 1;
 	 
+	 
+	 assign out = in[FLIT_SIZE - 1 : 0];
+	 assign out_valid = 1;
+	 assign in_avail = 6'b000001;
+	 
 	 //need to pick between the 6 inputs
 
 endmodule
