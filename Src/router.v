@@ -1,23 +1,5 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    13:05:34 06/29/2018 
-// Design Name: 
-// Module Name:    router 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+
 module router(
 
     input clk,
@@ -102,15 +84,11 @@ module router(
 	 parameter DIR_ZNEG=3'd6;
 	 parameter DIR_EJECT=3'd7;
 	 
+	 parameter PORT_NUM = 6;
+	 parameter VC_NUM = 1;
 	 //instantiate route computation components
-    wire in_xpos_is_credit = 0;
-    /*wire in_ypos_is_credit;
-    wire in_zpos_is_credit;
-    wire in_xneg_is_credit;
-    wire in_yneg_is_credit;
-    wire in_zneg_is_credit;*/
 
-    wire VA_stall_xpos;
+    wire VA_stall_xpos = 0;
     /*wire VA_stall_ypos;
     wire VA_stall_zpos;
     wire VA_stall_xneg;
@@ -119,6 +97,7 @@ module router(
 	 
 	 //instantiate 6 big input buffers
 	 
+//buffer output and IR input
 	 wire [81:0]in_xpos_IR;
 	 /*wire [81:0]in_ypos_IR;
 	 wire [81:0]in_zpos_IR;
@@ -126,6 +105,7 @@ module router(
 	 wire [81:0]in_yneg_IR;
 	 wire [81:0]in_zneg_IR;*/
 	 
+//IR output and buffer input
 	 wire xpos_IR_consume;
 	 /*wire ypos_IR_consume;
 	 wire zpos_IR_consume;
@@ -133,6 +113,7 @@ module router(
 	 wire yneg_IR_consume;
 	 wire zneg_IR_consume;*/
 
+//IR output and RC input
     wire [84 : 0] in_xpos_RC;
    /* wire [FLIT_SIZE - 1 : 0] in_ypos_RC;
     wire [FLIT_SIZE - 1 : 0] in_zpos_RC;
@@ -140,6 +121,7 @@ module router(
     wire [FLIT_SIZE - 1 : 0] in_yneg_RC;
     wire [FLIT_SIZE - 1 : 0] in_zneg_RC;*/
 	 
+//RC output and VC input
 	 wire [FLIT_SIZE - 1 : 0] flit_xpos_VA;
    /* wire [FLIT_SIZE - 1 : 0] flit_ypos_VA;
     wire [FLIT_SIZE - 1 : 0] flit_zpos_VA;
@@ -164,7 +146,7 @@ module router(
         .clk(clk),
         .rst(rst),
         .in(in_xpos),
-        .produce(in_xpos_valid && (~in_xpos_is_credit)),
+        .produce(in_xpos_valid),
         .consume(xpos_IR_consume),
         .full(),
         .empty(),
@@ -195,12 +177,92 @@ module router(
         .flit_before_RC(in_xpos_RC[81:0]),
         .stall(VA_stall_xpos),
         .dir_in(DIR_XPOS),
-        .flit_after_RC(),
-        .flit_valid_out(flit_xpos_VA_valid),
+        .flit_after_RC(flit_xpos_VA),
+        .flit_valid_out(),
         .dir_out(flit_xpos_VA_route),
         .eject_enable(eject_xpos_valid)
     );
     assign eject_xpos = flit_xpos_VA;
+	 
+	 
+	 //instantiate switch
+
+//buffer output and switch input
+	 wire [FLIT_SIZE - 1 : 0] flit_xpos_SA;
+    /*wire [FLIT_SIZE - 1 : 0] flit_ypos_SA;
+    wire [FLIT_SIZE - 1 : 0] flit_zpos_SA;
+    wire [FLIT_SIZE - 1 : 0] flit_xneg_SA;
+    wire [FLIT_SIZE - 1 : 0] flit_yneg_SA;
+    wire [FLIT_SIZE - 1 : 0] flit_zneg_SA;*/
+		 
+	 wire [ROUTE_LEN - 1 : 0] flit_xpos_SA_route;
+    /*wire [ROUTE_LEN - 1 : 0] flit_ypos_SA_route;
+    wire [ROUTE_LEN - 1 : 0] flit_zpos_SA_route;
+    wire [ROUTE_LEN - 1 : 0] flit_xneg_SA_route;
+    wire [ROUTE_LEN - 1 : 0] flit_yneg_SA_route;
+    wire [ROUTE_LEN - 1 : 0] flit_zneg_SA_route;*/
+
+    wire flit_xpos_SA_valid = flit_xpos_SA[81];
+    wire flit_ypos_SA_valid;
+    wire flit_zpos_SA_valid;
+    wire flit_xneg_SA_valid;
+    wire flit_yneg_SA_valid;
+    wire flit_zneg_SA_valid;
+
+//switch output and buffer input
+    wire flit_xpos_SA_grant;
+    wire flit_ypos_SA_grant;
+    wire flit_zpos_SA_grant;
+    wire flit_xneg_SA_grant;
+    wire flit_yneg_SA_grant;
+    wire flit_zneg_SA_grant;
+
+	 large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FLIT_SIZE)
+    )
+    xpos_switch_queue(
+        .clk(clk),
+        .rst(rst),
+        .in(flit_xpos_VA),
+        .produce(flit_xpos_VA[81]),
+        .consume(flit_xpos_SA_grant),
+        .full(),
+        .empty(),
+        .out(flit_xpos_SA),
+        .usedw()
+    );
+
+
+
+    wire [PORT_NUM - 1 : 0] flit_valid_ST;
+
+    wire xpos_avail_ST;
+	 wire ypos_avail_ST;
+    wire zpos_avail_ST;
+	 wire xneg_avail_ST;
+    wire yneg_avail_ST;
+    wire zneg_avail_ST;
+
+    wire [PORT_NUM * FLIT_SIZE - 1 : 0] out_ST;
+
+
+    switch#(
+        .M_IN(PORT_NUM),	//6
+        .N_OUT(PORT_NUM)	//6
+    )sw_inst(
+        .clk(clk),
+        .rst(rst),
+        .in({410'b0, flit_xpos_SA}),
+        .route_in({15'b0, flit_xpos_SA_route}),
+        .in_valid({flit_zneg_SA_valid, flit_yneg_SA_valid, flit_xneg_SA_valid, flit_zpos_SA_valid, flit_ypos_SA_valid, flit_xpos_SA_valid}),
+        .in_avail({flit_zneg_SA_grant, flit_yneg_SA_grant, flit_xneg_SA_grant, flit_zpos_SA_grant, flit_ypos_SA_grant, flit_xpos_SA_grant}),	//output
+        
+        .out_valid(flit_valid_ST),
+        .out_avail({zneg_avail_ST, yneg_avail_ST, xneg_avail_ST, zpos_avail_ST, ypos_avail_ST, xpos_avail_ST}),	//input
+        .out(out_ST)
+    );
+
 
 
     /*large_buffer#(
@@ -293,6 +355,7 @@ module router(
 
 
 */
+
 
 
 
