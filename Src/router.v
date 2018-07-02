@@ -233,6 +233,21 @@ module router(
         .usedw()
     );
 
+	 large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(ROUTE_LEN)
+    )
+    xpos_route_queue(
+        .clk(clk),
+        .rst(rst),
+        .in(flit_xpos_VA_route),
+        .produce(flit_xpos_VA[81]),
+        .consume(flit_xpos_SA_grant),
+        .full(),
+        .empty(),
+        .out(flit_xpos_SA_route),
+        .usedw()
+    );
 
 
     wire [PORT_NUM - 1 : 0] flit_valid_ST;
