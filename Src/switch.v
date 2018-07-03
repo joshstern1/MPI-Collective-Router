@@ -55,12 +55,12 @@ module switch#(
     genvar i;
     generate 
         for(i = 0; i < M_IN; i = i + 1) begin: dst_checker
-            assign xpos_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] == DIR_XPOS;
-            assign ypos_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] == DIR_YPOS;
-            assign zpos_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] == DIR_ZPOS;
-            assign xneg_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] == DIR_XNEG;
-            assign yneg_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] == DIR_YNEG;
-            assign zneg_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] == DIR_ZNEG;
+            assign xpos_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1 : i * ROUTE_LEN] == DIR_XPOS;
+            assign ypos_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1 : i * ROUTE_LEN] == DIR_YPOS;
+            assign zpos_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1 : i * ROUTE_LEN] == DIR_ZPOS;
+            assign xneg_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1 : i * ROUTE_LEN] == DIR_XNEG;
+            assign yneg_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1 : i * ROUTE_LEN] == DIR_YNEG;
+            assign zneg_in_valid[i] = route_in[i * ROUTE_LEN + ROUTE_LEN - 1 : i * ROUTE_LEN] == DIR_ZNEG;
         end
     endgenerate
 
