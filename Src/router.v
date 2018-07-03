@@ -195,14 +195,14 @@ module router(
     wire [ROUTE_LEN - 1 : 0] flit_zneg_SA_route;*/
 
     wire flit_xpos_SA_valid = flit_xpos_SA[81];
-    wire flit_ypos_SA_valid;
-    wire flit_zpos_SA_valid;
-    wire flit_xneg_SA_valid;
-    wire flit_yneg_SA_valid;
-    wire flit_zneg_SA_valid;
+    wire flit_ypos_SA_valid = 0;
+    wire flit_zpos_SA_valid = 0;
+    wire flit_xneg_SA_valid = 0;
+    wire flit_yneg_SA_valid = 0;
+    wire flit_zneg_SA_valid = 0;
 
 //switch output and buffer input
-    wire flit_xpos_SA_grant = 1;
+    wire flit_xpos_SA_grant;
     wire flit_ypos_SA_grant;
     wire flit_zpos_SA_grant;
     wire flit_xneg_SA_grant;
@@ -246,21 +246,19 @@ module router(
     wire [PORT_NUM * FLIT_SIZE - 1 : 0] out_ST;
 
 
-    /*switch#(
-        .M_IN(PORT_NUM),	//6
-        .N_OUT(PORT_NUM)	//6
+    switch#(
+        .M_IN(PORT_NUM)	//6
     )sw_inst(
         .clk(clk),
         .rst(rst),
         .in({410'b0, flit_xpos_SA}),
         .route_in({15'b0, flit_xpos_SA_route}),
         .in_valid({flit_zneg_SA_valid, flit_yneg_SA_valid, flit_xneg_SA_valid, flit_zpos_SA_valid, flit_ypos_SA_valid, flit_xpos_SA_valid}),
-        .in_avail({flit_zneg_SA_grant, flit_yneg_SA_grant, flit_xneg_SA_grant, flit_zpos_SA_grant, flit_ypos_SA_grant, flit_xpos_SA_grant}),	//output
-        
+		  
+        .in_avail({flit_zneg_SA_grant, flit_yneg_SA_grant, flit_xneg_SA_grant, flit_zpos_SA_grant, flit_ypos_SA_grant, flit_xpos_SA_grant}),	//output        
         .out_valid(flit_valid_ST),
-        .out_avail(6'b0),	//input
         .out(out_ST)
-    );*/
+    );
 
 
 	 
