@@ -8,7 +8,7 @@ module reduction_tree#(
     input rst,
     input [FLIT_SIZE * FAN_IN  - 1 : 0] in,
     input [FAN_IN - 1 : 0] in_valid,
-    input out_avail,
+
     output reg [FAN_IN - 1 : 0] in_avail,
     output [FLIT_SIZE - 1 : 0] out,
     output out_valid
@@ -20,8 +20,6 @@ module reduction_tree#(
 	 parameter cur_z = 0;
 	 parameter ROUTE_LEN = 3;
 	 parameter input_Q_size = 5;
-	 parameter credit_back_period = 100;
-	 parameter credit_threshold = 160;
 	 
 	 parameter DIR_INJECT=3'd0;
 	 parameter DIR_XPOS=3'd1;
@@ -38,7 +36,9 @@ module reduction_tree#(
 	 
 	 assign out = in[FLIT_SIZE - 1 : 0];
 	 assign out_valid = 1;
-	 assign in_avail = 6'b000001;
+	 always @(posedge clk)begin
+		in_avail = 0;
+	 end
 	 
 	 //need to pick between the 6 inputs
 
