@@ -10,8 +10,8 @@ module reduction_tree#(
     input [FAN_IN - 1 : 0] in_valid,
 
     output reg [FAN_IN - 1 : 0] in_avail,
-    output [FLIT_SIZE - 1 : 0] out,
-    output out_valid
+    output reg[FLIT_SIZE - 1 : 0] out,
+    output reg out_valid
 );
 
 	 parameter FLIT_SIZE = 82;
@@ -19,27 +19,23 @@ module reduction_tree#(
 	 parameter cur_y = 0;
 	 parameter cur_z = 0;
 	 parameter ROUTE_LEN = 3;
-	 parameter input_Q_size = 5;
+
+	 reg[FAN_IN - 1 : 0]i;
 	 
-	 parameter DIR_INJECT=3'd0;
-	 parameter DIR_XPOS=3'd1;
-	 parameter DIR_YPOS=3'd2;
-	 parameter DIR_ZPOS=3'd3;
-	 parameter DIR_XNEG=3'd4;
-	 parameter DIR_YNEG=3'd5;
-	 parameter DIR_ZNEG=3'd6;
-	 parameter DIR_EJECT=3'd7;
+	 reg [ROUTE_LEN - 1 : 0]selector;
+	
+	 assign out = in[selector*FLIT_SIZE - 1 + FLIT_SIZE : selector * FLIT_SIZE];
+	 assign out_valid = in_valid[selector];
+	 assign in_avail = selector;
 	 
-	 parameter PORT_NUM = 6;
-	 parameter VC_NUM = 1;
-	 
-	 
-	 assign out = in[FLIT_SIZE - 1 : 0];
-	 assign out_valid = 1;
-	 always @(posedge clk)begin
-		in_avail = 0;
+	 always@(posedge clk)begin
+		if(rst) begin
+			selector <= 0;
+		end
+		else begin
+			selector <= (in_valid[0])? 0 : (in_valid[1])? 1 : (in_valid[2])? 2 : (in_valid[3])? 3 : (in_valid[4])? 4 : 5;
+		end
 	 end
 	 
-	 //need to pick between the 6 inputs
 
 endmodule
