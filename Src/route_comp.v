@@ -31,27 +31,47 @@ module route_comp
     input clk,
     input rst,
     input flit_valid_in,
-    input [FLIT_SIZE - 1 : 0] flit_before_RC, 
-    input stall,
+    input [FlitWidth - 1 : 0] flit_before_RC, 
     input [2 : 0] dir_in,
-    output reg [FLIT_SIZE - 1 : 0] flit_after_RC,
+    output reg [FlitWidth - 1 : 0] flit_after_RC,
     output flit_valid_out,
     output reg [2 : 0] dir_out, //this is going to hold until next head
     output eject_enable
 );
 
-	parameter FLIT_SIZE = 82;
-	parameter PHIT_SIZE=256;
-	parameter IN_Q_SIZE=5;
-//	parameter VC_SIZE=16; 
-//	parameter VC_NUM=9;
+	parameter PayloadWidth=32;
+	parameter opPos = PayloadWidth;
+	parameter opWidth = 4;
+	parameter AlgTypePos = opPos+opWidth;
+	parameter AlgTypeWidth = 2;
+	parameter TagPos=AlgTypePos+AlgTypeWidth;
+	parameter TagWidth = 8;
+	parameter ContextIdPos = TagPos+TagWidth;
+	parameter ContextIdWidth = 8;
+	parameter RankPos = ContextIdPos + ContextIdWidth;
+	parameter RankWidth = 9;
+	parameter Src_XPos = RankPos+RankWidth;
+	parameter Src_XWidth = 3;
+	parameter Src_YPos = Src_XPos+Src_XWidth;
+	parameter Src_YWidth = 3;
+	parameter Src_ZPos = Src_YPos+Src_YWidth;
+	parameter Src_ZWidth = 3;
+	parameter Dst_XPos = Src_ZPos+Src_ZWidth;
+	parameter Dst_XWidth = 3;
+	parameter Dst_YPos = Dst_XPos+Dst_XWidth;
+	parameter Dst_YWidth = 3;
+	parameter Dst_ZPos = Dst_YPos+Dst_YWidth;
+	parameter Dst_ZWidth = 3;
+	parameter SrcPos = Src_XPos;
+	parameter SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
+	parameter DstPos = Dst_XPos;
+	parameter DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
+	parameter ValidBitPos = Dst_ZPos+Dst_ZWidth;
+	parameter FlitWidth = ValidBitPos + 1;
+
 	parameter XSIZE=4'd4;  
 	parameter YSIZE=4'd4;  
-	parameter ZSIZE=4'd4; 
-	parameter XW=3;   
-	parameter YW=3;   
-	parameter ZW=3;   
-	parameter DSTW=9; 
+	parameter ZSIZE=4'd4;   
 	parameter DIR_INJECT=3'd0;
 	parameter DIR_XPOS=3'd1;
 	parameter DIR_YPOS=3'd2;
@@ -61,193 +81,80 @@ module route_comp
 	parameter DIR_ZNEG=3'd6;
 	parameter DIR_EJECT=3'd7;
 
-	parameter HEADER_LEN=3;
 	parameter ROUTE_LEN = 3;
-	parameter HEAD_FLIT=3'b000;
-	parameter BODY_FLIT=3'b001;
-	parameter TAIL_FLIT=3'b010;
-	parameter SINGLE_FLIT=3'b011;
-	parameter CREDIT_FLIT=3'b100;
-
-	parameter VC_CLASS_POS = FLIT_SIZE - HEADER_LEN - 1;
 	parameter PORT_NUM = 6;
-	parameter DST_ZPOS = VC_CLASS_POS - 1;
-	parameter DST_YPOS = DST_ZPOS - ZW;
-	parameter DST_XPOS = DST_YPOS - YW;
-	parameter CMP_POS = DST_XPOS - XW;
-	parameter CMP_LEN = 4;
 
+    wire [Dst_XWidth - 1 : 0] dst_x;
+    wire [Dst_XWidth - 1 : 0] dst_y;
+    wire [Dst_XWidth - 1 : 0] dst_z;
+    reg [ROUTE_LEN - 1:0] dir;
 
-    wire [XW - 1 : 0] dst_x;
-    wire [YW - 1 : 0] dst_y;
-    wire [ZW - 1 : 0] dst_z;
-    reg [2:0] dir;
-
-
-    reg turn;
-
-    reg flit_out_tmp;
-    wire ejecting;
-
-
-    assign dst_z = flit_before_RC[DST_ZPOS : DST_ZPOS - ZW + 1];
-    assign dst_y = flit_before_RC[DST_YPOS : DST_YPOS - YW + 1];
-    assign dst_x = flit_before_RC[DST_XPOS : DST_XPOS - XW + 1];
-
-
-    reg ejecting_started;
-
-    wire start_ejecting;
-
-    wire single_ejecting;
-
-    wire stop_ejecting;
-    reg stop_ejecting_reg;
-
-    reg ejecting_delay;
-
-    assign start_ejecting = flit_valid_in && (flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == HEAD_FLIT) && dir == DIR_EJECT;
-
-    assign single_ejecting = flit_valid_in && (flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == SINGLE_FLIT) && dir == DIR_EJECT;
-
-
-    assign stop_ejecting = flit_valid_in && ((flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == TAIL_FLIT));
-
-    always@(posedge clk) begin
-        stop_ejecting_reg <= stop_ejecting;
-    end
-
-    assign ejecting = single_ejecting || (start_ejecting || (ejecting_started && ~stop_ejecting_reg));
-
+	 assign {dst_z, dst_y, dst_x} = flit_before_RC[DstPos+DstWidth-1:DstPos];
+	  
+	 
+	 wire ejecting = ((flit_valid_in) && (dir == DIR_EJECT));
+	 reg ejecting_delay;
+	 reg flit_valid_in_reg;
+	 
     always@(posedge clk) begin
         ejecting_delay <= ejecting;
     end
-    reg flit_valid_in_reg;
+	 
     assign eject_enable = ejecting_delay && flit_valid_in_reg;
 
-
     always@(posedge clk) begin
-        if(rst) begin 
-            ejecting_started <= 0;
-        end
-        else begin
-            if(start_ejecting) begin
-                ejecting_started <= 1;
-            end
-            else begin
-                if(ejecting_started) begin
-                    if(stop_ejecting) begin
-                        ejecting_started <= 0;
-                    end
-                end
-            end
-        end
-    end
-
-
-
-    always@(posedge clk) begin
-        if(~stall) begin
-            flit_valid_in_reg <= flit_valid_in;
-        end
+        flit_valid_in_reg <= flit_valid_in;
     end
 
     assign flit_valid_out = flit_valid_in_reg && ~eject_enable;
-
-
-wire[CMP_LEN-1:0] trash_cmp = 1;
-wire josh = 1'b1;
-
-`ifdef FARTHEST_FIRST
-    wire [CMP_LEN - 1 : 0] nxt_priority_field;
-    assign nxt_priority_field = (flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == HEAD_FLIT || flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN]) ? trash_cmp : trash_cmp;
-`endif
-    
 
     always@(posedge clk) begin
         if(rst) begin
             dir_out<=0;
         end
         else if(~ejecting) begin
-            if(~ stall) begin
-`ifdef FARTHEST_FIRST
-                flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], josh, flit_before_RC[DST_ZPOS : CMP_POS + 1], trash_cmp, flit_before_RC[CMP_POS - CMP_LEN : 0]};
-`else
-                flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], josh, flit_before_RC[FLIT_SIZE - HEADER_LEN - 2  : 0]};
-`endif
-                if((flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == HEAD_FLIT) || (flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN] == SINGLE_FLIT))begin
-                    dir_out<=dir;
-                end
-            end
+//FARTHEST_FIRST
+				flit_after_RC <= flit_before_RC;//[FlitWidth - 1 : FlitWidth - HEADER_LEN], new_VC_class, flit_before_RC[DST_ZPOS : CMP_POS + 1], nxt_priority_field, flit_before_RC[CMP_POS - CMP_LEN : 0]};
+            dir_out<=dir;
         end
         else begin //dir equals to eject port
-            flit_after_RC <= {flit_before_RC[FLIT_SIZE - 1 : FLIT_SIZE - HEADER_LEN], josh, flit_before_RC[FLIT_SIZE - HEADER_LEN - 2  : 0]};
+            flit_after_RC <= flit_before_RC;//[FlitWidth - 1 : FlitWidth - HEADER_LEN], new_VC_class, flit_before_RC[FlitWidth - HEADER_LEN - 2  : 0]};
             dir_out <= DIR_EJECT;
         end
     end
 
 
 
-`ifdef DOR_XYZ
+// DOR_XYZ
     //for simplicity start with xyz routing first
     always@(*) begin
         if(cur_x != dst_x) begin
             if(cur_x > dst_x) begin
-                if(cur_x - dst_x >= XSIZE/2) begin
-                    dir = DIR_XPOS;
-                end
-                else begin
-                    dir = DIR_XNEG;
-                end
+                dir = (cur_x - dst_x >= XSIZE/2)? DIR_XPOS : DIR_XNEG;
             end
             else begin
-                if(dst_x - cur_x <= XSIZE/2) begin
-                    dir = DIR_XPOS;
-                end
-                else begin
-                    dir = DIR_XNEG;
-                end
+                dir = (dst_x - cur_x <= XSIZE/2)? DIR_XPOS : DIR_XNEG;
             end
         end
         else if(cur_y != dst_y) begin
             if(cur_y > dst_y) begin
-                if(cur_y - dst_y >= YSIZE/2) begin
-                    dir = DIR_YPOS;
-                end
-                else begin
-                    dir = DIR_YNEG;
-                end
+                dir = (cur_y - dst_y >= YSIZE/2)? DIR_YPOS : DIR_YNEG;
             end
             else begin
-                if(dst_y - cur_y <= YSIZE/2) begin
-                    dir = DIR_YPOS;
-                end
-                else begin
-                    dir = DIR_YNEG;
-                end
+                dir = (dst_y - cur_y <= YSIZE/2)? DIR_YPOS : DIR_YNEG;
             end
         end
         else if(cur_z != dst_z) begin
             if(cur_z > dst_z) begin
-                if(cur_z - dst_z >= ZSIZE/2) begin
-                    dir = DIR_ZPOS;
-                end
-                else begin
-                    dir = DIR_ZNEG;
-                end
+                dir = (cur_z - dst_z >= ZSIZE/2)? DIR_ZPOS : DIR_ZNEG;
             end
             else begin
-                if(dst_z - cur_z <= ZSIZE/2) begin
-                    dir = DIR_ZPOS;
-                end 
-                else begin
-                    dir = DIR_ZNEG;
-                end
+                dir = (dst_z - cur_z <= ZSIZE/2)? DIR_ZPOS : DIR_ZNEG;
             end
         end
         else begin
             dir = DIR_EJECT;
         end
     end
-`endif
+
 endmodule
