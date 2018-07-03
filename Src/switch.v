@@ -1,8 +1,7 @@
 `timescale 1ns / 1ns
 
 module switch#(
-    parameter M_IN = PORT_NUM,	//6
-    parameter N_OUT= PORT_NUM					//6
+    parameter M_IN = PORT_NUM				//6
 )
 (
     input clk,
@@ -10,11 +9,10 @@ module switch#(
     input [M_IN * FLIT_SIZE - 1 : 0] in,
     input [M_IN * ROUTE_LEN - 1 : 0] route_in,
     input [M_IN - 1 : 0] in_valid,
+	 
     output [M_IN - 1 : 0] in_avail,
-
-    output [N_OUT - 1 : 0] out_valid,
-    input [N_OUT - 1 : 0] out_avail,
-    output [N_OUT * FLIT_SIZE - 1 : 0] out    
+    output [M_IN - 1 : 0] out_valid,
+    output [M_IN * FLIT_SIZE - 1 : 0] out    
 );
 
 	 parameter FLIT_SIZE = 82;
@@ -23,8 +21,6 @@ module switch#(
 	 parameter cur_z = 0;
 	 parameter ROUTE_LEN = 3;
 	 parameter input_Q_size = 5;
-	 parameter credit_back_period = 100;
-	 parameter credit_threshold = 160;
 	 
 	 parameter DIR_INJECT=3'd0;
 	 parameter DIR_XPOS=3'd1;
@@ -64,11 +60,11 @@ module switch#(
         end
     endgenerate
 
-    generate
+    /*generate
         for(i = 0; i < M_IN; i = i + 1) begin: in_avail_gen
             assign in_avail[i] = ({zneg_in_avail[i], yneg_in_avail[i], xneg_in_avail[i], zpos_in_avail[i], ypos_in_avail[i], xpos_in_avail[i]} & (1 << ( route_in[i * ROUTE_LEN + ROUTE_LEN - 1: i * ROUTE_LEN] - 1))) != 0;
         end
-    endgenerate
+    endgenerate*/
 
 
     reduction_tree#(
@@ -78,13 +74,16 @@ module switch#(
         .rst(rst),
         .in(in),
         .in_valid(in_valid & xpos_in_valid),
-        .in_avail(xpos_in_avail),
+		  
+        .in_avail(xpos_in_avail),	
         .out_valid(out_valid[0]),
-        .out_avail(out_avail[0]),
         .out(out[FLIT_SIZE - 1 : 0])
     );
+	 
+	 assign out[FLIT_SIZE * 6 - 1 : FLIT_SIZE] = 0;
+	 assign in_avail = 6'b000001;
      
-    reduction_tree#(
+    /*reduction_tree#(
         .FAN_IN(M_IN)
     )ypos_reduction(
         .clk(clk),
@@ -148,7 +147,7 @@ module switch#(
         .out_avail(out_avail[5]),
         .out(out[FLIT_SIZE * 6 - 1 : FLIT_SIZE * 5])
     );
-   
+   */
    
    
 endmodule
