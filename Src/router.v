@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 1ns
 
 module router(
 
@@ -24,8 +24,8 @@ module router(
     output [FLIT_SIZE - 1 : 0] out_zpos,
     output [FLIT_SIZE - 1 : 0] out_xneg,
     output [FLIT_SIZE - 1 : 0] out_yneg,
-    output [FLIT_SIZE - 1 : 0] out_zneg,
-    output out_xpos_valid,
+    output [FLIT_SIZE - 1 : 0] out_zneg,*/
+    output out_xpos_valid,/*
     output out_ypos_valid,
     output out_zpos_valid,
     output out_xneg_valid,
@@ -86,14 +86,7 @@ module router(
 	 
 	 parameter PORT_NUM = 6;
 	 parameter VC_NUM = 1;
-	 //instantiate route computation components
 
-    wire VA_stall_xpos = 0;
-    /*wire VA_stall_ypos;
-    wire VA_stall_zpos;
-    wire VA_stall_xneg;
-    wire VA_stall_yneg;
-    wire VA_stall_zneg;*/
 	 
 	 //instantiate 6 big input buffers
 	 
@@ -175,7 +168,6 @@ module router(
         .rst(rst),
         .flit_valid_in(in_xpos_RC[81]),	//ValidBitPos
         .flit_before_RC(in_xpos_RC[81:0]),
-        .stall(VA_stall_xpos),
         .dir_in(DIR_XPOS),
         .flit_after_RC(flit_xpos_VA),
         .flit_valid_out(),
@@ -210,7 +202,7 @@ module router(
     wire flit_zneg_SA_valid;
 
 //switch output and buffer input
-    wire flit_xpos_SA_grant;
+    wire flit_xpos_SA_grant = 1;
     wire flit_ypos_SA_grant;
     wire flit_zpos_SA_grant;
     wire flit_xneg_SA_grant;
@@ -254,7 +246,7 @@ module router(
     wire [PORT_NUM * FLIT_SIZE - 1 : 0] out_ST;
 
 
-    switch#(
+    /*switch#(
         .M_IN(PORT_NUM),	//6
         .N_OUT(PORT_NUM)	//6
     )sw_inst(
@@ -268,7 +260,7 @@ module router(
         .out_valid(flit_valid_ST),
         .out_avail(6'b0),	//input
         .out(out_ST)
-    );
+    );*/
 
 
 	 
