@@ -6,13 +6,14 @@ module switch#(
 (
     input clk,
     input rst,
-    input [M_IN * FLIT_SIZE - 1 : 0] in,
+    input [/*M_IN * */FLIT_SIZE - 1 : 0] in,	//////////////////remember to change this
     input [M_IN * ROUTE_LEN - 1 : 0] route_in,
     input [M_IN - 1 : 0] in_valid,
+	 input [M_IN - 1 : 0] out_avail,
 	 
     output [M_IN - 1 : 0] in_avail,
     output [M_IN - 1 : 0] out_valid,
-    output [M_IN * FLIT_SIZE - 1 : 0] out    
+    output [/*M_IN * */FLIT_SIZE - 1 : 0] out    //////////////////remember to change this
 );
 
 	 parameter FLIT_SIZE = 82;
@@ -80,8 +81,8 @@ module switch#(
         .out(out[FLIT_SIZE - 1 : 0])
     );
 	 
-	 assign out[FLIT_SIZE * 6 - 1 : FLIT_SIZE] = 0;
-	 assign in_avail = 6'b000001;
+	 //assign out[FLIT_SIZE * 6 - 1 : FLIT_SIZE] = 0;
+	 assign in_avail = xpos_in_avail & (~out_avail);
 	 assign out_valid[5:1] = 0;
      
     /*reduction_tree#(
