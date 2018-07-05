@@ -82,6 +82,7 @@ module switch#(
 	 
 	 assign out[FLIT_SIZE * 6 - 1 : FLIT_SIZE] = 0;
 	 assign in_avail = 6'b000001;
+	 assign out_valid[5:1] = 0;
      
     /*reduction_tree#(
         .FAN_IN(M_IN)
@@ -151,4 +152,3 @@ module switch#(
    
    
 endmodule
- 
