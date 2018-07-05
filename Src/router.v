@@ -244,7 +244,17 @@ module router(
 
     wire [PORT_NUM - 1 : 0] flit_valid_ST;
     wire [PORT_NUM * FLIT_SIZE - 1 : 0] out_ST;
+	 
+	 wire [FLIT_SIZE - 1 : 0] out_xpos_switch;
+	 wire out_xpos_valid_switch;
+	 wire xpos_rd_en;
+	 
+	 wire [FLIT_SIZE - 1 : 0] in_xpos_reduce;
+	 wire [FLIT_SIZE - 1 : 0] out_xpos_reduce;
+	 wire xpos_reduce_done;
+	 wire xpos_reduce_valid_out;
 
+	 wire [FLIT_SIZE - 1 : 0]out_xpos_noreduce;
 
     switch#(
         .M_IN(PORT_NUM)	//6
@@ -254,6 +264,7 @@ module router(
         .in({410'b0, flit_xpos_SA}),
         .route_in({15'b0, flit_xpos_SA_route}),
         .in_valid({flit_zneg_SA_valid, flit_yneg_SA_valid, flit_xneg_SA_valid, flit_zpos_SA_valid, flit_ypos_SA_valid, flit_xpos_SA_valid}),
+		  .out_avail({5'b0, inject_xpos_valid}),
 		  
         .in_avail({flit_zneg_SA_grant, flit_yneg_SA_grant, flit_xneg_SA_grant, flit_zpos_SA_grant, flit_ypos_SA_grant, flit_xpos_SA_grant}),	//output        
         .out_valid(flit_valid_ST),
@@ -262,7 +273,7 @@ module router(
 
 
 	 
-	 assign out_xpos = ((flit_valid_ST[0]) && (~inject_xpos_valid))? out_ST[FLIT_SIZE - 1 : 0] : inject_xpos;
+	 assign out_xpos_switch = ((flit_valid_ST[0]) && (~inject_xpos_valid))? out_ST[FLIT_SIZE - 1 : 0] : inject_xpos;
     /*assign out_ypos = ((flit_valid_ST[1]) && (~inject_ypos_valid))? out_ST[2 * FLIT_SIZE - 1 : FLIT_SIZE] : inject_ypos;
     assign out_zpos = ((flit_valid_ST[2]) && (~inject_zpos_valid))? out_ST[3 * FLIT_SIZE - 1 : 2 * FLIT_SIZE] : inject_zpos;
     assign out_xneg = ((flit_valid_ST[3]) && (~inject_xneg_valid))? out_ST[4 * FLIT_SIZE - 1 : 3 * FLIT_SIZE] : inject_xneg;
@@ -270,7 +281,7 @@ module router(
     assign out_zneg = ((flit_valid_ST[5]) && (~inject_zneg_valid))? out_ST[6 * FLIT_SIZE - 1 : 5 * FLIT_SIZE] : inject_zneg;*/
 	 
 	 
-	 assign out_xpos_valid = flit_valid_ST[0] || inject_xpos_valid;
+	 assign out_xpos_valid_switch = flit_valid_ST[0] || inject_xpos_valid;
     /*assign out_ypos_valid = flit_valid_ST[1] || inject_ypos_valid;
     assign out_zpos_valid = flit_valid_ST[2] || inject_zpos_valid;
     assign out_xneg_valid = flit_valid_ST[3] || inject_xneg_valid;
@@ -278,7 +289,57 @@ module router(
     assign out_zneg_valid = flit_valid_ST[5] || inject_zneg_valid;*/
 
 	
-	//need to add reduce_unit
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FLIT_SIZE)
+    )
+    xpos_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(out_xpos_switch),
+        .produce(1),
+        .consume(xpos_rd_en),
+        .full(),
+        .empty(),
+        .out(in_xpos_reduce),
+        .usedw()
+    );
+	
+
+	reduce_unit xpos_reduce_unit (
+	 .Outpacket(out_xpos_reduce),
+	 .done(xpos_reduce_done),
+	 .valid_out(xpos_reduce_valid_out),
+	 .clk(clk),
+	 .rst(rst),
+	 .packetA(in_xpos_reduce),
+	 .rd_en(xpos_rd_en),
+	 .wr_en(),
+	 .fifo_counter(),
+	 .buf_empty(),
+	 .buf_full()
+	);
+	
+	
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FLIT_SIZE)
+    )
+    xpos_postswitch_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(out_xpos_switch),
+        .produce(1),
+        .consume(!xpos_reduce_done),
+        .full(),
+        .empty(),
+        .out(out_xpos_noreduce),
+        .usedw()
+    );
+	 
+	
+	assign out_xpos = (xpos_reduce_done)? out_xpos_reduce : out_xpos_noreduce;
+	assign out_xpos_valid = ((xpos_reduce_done)&&(xpos_reduce_valid_out))||(out_xpos_noreduce[81]);
 
 
     /*large_buffer#(
@@ -377,4 +438,3 @@ module router(
 
 
 endmodule
- 
