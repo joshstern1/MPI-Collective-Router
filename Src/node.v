@@ -1,56 +1,39 @@
 `timescale 1ns / 1ns
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    12:09:45 06/29/2018 
-// Design Name: 
-// Module Name:    node 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
-
-module node(clk, rst, in_xpos_ser, in_xneg_ser, in_ypos_ser, in_yneg_ser, in_zpos_ser, in_zneg_ser, out_xpos_ser, out_xneg_ser, out_ypos_ser, out_yneg_ser, out_zpos_ser, out_zneg_ser);
+module node
+#(
+    parameter cur_x = 0,
+    parameter cur_y = 0,
+    parameter cur_z = 0
+)(
+	 input clk,
+    input rst,
+	 
+	 input [FLIT_SIZE - 1 : 0] in_xpos_ser,	
+	 input [FLIT_SIZE - 1 : 0] in_ypos_ser,	
+	 /*input [FLIT_SIZE -1 : 0] in_zpos_ser,
+	 input [FLIT_SIZE - 1 : 0] in_xneg_ser,
+	 input [FLIT_SIZE - 1 : 0] in_yneg_ser,
+	 input [FLIT_SIZE -1 : 0] in_zneg_ser,	*/
+	 
+    output [FLIT_SIZE - 1 : 0] out_xpos_ser,
+    output [FLIT_SIZE - 1 : 0] out_ypos_ser/*,	
+	 output [FLIT_SIZE - 1 : 0] out_zpos_ser,
+    output [FLIT_SIZE - 1 : 0] out_xneg_ser,	    	
+    output [FLIT_SIZE - 1 : 0] out_yneg_ser,
+    output [FLIT_SIZE - 1 : 0] out_zneg_ser*/
+);
 
 	parameter FLIT_SIZE = 82;
-	parameter cur_x = 0;
-	parameter cur_y = 0;
-	parameter cur_z = 0;
-	parameter LinkDelay = 50;
-
-	input clk; 
-	input rst;
+	parameter LinkDelay = 6;
 	
-	input [FLIT_SIZE : 0] in_xpos_ser;	
-	input [FLIT_SIZE : 0] in_xneg_ser;				
-   input [FLIT_SIZE : 0] in_ypos_ser;	
-	input [FLIT_SIZE : 0] in_yneg_ser;
-	input [FLIT_SIZE : 0] in_zpos_ser;
-	input [FLIT_SIZE : 0] in_zneg_ser;	
-   
-	output [FLIT_SIZE : 0] out_xpos_ser;
-   output [FLIT_SIZE : 0] out_xneg_ser;
-   output [FLIT_SIZE : 0] out_ypos_ser;
-   output [FLIT_SIZE : 0] out_yneg_ser;
-   output [FLIT_SIZE : 0] out_zpos_ser;
-   output [FLIT_SIZE : 0] out_zneg_ser;
-
-
+	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
     wire [FLIT_SIZE - 1 : 0] in_ypos;
-    wire [FLIT_SIZE - 1 : 0] in_zpos;
+    /*wire [FLIT_SIZE - 1 : 0] in_zpos;
     wire [FLIT_SIZE - 1 : 0] in_xneg;
     wire [FLIT_SIZE - 1 : 0] in_yneg;
-    wire [FLIT_SIZE - 1 : 0] in_zneg;
+    wire [FLIT_SIZE - 1 : 0] in_zneg;*/
     
     wire in_xpos_valid;
     wire in_ypos_valid;
@@ -61,64 +44,51 @@ module node(clk, rst, in_xpos_ser, in_xneg_ser, in_ypos_ser, in_yneg_ser, in_zpo
 
     wire [FLIT_SIZE - 1 : 0] out_xpos;
     wire [FLIT_SIZE - 1 : 0] out_ypos;
-    wire [FLIT_SIZE - 1 : 0] out_zpos;
+    /*wire [FLIT_SIZE - 1 : 0] out_zpos;
     wire [FLIT_SIZE - 1 : 0] out_xneg;
     wire [FLIT_SIZE - 1 : 0] out_yneg;
-    wire [FLIT_SIZE - 1 : 0] out_zneg;
+    wire [FLIT_SIZE - 1 : 0] out_zneg;*/
     
     wire out_xpos_valid;
     wire out_ypos_valid;
-    wire out_zpos_valid;
+    /*wire out_zpos_valid;
     wire out_xneg_valid;
     wire out_yneg_valid;
-    wire out_zneg_valid;
+    wire out_zneg_valid;*/
 
-    wire [FLIT_SIZE - 1 : 0] inject_xpos;
-    wire [FLIT_SIZE - 1 : 0] inject_ypos;
-    wire [FLIT_SIZE - 1 : 0] inject_zpos;
+    wire [FLIT_SIZE - 1 : 0] inject_xpos = 0;
+    wire [FLIT_SIZE - 1 : 0] inject_ypos = 0;
+    /*wire [FLIT_SIZE - 1 : 0] inject_zpos;
     wire [FLIT_SIZE - 1 : 0] inject_xneg;
     wire [FLIT_SIZE - 1 : 0] inject_yneg;
-    wire [FLIT_SIZE - 1 : 0] inject_zneg;
+    wire [FLIT_SIZE - 1 : 0] inject_zneg;*/
     
-    wire inject_xpos_valid;
-    wire inject_ypos_valid;
-    wire inject_zpos_valid;
+    wire inject_xpos_valid = 0;
+    wire inject_ypos_valid = 0;
+    /*wire inject_zpos_valid;
     wire inject_xneg_valid;
     wire inject_yneg_valid;
-    wire inject_zneg_valid;
-
-    wire inject_xpos_avail;
-    wire inject_ypos_avail;
-    wire inject_zpos_avail;
-    wire inject_xneg_avail;
-    wire inject_yneg_avail;
-    wire inject_zneg_avail;
+    wire inject_zneg_valid;*/
  
     wire [FLIT_SIZE - 1 : 0] eject_xpos;
     wire [FLIT_SIZE - 1 : 0] eject_ypos;
-    wire [FLIT_SIZE - 1 : 0] eject_zpos;
+    /*wire [FLIT_SIZE - 1 : 0] eject_zpos;
     wire [FLIT_SIZE - 1 : 0] eject_xneg;
     wire [FLIT_SIZE - 1 : 0] eject_yneg;
-    wire [FLIT_SIZE - 1 : 0] eject_zneg;
+    wire [FLIT_SIZE - 1 : 0] eject_zneg;*/
     
     wire eject_xpos_valid;
     wire eject_ypos_valid;
-    wire eject_zpos_valid;
+    /*wire eject_zpos_valid;
     wire eject_xneg_valid;
     wire eject_yneg_valid;
-    wire eject_zneg_valid;
-
-
-
+    wire eject_zneg_valid;*/
 
     
     router#(
         .cur_x(cur_x),
         .cur_y(cur_y),
-        .cur_z(cur_z),
-        .input_Q_size(256),
-        .credit_back_period(100),
-        .credit_threshold(160)
+        .cur_z(cur_z)
     )
     switch_inst(
         .clk(clk),
@@ -127,65 +97,56 @@ module node(clk, rst, in_xpos_ser, in_xneg_ser, in_ypos_ser, in_yneg_ser, in_zpo
     //interface from 6 MGTs
         .in_xpos(in_xpos),
         .in_ypos(in_ypos),
-        .in_zpos(in_zpos),
+        /*.in_zpos(in_zpos),
         .in_xneg(in_xneg),
         .in_yneg(in_yneg),
-        .in_zneg(in_zneg),
+        .in_zneg(in_zneg),*/
         .in_xpos_valid(in_xpos_valid),
         .in_ypos_valid(in_ypos_valid),
-        .in_zpos_valid(in_zpos_valid),
+        /*.in_zpos_valid(in_zpos_valid),
         .in_xneg_valid(in_xneg_valid),
         .in_yneg_valid(in_yneg_valid),
-        .in_zneg_valid(in_zneg_valid),
+        .in_zneg_valid(in_zneg_valid),*/
     //interface to 6 MGTs
         .out_xpos(out_xpos),
         .out_ypos(out_ypos),
-        .out_zpos(out_zpos),
+        /*.out_zpos(out_zpos),
         .out_xneg(out_xneg),
         .out_yneg(out_yneg),
-        .out_zneg(out_zneg),
+        .out_zneg(out_zneg),*/
         .out_xpos_valid(out_xpos_valid),
         .out_ypos_valid(out_ypos_valid),
-        .out_zpos_valid(out_zpos_valid),
+        /*.out_zpos_valid(out_zpos_valid),
         .out_xneg_valid(out_xneg_valid),
         .out_yneg_valid(out_yneg_valid),
-        .out_zneg_valid(out_zneg_valid),
+        .out_zneg_valid(out_zneg_valid),*/
     //interface to application kernel
     //inputs 
         .eject_xpos(eject_xpos),
         .eject_ypos(eject_ypos),
-        .eject_zpos(eject_zpos),
+        /*.eject_zpos(eject_zpos),
         .eject_xneg(eject_xneg),
         .eject_yneg(eject_yneg),
-        .eject_zneg(eject_zneg),
+        .eject_zneg(eject_zneg),*/
         .eject_xpos_valid(eject_xpos_valid),
         .eject_ypos_valid(eject_ypos_valid),
-        .eject_zpos_valid(eject_zpos_valid),
+        /*.eject_zpos_valid(eject_zpos_valid),
         .eject_xneg_valid(eject_xneg_valid),
         .eject_yneg_valid(eject_yneg_valid),
-        .eject_zneg_valid(eject_zneg_valid),
+        .eject_zneg_valid(eject_zneg_valid),*/
 
         .inject_xpos(inject_xpos),
         .inject_ypos(inject_ypos),
-        .inject_zpos(inject_zpos),
+        /*.inject_zpos(inject_zpos),
         .inject_xneg(inject_xneg),
         .inject_yneg(inject_yneg),
-        .inject_zneg(inject_zneg),
+        .inject_zneg(inject_zneg),*/
         .inject_xpos_valid(inject_xpos_valid),
-        .inject_ypos_valid(inject_ypos_valid),
+        .inject_ypos_valid(inject_ypos_valid)/*,
         .inject_zpos_valid(inject_zpos_valid),
         .inject_xneg_valid(inject_xneg_valid),
         .inject_yneg_valid(inject_yneg_valid),
-        .inject_zneg_valid(inject_zneg_valid),
-        .inject_xpos_avail(inject_xpos_avail),
-        .inject_ypos_avail(inject_ypos_avail),
-        .inject_zpos_avail(inject_zpos_avail),
-        .inject_xneg_avail(inject_xneg_avail),
-        .inject_yneg_avail(inject_yneg_avail),
-        .inject_zneg_avail(inject_zneg_avail)
-
-
-
+        .inject_zneg_valid(inject_zneg_valid),*/
     );
         
 //xpos link
@@ -221,7 +182,7 @@ module node(clk, rst, in_xpos_ser, in_xneg_ser, in_ypos_ser, in_yneg_ser, in_zpo
         .rx_ser_data(in_ypos_ser),
         .rx_ready()
     );
-
+/*
     //zpos link
     internode_link#(
         .DELAY(LinkDelay)
@@ -288,6 +249,7 @@ module node(clk, rst, in_xpos_ser, in_xneg_ser, in_ypos_ser, in_yneg_ser, in_zpo
         .rx_ready()
     );
 
+
 //local unit 
 //
     local_unit#(
@@ -323,13 +285,7 @@ module node(clk, rst, in_xpos_ser, in_xneg_ser, in_ypos_ser, in_yneg_ser, in_zpo
         .inject_yneg_valid(inject_yneg_valid),
         .inject_zneg(inject_zneg),
         .inject_zneg_valid(inject_zneg_valid),
-        .inject_xpos_avail(inject_xpos_avail),
-        .inject_ypos_avail(inject_ypos_avail),
-        .inject_zpos_avail(inject_zpos_avail),
-        .inject_xneg_avail(inject_xneg_avail),
-        .inject_yneg_avail(inject_yneg_avail),
-        .inject_zneg_avail(inject_zneg_avail)
-    );
+    );*/
     
 
 endmodule
