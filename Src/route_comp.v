@@ -26,63 +26,48 @@ module route_comp
 #(
     parameter cur_x = 0,
     parameter cur_y = 0,
-    parameter cur_z = 0
+    parameter cur_z = 0,
+	 parameter DstPos = 72,
+	 parameter DstWidth = 9,
+	 parameter Dst_XWidth = 3
 )(
     input clk,
     input rst,
     input flit_valid_in,
-    input [FlitWidth - 1 : 0] flit_before_RC, 
+    input [FlitChildWidth-1:0] flit_before_RC, 
     input [2 : 0] dir_in,
-    output reg [FlitWidth - 1 : 0] flit_after_RC,
+    output reg [FlitChildWidth-1:0] flit_after_RC,
     output flit_valid_out,
     output reg [2 : 0] dir_out, //this is going to hold until next head
     output eject_enable
 );
 
-	parameter PayloadWidth=32;
-	parameter opPos = PayloadWidth;
-	parameter opWidth = 4;
-	parameter AlgTypePos = opPos+opWidth;
-	parameter AlgTypeWidth = 2;
-	parameter TagPos=AlgTypePos+AlgTypeWidth;
-	parameter TagWidth = 8;
-	parameter ContextIdPos = TagPos+TagWidth;
-	parameter ContextIdWidth = 8;
-	parameter RankPos = ContextIdPos + ContextIdWidth;
-	parameter RankWidth = 9;
-	parameter Src_XPos = RankPos+RankWidth;
-	parameter Src_XWidth = 3;
-	parameter Src_YPos = Src_XPos+Src_XWidth;
-	parameter Src_YWidth = 3;
-	parameter Src_ZPos = Src_YPos+Src_YWidth;
-	parameter Src_ZWidth = 3;
-	parameter Dst_XPos = Src_ZPos+Src_ZWidth;
-	parameter Dst_XWidth = 3;
-	parameter Dst_YPos = Dst_XPos+Dst_XWidth;
-	parameter Dst_YWidth = 3;
-	parameter Dst_ZPos = Dst_YPos+Dst_YWidth;
-	parameter Dst_ZWidth = 3;
-	parameter SrcPos = Src_XPos;
-	parameter SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
-	parameter DstPos = Dst_XPos;
-	parameter DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
-	parameter ValidBitPos = Dst_ZPos+Dst_ZWidth;
-	parameter FlitWidth = ValidBitPos + 1;
+	 parameter lg_numprocs = 3;
+	 parameter num_procs = 1 << lg_numprocs;
 
-	parameter XSIZE=4'd4;  
-	parameter YSIZE=4'd4;  
-	parameter ZSIZE=4'd4;   
-	parameter DIR_INJECT=3'd0;
-	parameter DIR_XPOS=3'd1;
-	parameter DIR_YPOS=3'd2;
-	parameter DIR_ZPOS=3'd3;
-	parameter DIR_XNEG=3'd4;
-	parameter DIR_YNEG=3'd5;
-	parameter DIR_ZNEG=3'd6;
-	parameter DIR_EJECT=3'd7;
+	 parameter ValidBitPos = 81;
+	 parameter FlitWidth = ValidBitPos + 1;
 
-	parameter ROUTE_LEN = 3;
-	parameter PORT_NUM = 6;
+	 parameter ChildrenPos=ValidBitPos+1;
+	 parameter ChildrenWidth=lg_numprocs;
+	 
+	 parameter FlitChildWidth = FlitWidth+ChildrenWidth;
+
+
+	 parameter XSIZE=4'd4;  
+	 parameter YSIZE=4'd4;  
+	 parameter ZSIZE=4'd4;   
+	 parameter DIR_INJECT=3'd0;
+	 parameter DIR_XPOS=3'd1;
+	 parameter DIR_YPOS=3'd2;
+	 parameter DIR_ZPOS=3'd3;
+	 parameter DIR_XNEG=3'd4;
+	 parameter DIR_YNEG=3'd5;
+	 parameter DIR_ZNEG=3'd6;
+	 parameter DIR_EJECT=3'd7;
+
+	 parameter ROUTE_LEN = 3;
+	 parameter PORT_NUM = 6;
 
     wire [Dst_XWidth - 1 : 0] dst_x;
     wire [Dst_XWidth - 1 : 0] dst_y;
@@ -158,4 +143,3 @@ module route_comp
     end
 
 endmodule
- 
