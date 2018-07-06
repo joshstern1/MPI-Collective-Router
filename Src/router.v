@@ -73,6 +73,15 @@ module router(
 	 parameter input_Q_size = 5;
 	 parameter PORT_NUM = 6;
 	 
+	 parameter DIR_INJECT=3'd0;
+	 parameter DIR_XPOS=3'd1;
+	 parameter DIR_YPOS=3'd2;
+	 parameter DIR_ZPOS=3'd3;
+	 parameter DIR_XNEG=3'd4;
+	 parameter DIR_YNEG=3'd5;
+	 parameter DIR_ZNEG=3'd6;
+	 parameter DIR_EJECT=3'd7;
+	 
 	 parameter lg_numprocs = 3;
 	 parameter num_procs = 1 << lg_numprocs;
 
@@ -436,7 +445,7 @@ module router(
 	 .rst(rst),
 	 .buf_in(xpos_reduce_special),
 	 .buf_out(in_xpos_reduce),
-	 .wr_en(1),
+	 .wr_en(1'b1),
 	 .rd_en(xpos_rd_en),
 	 .buf_empty(),
 	 .buf_full(),
@@ -481,7 +490,7 @@ module router(
 	 .rst(rst),
 	 .buf_in(ypos_reduce_special),
 	 .buf_out(in_ypos_reduce),
-	 .wr_en(1),
+	 .wr_en(1'b1),
 	 .rd_en(ypos_rd_en),
 	 .buf_empty(),
 	 .buf_full(),
