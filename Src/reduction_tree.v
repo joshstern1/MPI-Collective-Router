@@ -1,23 +1,27 @@
 `timescale 1ns / 1ns
 
 module reduction_tree#(
-    parameter FAN_IN = 6	//PORT_NUM
+    parameter FAN_IN = 6,	//PORT_NUM
+	 parameter ValidBitPos = 81
 )
 (
     input clk,
     input rst,
-    input [FLIT_SIZE * FAN_IN  - 1 : 0] in,
+    input [FlitChildWidth * FAN_IN  - 1 : 0] in,
     input [FAN_IN - 1 : 0] in_valid,
 
     output [FAN_IN - 1 : 0] in_avail,
-    output [FLIT_SIZE - 1 : 0] out,
+    output [FlitChildWidth-1:0] out,
     output  out_valid
 );
 
-	 parameter FLIT_SIZE = 82;
-	 parameter cur_x = 0;
-	 parameter cur_y = 0;
-	 parameter cur_z = 0;
+	 parameter lg_numprocs = 3;
+	 parameter num_procs = 1 << lg_numprocs;
+
+	 parameter FlitWidth = ValidBitPos + 1;
+	 parameter ChildrenWidth=lg_numprocs;	 
+	 parameter FlitChildWidth = FlitWidth+ChildrenWidth;
+
 	 parameter ROUTE_LEN = 3;
 	 
 	 wire [ROUTE_LEN - 1 : 0]selector = (in_valid[0])? 0 : (in_valid[1])? 1 : (in_valid[2])? 2 : (in_valid[3])? 3 : (in_valid[4])? 4 : 5;
@@ -32,7 +36,7 @@ module reduction_tree#(
 	 assign in_avail[5] = (in_valid>0)? (selector == 5) : 1'b1;
 	 
 	 assign out_valid = ((in_valid>0) && (!rst))? in_valid[selector] : 0;
-	 assign out = ((in_valid>0) && (!rst))? in[selector*FLIT_SIZE+: FLIT_SIZE] : 0;
+	 assign out = ((in_valid>0) && (!rst))? in[selector*FlitChildWidth+: FlitChildWidth] : 0;
 	 
 	 /*always@(posedge clk)begin
 		if(rst) begin
