@@ -1,7 +1,10 @@
 `timescale 1ns / 1ns
 
-module router(
-
+module router#(
+    parameter cur_x = 0,
+    parameter cur_y = 0,
+    parameter cur_z = 0
+)(
     input clk,
     input rst,
 
@@ -57,18 +60,9 @@ module router(
     input inject_zpos_valid,
     input inject_xneg_valid,
     input inject_yneg_valid,
-    input inject_zneg_valid,
-    output inject_xpos_avail,
-    output inject_ypos_avail,
-    output inject_zpos_avail,
-    output inject_xneg_avail,
-    output inject_yneg_avail,
-    output inject_zneg_avail*/
+    input inject_zneg_valid*/
     );
 	 
-	 parameter cur_x = 0;
-	 parameter cur_y = 0;
-	 parameter cur_z = 0;
 	 parameter ROUTE_LEN = 3;
 	 parameter input_Q_size = 5;
 	 parameter PORT_NUM = 6;
@@ -135,6 +129,8 @@ module router(
     wire [ROUTE_LEN - 1 : 0] flit_zneg_VA_route;*/
 	 
 	 
+///////////////////////////////////////////////////////////////////////////////////////////
+//router input buffers	 
 	 
 	 large_buffer#(
         .buffer_depth(input_Q_size),
@@ -169,7 +165,8 @@ module router(
         .usedw()
     );
 	
-
+///////////////////////////////////////////////////////////////////////////////////////
+//reduce instr
 	reduce_instr xpos_IR (
 	 .packetOut(in_xpos_RC),
 	 .new_comm(61'b0),
@@ -189,6 +186,8 @@ module router(
 	);
 
 
+///////////////////////////////////////////////////////////////////////////////////////
+//route comp
     route_comp#(
         .cur_x(cur_x),
         .cur_y(cur_y),
@@ -262,6 +261,8 @@ module router(
     wire flit_yneg_SA_grant;
     wire flit_zneg_SA_grant;
 
+///////////////////////////////////////////////////////////////////
+//pre switch buffers
 	 large_buffer#(
         .buffer_depth(input_Q_size),
         .buffer_width(FlitChildWidth)
@@ -331,6 +332,8 @@ module router(
     wire [PORT_NUM - 1 : 0] flit_valid_ST;
     wire [PORT_NUM * FlitChildWidth - 1 : 0] out_ST;
 	 
+/////////////////////////////////////////////////////////////////////
+//switch
 
     switch#(
         .M_IN(PORT_NUM),	//6
@@ -438,7 +441,8 @@ module router(
 	 wire [FlitWidth - 1 : 0]out_yneg_noreduce;
 	 wire [FlitWidth - 1 : 0]out_zneg_noreduce;*/
 
-
+////////////////////////////////////////////////////////////
+//reduce unit
 	
 	 fifo xpos_reduce_fifo (
 	 .clk(clk),
@@ -529,6 +533,9 @@ module router(
         .usedw()
     );
 	
+///////////////////////////////////////////////////////////////////////////////
+//outputs
+	
 	assign out_xpos = (xpos_reduce_done)? out_xpos_reduce : out_xpos_noreduce;
 	assign out_ypos = (ypos_reduce_done)? out_ypos_reduce : out_ypos_noreduce;
 	/*assign out_zpos = (zpos_reduce_done)? out_zpos_reduce : out_zpos_noreduce;
@@ -545,4 +552,3 @@ module router(
 
 
 endmodule
- 
