@@ -9,6 +9,13 @@ module node
 	 input clk,
     input rst,
 	 
+	 input [FLIT_SIZE : 0]inject_xpos,
+	 input [FLIT_SIZE : 0]inject_ypos,
+	 /*input [FLIT_SIZE : 0]inject_zpos,
+	 input [FLIT_SIZE : 0]inject_xneg,
+	 input [FLIT_SIZE : 0]inject_yneg,
+	 input [FLIT_SIZE : 0]inject_zneg,*/
+	 
 	 input [FLIT_SIZE - 1 : 0] in_xpos_ser,	
 	 input [FLIT_SIZE - 1 : 0] in_ypos_ser,	
 	 /*input [FLIT_SIZE -1 : 0] in_zpos_ser,
@@ -26,7 +33,8 @@ module node
 
 	parameter FLIT_SIZE = 82;
 	parameter LinkDelay = 6;
-	
+	parameter ValidBitPos = 81;
+
 	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
     wire [FLIT_SIZE - 1 : 0] in_ypos;
@@ -55,20 +63,13 @@ module node
     wire out_xneg_valid;
     wire out_yneg_valid;
     wire out_zneg_valid;*/
-
-    wire [FLIT_SIZE - 1 : 0] inject_xpos = 0;
-    wire [FLIT_SIZE - 1 : 0] inject_ypos = 0;
-    /*wire [FLIT_SIZE - 1 : 0] inject_zpos;
-    wire [FLIT_SIZE - 1 : 0] inject_xneg;
-    wire [FLIT_SIZE - 1 : 0] inject_yneg;
-    wire [FLIT_SIZE - 1 : 0] inject_zneg;*/
-    
-    wire inject_xpos_valid = 0;
-    wire inject_ypos_valid = 0;
-    /*wire inject_zpos_valid;
-    wire inject_xneg_valid;
-    wire inject_yneg_valid;
-    wire inject_zneg_valid;*/
+   
+    wire inject_xpos_valid = inject_xpos[ValidBitPos];
+    wire inject_ypos_valid = inject_ypos[ValidBitPos];
+    /*wire inject_zpos_valid = inject_zpos[ValidBitPos];
+    wire inject_xneg_valid = inject_xneg[ValidBitPos];
+    wire inject_yneg_valid = inject_yneg[ValidBitPos];
+    wire inject_zneg_valid = inject_zneg[ValidBitPos];*/
  
     wire [FLIT_SIZE - 1 : 0] eject_xpos;
     wire [FLIT_SIZE - 1 : 0] eject_ypos;
@@ -247,45 +248,10 @@ module node
         .rx_par_data_valid(in_zneg_valid),
         .rx_ser_data(in_zneg_ser),
         .rx_ready()
-    );
-
-
-//local unit 
-//
-    local_unit#(
-        .cur_x(cur_x),
-        .cur_y(cur_y),
-        .cur_z(cur_z)
-    )
-    local_unit_inst(
-        .clk(clk),
-        .rst(rst),
-        .eject_xpos(eject_xpos),
-        .eject_xpos_valid(eject_xpos_valid),
-        .eject_ypos(eject_ypos),
-        .eject_ypos_valid(eject_ypos_valid),
-        .eject_zpos(eject_zpos),
-        .eject_zpos_valid(eject_zpos_valid),
-        .eject_xneg(eject_xneg),
-        .eject_xneg_valid(eject_xneg_valid),
-        .eject_yneg(eject_yneg),
-        .eject_yneg_valid(eject_yneg_valid),
-        .eject_zneg(eject_zneg),
-        .eject_zneg_valid(eject_zneg_valid),
-
-        .inject_xpos(inject_xpos),
-        .inject_xpos_valid(inject_xpos_valid),
-        .inject_ypos(inject_ypos),
-        .inject_ypos_valid(inject_ypos_valid),
-        .inject_zpos(inject_zpos),
-        .inject_zpos_valid(inject_zpos_valid),
-        .inject_xneg(inject_xneg),
-        .inject_xneg_valid(inject_xneg_valid),
-        .inject_yneg(inject_yneg),
-        .inject_yneg_valid(inject_yneg_valid),
-        .inject_zneg(inject_zneg),
-        .inject_zneg_valid(inject_zneg_valid),
     );*/
+
+
+
     
 
 endmodule
