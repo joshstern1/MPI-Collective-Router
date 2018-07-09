@@ -95,6 +95,21 @@ parameter ReductionTableSize = 2;
 parameter AdderLatency = 14;
 parameter ReductionBitPos=opPos+opWidth-1;
 
+////////////////////////////////////
+//algorithmic opcodes
+parameter Scan = 4'b0011;
+parameter AlltoAll = 4'b0100;
+parameter LargeBcast = 4'b0101;
+parameter MediumBcast = 4'b0110;
+parameter ShortBcast = 4'b0111;
+parameter Scatter = 4'b1000;
+parameter LargeAllGather = 4'b1001;
+parameter ShortAllGather = 4'b1010;
+parameter Gather = 4'b1011;
+parameter ShortReduce = 4'b1100;
+parameter LargeReduce = 4'b1101;
+parameter ShortAllReduce = 4'b1110;
+parameter LargeAllReduce = 4'b1111;
 
 ///////////////////////////////////////
 
