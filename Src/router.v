@@ -167,7 +167,13 @@ module router#(
 	
 ///////////////////////////////////////////////////////////////////////////////////////
 //reduce instr
-	reduce_instr xpos_IR (
+	reduce_instr#(
+		.rank_x(cur_x),
+		.rank_y(cuz_y),
+		.rank_z(cur_z),
+		.lg_numprocs(lg_numprocs)
+	)
+	xpos_IR(
 	 .packetOut(in_xpos_RC),
 	 .new_comm(61'b0),
 	 .packetIn(in_xpos_IR),
@@ -176,7 +182,13 @@ module router#(
 	 .rd_en(xpos_IR_consume)
 	);
 
-	reduce_instr ypos_IR (
+	reduce_instr#(
+		.rank_x(cur_x),
+		.rank_y(cuz_y),
+		.rank_z(cur_z),
+		.lg_numprocs(lg_numprocs)
+	)
+	ypos_IR(
 	 .packetOut(in_ypos_RC),
 	 .new_comm(61'b0),
 	 .packetIn(in_ypos_IR),
@@ -455,9 +467,15 @@ module router#(
 	 .buf_full(),
 	 .fifo_counter()
 	);
-	
 
-	reduce_unit xpos_reduce_unit (
+
+	reduce_unit#(
+		.rank_x(cur_x),
+		.rank_y(cuz_y),
+		.rank_z(cur_z),
+		.lg_numprocs(lg_numprocs)
+	)
+	xpos_reduce_unit(
 	 .Outpacket(out_xpos_reduce),
 	 .done(xpos_reduce_done),
 	 .valid_out(xpos_reduce_valid_out),
@@ -502,7 +520,13 @@ module router#(
 	);
 	
 
-	reduce_unit ypos_reduce_unit (
+	reduce_unit#(
+		.rank_x(cur_x),
+		.rank_y(cuz_y),
+		.rank_z(cur_z),
+		.lg_numprocs(lg_numprocs)
+	)
+	ypos_reduce_unit(
 	 .Outpacket(out_ypos_reduce),
 	 .done(ypos_reduce_done),
 	 .valid_out(ypos_reduce_valid_out),
