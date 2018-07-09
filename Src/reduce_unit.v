@@ -21,23 +21,31 @@ inside the fifo
 //extra bit/counting down is 1 if the wait count was ever set to the proper latency
 /////////////////////////////////////////////////////////////////////////////////*/
 
-module reduce_unit(Outpacket, done, valid_out, clk, rst, packetA, rd_en, wr_en, fifo_counter, buf_empty, buf_full);
+module reduce_unit#(
+	parameter rank_z = 3'b0,
+	parameter rank_y = 3'b0,
+	parameter rank_x = 3'b0,
+	parameter lg_numprocs = 3
+)
+(
+	input clk,
+	input	rst,
+	input [FlitWidth+ChildrenWidth-1:0]packetA,
+	input [12:0]fifo_counter,
+	input buf_empty,
+	input buf_full,
+	output rd_en, 
+	input wr_en,
+	output valid_out,
+	output done,
+	output[FlitWidth-1:0]Outpacket
+);
+
+
 
 //////////////////////////////////////////
-//current rank, root, and world size
-parameter cur_rank = 9'b0;
-parameter root = 9'b0;
-parameter rank_z = 3'b0;
-parameter rank_y = 3'b0;
-parameter rank_x = 3'b0;
-parameter root_z = 3'b0;
-parameter root_y = 3'b0;
-parameter root_x = 3'b0;
-
-parameter lg_numprocs = 3;
 parameter num_procs = 1 << lg_numprocs;
 
-///////////////////////////////////////////
 //packet structure
 parameter PayloadWidth=32;
 parameter opPos = PayloadWidth;
@@ -89,46 +97,6 @@ parameter ReductionBitPos=opPos+opWidth-1;
 
 
 ///////////////////////////////////////
-//fifo
-parameter fifo_lg_size = 12;
-parameter FifoSize = 1<<fifo_lg_size;
-
-/////////////////////////////////////
-//communicator table
-parameter CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
-parameter CommTableSize = 4;
-parameter lgCommSizePos = lg_numprocs*DstWidth;
-parameter CommChildrenPos = lgCommSizePos+lg_numprocs+1;
-parameter LocalRankPos = CommChildrenPos + lg_numprocs;
-parameter NewCommWidth = CommTableWidth+ContextIdWidth;
-
-////////////////////////////////////
-//algorithmic opcodes
-parameter Scan = 4'b0011;
-parameter AlltoAll = 4'b0100;
-parameter LargeBcast = 4'b0101;
-parameter MediumBcast = 4'b0110;
-parameter ShortBcast = 4'b0111;
-parameter Scatter = 4'b1000;
-parameter LargeAllGather = 4'b1001;
-parameter ShortAllGather = 4'b1010;
-parameter Gather = 4'b1011;
-parameter ShortReduce = 4'b1100;
-parameter LargeReduce = 4'b1101;
-parameter ShortAllReduce = 4'b1110;
-parameter LargeAllReduce = 4'b1111;
-
-////////////////////////////////////
-
-input clk, rst;
-input [FlitWidth+ChildrenWidth-1:0]packetA;
-input [12:0]fifo_counter;
-input buf_empty, buf_full;
-output rd_en, wr_en;
-output valid_out;
-output done;
-output[FlitWidth-1:0]Outpacket;
-
 
 wire [TagWidth-1:0]packetIndex;
 wire [ChildrenWidth-1:0]children_count;
