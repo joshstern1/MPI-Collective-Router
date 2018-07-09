@@ -216,8 +216,8 @@ always@(posedge clk) begin
   
 		if (reductiontype && (reduction_table[packetIndex][ValidBitPos]==0))begin //if slot is empty
 			reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]<=children_count+1;
-			reduction_table[packetIndex][ValidBitPos]<=1;
-			reduction_table[packetIndex][ReductionBitPos:0] <= packetA[ReductionBitPos:0];
+			reduction_table[packetIndex][ValidBitPos:0]<= packetA[ValidBitPos:0];//1;
+			//reduction_table[packetIndex][ReductionBitPos:0] <= packetA[ReductionBitPos:0];
 			
 			/* if the reduction requires 0 children, then we set the LeafBit to 1 which indicates a special
 			case (that being 0 children), this leafbit will be used later */
@@ -240,9 +240,9 @@ always@(posedge clk) begin
     */
 				if (done_index==packetIndex)begin
 					reduction_table[packetIndex][ChildrenPos+ChildrenWidth-1:ChildrenPos]<=children_count+1;
-					reduction_table[packetIndex][ValidBitPos]<=1;
-					reduction_table[packetIndex][ReductionBitPos:0] <= packetA[ReductionBitPos:0];
-					
+					reduction_table[packetIndex][ValidBitPos:0]<= packetA[ValidBitPos:0];//1;
+					//reduction_table[packetIndex][ReductionBitPos:0] <= packetA[ReductionBitPos:0];
+							
 					/* if the reduction requires 0 children, then we set the LeafBit to 1 which indicates a special
 					case (that being 0 children), this leafbit will be used later */
 					if(children_count == 0)begin
