@@ -169,7 +169,7 @@ module router#(
 //reduce instr
 	reduce_instr#(
 		.rank_x(cur_x),
-		.rank_y(cuz_y),
+		.rank_y(cur_y),
 		.rank_z(cur_z),
 		.lg_numprocs(lg_numprocs)
 	)
@@ -184,7 +184,7 @@ module router#(
 
 	reduce_instr#(
 		.rank_x(cur_x),
-		.rank_y(cuz_y),
+		.rank_y(cur_y),
 		.rank_z(cur_z),
 		.lg_numprocs(lg_numprocs)
 	)
@@ -471,7 +471,7 @@ module router#(
 
 	reduce_unit#(
 		.rank_x(cur_x),
-		.rank_y(cuz_y),
+		.rank_y(cur_y),
 		.rank_z(cur_z),
 		.lg_numprocs(lg_numprocs)
 	)
@@ -522,7 +522,7 @@ module router#(
 
 	reduce_unit#(
 		.rank_x(cur_x),
-		.rank_y(cuz_y),
+		.rank_y(cur_y),
 		.rank_z(cur_z),
 		.lg_numprocs(lg_numprocs)
 	)
