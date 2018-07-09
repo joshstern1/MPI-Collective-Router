@@ -27,6 +27,8 @@ module node_test1;
 	// Inputs
 	reg clk;
 	reg rst;
+	reg [81:0] inject_xpos;
+	reg [81:0] inject_ypos;
 	reg [81:0] in_xpos_ser;
 	reg [81:0] in_ypos_ser;
 
@@ -38,6 +40,8 @@ module node_test1;
 	node uut (
 		.clk(clk), 
 		.rst(rst), 
+		.inject_xpos(inject_xpos),
+		.inject_ypos(inject_ypos),
 		.in_xpos_ser(in_xpos_ser), 
 		.in_ypos_ser(in_ypos_ser), 
 		.out_xpos_ser(out_xpos_ser), 
@@ -48,6 +52,8 @@ module node_test1;
 		// Initialize Inputs
 		clk = 0;
 		rst = 1;
+		inject_xpos = 0;
+		inject_ypos = 0;
 		in_xpos_ser = 0;
 		in_ypos_ser = 0;
 
