@@ -128,8 +128,8 @@
 	wire[FLIT_SIZE - 1 : 0] in_zpos_ser_1_1_1, out_zpos_ser_1_1_1;
 	wire[FLIT_SIZE - 1 : 0] in_zneg_ser_1_1_1, out_zneg_ser_1_1_1;*/
 
-	assign in_xpos_ser_0_0_1 = 0;
-	assign in_xpos_ser_0_0_0 = out_xpos_ser_0_0_1;
+	assign in_xpos_ser_0_0_1 = 0;	///////////////////////////for testing
+	assign in_xpos_ser_0_0_0 = out_xpos_ser_0_0_1;	////////////////////for testing
 
 	/*assign in_xpos_ser_0_0_0=out_xneg_ser_1_0_0;
 	assign in_xneg_ser_0_0_0=out_xpos_ser_1_0_0;
