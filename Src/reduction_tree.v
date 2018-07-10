@@ -2,7 +2,8 @@
 
 module reduction_tree#(
     parameter FAN_IN = 6,	//PORT_NUM
-	 parameter ValidBitPos = 81
+	 parameter ValidBitPos = 81,
+	 parameter lg_numprocs = 3
 )
 (
     input clk,
@@ -15,14 +16,13 @@ module reduction_tree#(
     output  out_valid
 );
 
-	 parameter lg_numprocs = 3;
-	 parameter num_procs = 1 << lg_numprocs;
+	 localparam num_procs = 1 << lg_numprocs;
 
-	 parameter FlitWidth = ValidBitPos + 1;
-	 parameter ChildrenWidth=lg_numprocs;	 
-	 parameter FlitChildWidth = FlitWidth+ChildrenWidth;
+	 localparam FlitWidth = ValidBitPos + 1;
+	 localparam ChildrenWidth=lg_numprocs;	 
+	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
 
-	 parameter ROUTE_LEN = 3;
+	 localparam ROUTE_LEN = 3;
 	 
 	 wire [ROUTE_LEN - 1 : 0]selector = (in_valid[0])? 0 : (in_valid[1])? 1 : (in_valid[2])? 2 : (in_valid[3])? 3 : (in_valid[4])? 4 : 5;
 	 
@@ -35,7 +35,7 @@ module reduction_tree#(
 	 assign in_avail[4] = (in_valid>0)? (selector == 4) : 1'b1;
 	 assign in_avail[5] = (in_valid>0)? (selector == 5) : 1'b1;
 	 
-	 assign out_valid = ((in_valid>0) && (!rst))? in_valid[selector] : 0;
+	 assign out_valid = ((in_valid>0) && (!rst))? in_valid[selector] : 1'b0;
 	 assign out = ((in_valid>0) && (!rst))? in[selector*FlitChildWidth+: FlitChildWidth] : 0;
 	 
 	 /*always@(posedge clk)begin
@@ -47,7 +47,7 @@ module reduction_tree#(
 		else begin
 			out <= (in_valid>0)? in[selector*FLIT_SIZE+: FLIT_SIZE] : 0;
 			out_valid <= (in_valid>0)? in_valid[selector] : 0;
-			/*for(i=0; i<FAN_IN; i=i+1)begin
+			for(i=0; i<FAN_IN; i=i+1)begin
 				in_avail[i] <= (in[31:0]==5)? 0 : (in_valid>0)? (selector == i) : 1'b1;
 			end
 		end
@@ -55,4 +55,3 @@ module reduction_tree#(
 	 
 
 endmodule
- 
