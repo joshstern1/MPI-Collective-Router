@@ -25,7 +25,8 @@ module reduce_unit#(
 	parameter rank_z = 3'b0,
 	parameter rank_y = 3'b0,
 	parameter rank_x = 3'b0,
-	parameter lg_numprocs = 3
+	parameter lg_numprocs = 3,
+	parameter PayloadWidth = 32
 )
 (
 	input clk,
@@ -47,7 +48,6 @@ module reduce_unit#(
 localparam num_procs = 1 << lg_numprocs;
 
 //packet structure
-localparam PayloadWidth=32;
 localparam opPos = PayloadWidth;
 localparam opWidth = 4;
 localparam AlgTypePos = opPos+opWidth;
