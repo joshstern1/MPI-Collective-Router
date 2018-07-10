@@ -5,7 +5,8 @@ module node
     parameter cur_x = 0,
     parameter cur_y = 0,
     parameter cur_z = 0,
-	 parameter lg_numprocs = 3
+	 parameter lg_numprocs = 3,
+	 parameter PayloadWidth = 32
 )(
 	 input clk,
     input rst,
@@ -34,18 +35,43 @@ module node
 	 input [NewCommWidth-1:0]newcomm
 );
 
-	localparam FLIT_SIZE = 82;
-	localparam LinkDelay = 6;
+	 localparam opPos = PayloadWidth;
+	 localparam opWidth = 4;
+	 localparam AlgTypePos = opPos+opWidth;
+	 localparam AlgTypeWidth = 2;
+	 localparam TagPos=AlgTypePos+AlgTypeWidth;
+	 localparam TagWidth = 8;
+	 localparam ContextIdPos = TagPos+TagWidth;
+	 localparam ContextIdWidth = 8;
+	 localparam RankPos = ContextIdPos + ContextIdWidth;
+	 localparam RankWidth = 9;
+	 localparam Src_XPos = RankPos+RankWidth;
+	 localparam Src_XWidth = 3;
+	 localparam Src_YPos = Src_XPos+Src_XWidth;
+	 localparam Src_YWidth = 3;
+	 localparam Src_ZPos = Src_YPos+Src_YWidth;
+	 localparam Src_ZWidth = 3;
+	 localparam Dst_XPos = Src_ZPos+Src_ZWidth;
+	 localparam Dst_XWidth = 3;
+	 localparam Dst_YPos = Dst_XPos+Dst_XWidth;
+	 localparam Dst_YWidth = 3;
+	 localparam Dst_ZPos = Dst_YPos+Dst_YWidth;
+	 localparam Dst_ZWidth = 3;
+	 localparam SrcPos = Src_XPos;
+	 localparam SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
+	 localparam DstPos = Dst_XPos;
+	 localparam DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
+	 localparam ValidBitPos = Dst_ZPos+Dst_ZWidth;
+	 localparam FlitWidth = ValidBitPos + 1;
 
-	localparam ValidBitPos = 81;
-	localparam FlitWidth = ValidBitPos + 1;
-	localparam ChildrenWidth=lg_numprocs;	 
-	localparam FlitChildWidth = FlitWidth+ChildrenWidth;
-	localparam DstWidth = 9;
-	localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
-	localparam ContextIdWidth = 8;
-	localparam NewCommWidth = CommTableWidth+ContextIdWidth;
+	 localparam ChildrenWidth=lg_numprocs;	 
+	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
+
+	 localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
+	 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 	
+	 localparam FLIT_SIZE = FlitWidth;
+	 localparam LinkDelay = 6;
 
 	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
@@ -102,7 +128,8 @@ module node
         .cur_x(cur_x),
         .cur_y(cur_y),
         .cur_z(cur_z),
-		  .lg_numprocs(lg_numprocs)
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
     )
     switch_inst(
         .clk(clk),
@@ -164,10 +191,131 @@ module node
 		  
 		  .newcomm(newcomm)
     );
+	 
+	 wire [FlitChildWidth-1:0]xpos_reduce_special = ((eject_xpos[35:34] == 2'b11)&&(eject_xpos[ValidBitPos]))? eject_xpos : 0;
+	 wire [FlitChildWidth-1:0]ypos_reduce_special = ((eject_ypos[35:34] == 2'b11)&&(eject_ypos[ValidBitPos]))? eject_ypos : 0;
+	 /*wire [FlitChildWidth-1:0]zpos_reduce_special = ((eject_zpos[35:34] == 2'b11)&&(eject_zpos[ValidBitPos]))? eject_zpos : 0;
+	 wire [FlitChildWidth-1:0]xneg_reduce_special = ((eject_xneg[35:34] == 2'b11)&&(eject_xneg[ValidBitPos]))? eject_xneg : 0;
+	 wire [FlitChildWidth-1:0]yneg_reduce_special = ((eject_yneg[35:34] == 2'b11)&&(eject_yneg[ValidBitPos]))? eject_yneg : 0;
+	 wire [FlitChildWidth-1:0]zneg_reduce_special = ((eject_zneg[35:34] == 2'b11)&&(eject_zneg[ValidBitPos]))? eject_zneg : 0;*/
+	
+	 wire [FlitChildWidth-1:0] in_xpos_reduce;
+	 wire [FlitChildWidth-1:0] in_ypos_reduce;
+	 /*wire [FlitChildWidth-1:0] in_zpos_reduce;
+	 wire [FlitChildWidth-1:0] in_xneg_reduce;
+	 wire [FlitChildWidth-1:0] in_yneg_reduce;
+	 wire [FlitChildWidth-1:0] in_zneg_reduce;*/
+	 
+	 wire [FlitWidth - 1 : 0] out_xpos_reduce;
+	 wire [FlitWidth - 1 : 0] out_ypos_reduce;
+	 /*wire [FlitWidth - 1 : 0] out_zpos_reduce;
+	 wire [FlitWidth - 1 : 0] out_xneg_reduce;
+	 wire [FlitWidth - 1 : 0] out_yneg_reduce;
+	 wire [FlitWidth - 1 : 0] out_zneg_reduce;*/
+	
+	 wire xpos_rd_en;
+	 wire ypos_rd_en;
+	 /*wire zpos_rd_en;
+	 wire xneg_rd_en;
+	 wire yneg_rd_en;
+	 wire zneg_rd_en;*/
+	 
+	 wire xpos_reduce_done;
+	 wire ypos_reduce_done;
+	 /*wire zpos_reduce_done;
+	 wire xneg_reduce_done;
+	 wire yneg_reduce_done;
+	 wire zneg_reduce_done;*/
+	 
+	 wire xpos_reduce_valid_out;
+	 wire ypos_reduce_valid_out;
+	 /*wire zpos_reduce_valid_out;
+	 wire xneg_reduce_valid_out;
+	 wire yneg_reduce_valid_out;
+	 wire zneg_reduce_valid_out;*/
+	 
+	fifo#(
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
+	 )	 
+	xpos_reduce_fifo (
+	 .clk(clk),
+	 .rst(rst),
+	 .buf_in(xpos_reduce_special),
+	 .buf_out(in_xpos_reduce),
+	 .wr_en(xpos_reduce_special[ValidBitPos]),
+	 .rd_en(xpos_rd_en),
+	 .buf_empty(),
+	 .buf_full(),
+	 .fifo_counter()
+	);
+
+
+	reduce_unit#(
+		.rank_x(cur_x),
+		.rank_y(cur_y),
+		.rank_z(cur_z),
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
+	)
+	xpos_reduce_unit(
+	 .Outpacket(out_xpos_reduce),
+	 .done(xpos_reduce_done),
+	 .valid_out(xpos_reduce_valid_out),
+	 .clk(clk),
+	 .rst(rst),
+	 .packetA(in_xpos_reduce),
+	 .rd_en(xpos_rd_en),
+	 .wr_en(),
+	 .fifo_counter(),
+	 .buf_empty(),
+	 .buf_full()
+	);
+	
+	
+	fifo#(
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
+	 )	 
+	ypos_reduce_fifo (
+	 .clk(clk),
+	 .rst(rst),
+	 .buf_in(ypos_reduce_special),
+	 .buf_out(in_ypos_reduce),
+	 .wr_en(ypos_reduce_special[ValidBitPos]),
+	 .rd_en(ypos_rd_en),
+	 .buf_empty(),
+	 .buf_full(),
+	 .fifo_counter()
+	);
+	
+
+	reduce_unit#(
+		.rank_x(cur_x),
+		.rank_y(cur_y),
+		.rank_z(cur_z),
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
+	)
+	ypos_reduce_unit(
+	 .Outpacket(out_ypos_reduce),
+	 .done(ypos_reduce_done),
+	 .valid_out(ypos_reduce_valid_out),
+	 .clk(clk),
+	 .rst(rst),
+	 .packetA(in_ypos_reduce),
+	 .rd_en(ypos_rd_en),
+	 .wr_en(),
+	 .fifo_counter(),
+	 .buf_empty(),
+	 .buf_full()
+	);
+
         
 //xpos link
     internode_link#(
-        .DELAY(LinkDelay)
+        .DELAY(LinkDelay),
+		  .FLIT_SIZE(FLIT_SIZE)
     )
     xpos_link_inst(
         .rst(rst),
@@ -184,7 +332,8 @@ module node
 
 //ypos link
     internode_link#(
-        .DELAY(LinkDelay)
+        .DELAY(LinkDelay),
+		  .FLIT_SIZE(FLIT_SIZE)
     )
     ypos_link_inst(
         .rst(rst),
@@ -198,6 +347,7 @@ module node
         .rx_ser_data(in_ypos_ser),
         .rx_ready()
     );
+	 
 /*
     //zpos link
     internode_link#(
