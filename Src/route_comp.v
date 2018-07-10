@@ -1,27 +1,9 @@
 `timescale 1ns / 1ns
 //////////////////////////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////////////////////////
 
-//the packet format:
-//head flit   |type|VC class|dst|cmp|payload| 
-//body flits  |type|                 payload|
-//tail flit   |type|                 payload|
-//
-//the |cmp| field will be the priority field for the switch allocation
-//if the SA policy is farthest first, this will be the distance from the destination node to the current node, if the SA policy is the oldest first, this will be the time stamp when this packet is sent
-//in order to prevent deadlock, there are 6 turns should be forbidden if it is not xyz routing
-//zneg -> xpos
-//zneg -> xneg
-//zneg -> ypos
-//zneg -> yneg
-//yneg -> xpos
-//yneg -> xneg
 `define FARTHEST_FIRST
-//`define OLDEST_FIRST
-
-
 `define DOR_XYZ
+
 module route_comp
 #(
     parameter cur_x = 0,
@@ -42,32 +24,32 @@ module route_comp
     output eject_enable
 );
 
-	 parameter lg_numprocs = 3;
-	 parameter num_procs = 1 << lg_numprocs;
+	 localparam lg_numprocs = 3;
+	 localparam num_procs = 1 << lg_numprocs;
 
-	 parameter ValidBitPos = 81;
-	 parameter FlitWidth = ValidBitPos + 1;
+	 localparam ValidBitPos = 81;
+	 localparam FlitWidth = ValidBitPos + 1;
 
-	 parameter ChildrenPos=ValidBitPos+1;
-	 parameter ChildrenWidth=lg_numprocs;
+	 localparam ChildrenPos=ValidBitPos+1;
+	 localparam ChildrenWidth=lg_numprocs;
 	 
-	 parameter FlitChildWidth = FlitWidth+ChildrenWidth;
+	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
 
 
-	 parameter XSIZE=4'd4;  
-	 parameter YSIZE=4'd4;  
-	 parameter ZSIZE=4'd4;   
-	 parameter DIR_INJECT=3'd0;
-	 parameter DIR_XPOS=3'd1;
-	 parameter DIR_YPOS=3'd2;
-	 parameter DIR_ZPOS=3'd3;
-	 parameter DIR_XNEG=3'd4;
-	 parameter DIR_YNEG=3'd5;
-	 parameter DIR_ZNEG=3'd6;
-	 parameter DIR_EJECT=3'd7;
+	 localparam XSIZE=4'd4;  
+	 localparam YSIZE=4'd4;  
+	 localparam ZSIZE=4'd4;   
+	 localparam DIR_INJECT=3'd0;
+	 localparam DIR_XPOS=3'd1;
+	 localparam DIR_YPOS=3'd2;
+	 localparam DIR_ZPOS=3'd3;
+	 localparam DIR_XNEG=3'd4;
+	 localparam DIR_YNEG=3'd5;
+	 localparam DIR_ZNEG=3'd6;
+	 localparam DIR_EJECT=3'd7;
 
-	 parameter ROUTE_LEN = 3;
-	 parameter PORT_NUM = 6;
+	 localparam ROUTE_LEN = 3;
+	 localparam PORT_NUM = 6;
 
     wire [Dst_XWidth - 1 : 0] dst_x;
     wire [Dst_XWidth - 1 : 0] dst_y;
@@ -131,7 +113,7 @@ module route_comp
         end
         else if(cur_z != dst_z) begin
             if(cur_z > dst_z) begin
-                dir = (cur_z - dst_z >= ZSIZE/2)? DIR_ZPOS : DIR_ZNEG;
+                dir = (cur_z - dst_z >= ZSIZE/2)? DIR_ZPOS : DIR_XPOS;//change this to DIR_ZNEG
             end
             else begin
                 dir = (dst_z - cur_z <= ZSIZE/2)? DIR_ZPOS : DIR_ZNEG;
@@ -143,4 +125,3 @@ module route_comp
     end
 
 endmodule
- 
