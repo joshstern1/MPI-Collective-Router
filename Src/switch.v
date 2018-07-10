@@ -43,10 +43,10 @@ module switch#(
 
     wire [M_IN - 1 : 0] xpos_in_avail;
     wire [M_IN - 1 : 0] ypos_in_avail;
-    wire [M_IN - 1 : 0] zpos_in_avail;
-    wire [M_IN - 1 : 0] xneg_in_avail;
-    wire [M_IN - 1 : 0] yneg_in_avail;
-    wire [M_IN - 1 : 0] zneg_in_avail;
+    wire [M_IN - 1 : 0] zpos_in_avail = 0;
+    wire [M_IN - 1 : 0] xneg_in_avail = 0;
+    wire [M_IN - 1 : 0] yneg_in_avail = 0;
+    wire [M_IN - 1 : 0] zneg_in_avail = 0;
 
     genvar i;
     generate 
@@ -60,6 +60,12 @@ module switch#(
         end
     endgenerate
 
+	wire [ROUTE_LEN - 1 : 0] out_xpos_selector;
+	wire [ROUTE_LEN - 1 : 0] out_ypos_selector;
+	/*wire [ROUTE_LEN - 1 : 0] out_zpos_selector;
+	wire [ROUTE_LEN - 1 : 0] out_xneg_selector;
+	wire [ROUTE_LEN - 1 : 0] out_yneg_selector;
+	wire [ROUTE_LEN - 1 : 0] out_xneg_selector;*/
 
     reduction_tree#(
         .FAN_IN(M_IN),
@@ -70,10 +76,10 @@ module switch#(
         .rst(rst),
         .in(in),
         .in_valid(in_valid & xpos_in_valid),
-		  
-        .in_avail(xpos_in_avail),	
+		  	
         .out_valid(out_valid[0]),
-        .out(out[FlitChildWidth-1:0])
+        .out(out[FlitChildWidth-1:0]),
+		  .selector(out_xpos_selector)
     );
 	 
      
@@ -86,18 +92,55 @@ module switch#(
         .rst(rst),
         .in(in),
         .in_valid(in_valid & ypos_in_valid),
-		  
-        .in_avail(ypos_in_avail),	
+		  	
         .out_valid(out_valid[1]),
-        .out(out[2*FlitChildWidth-1:FlitChildWidth])
+        .out(out[2*FlitChildWidth-1:FlitChildWidth]),
+		  .selector(out_ypos_selector)
     );	  
 	 
+	 reg [ROUTE_LEN - 1 : 0] in_xpos_selector;
+    reg [ROUTE_LEN - 1 : 0] in_ypos_selector;
+	 /*reg [ROUTE_LEN - 1 : 0] in_zpos_selector;
+    reg [ROUTE_LEN - 1 : 0] in_xneg_selector;
+	 reg [ROUTE_LEN - 1 : 0] in_yneg_selector;
+    reg [ROUTE_LEN - 1 : 0] in_zneg_selector;*/
 	 
-	 assign in_avail[0] = !(((xpos_in_avail==0)&&(out_valid[0]))||(out_avail[0]));
-	 assign in_avail[1] = !(((ypos_in_avail==1)&&(out_valid[1]))||(out_avail[1]));
 	 
-	 assign in_avail[5:2] = 0;
+	 always @(*)begin
+		case(route_in[ROUTE_LEN - 1 : 0])
+			DIR_XPOS:	in_xpos_selector = out_xpos_selector;							
+			DIR_YPOS:	in_xpos_selector = out_ypos_selector;		
+			/*DIR_ZPOS:	in_xpos_selector = out_zpos_selector;
+			DIR_XNEG:	in_xpos_selector = out_xneg_selector;		
+			DIR_YNEG:	in_xpos_selector = out_yneg_selector;
+			DIR_ZNEG:	in_xpos_selector = out_zneg_selector;*/		
+		endcase
+	 end
+	 
+	 always @(*)begin
+		case(route_in[2*ROUTE_LEN - 1 : ROUTE_LEN])
+			DIR_XPOS:	in_ypos_selector = out_xpos_selector;							
+			DIR_YPOS:	in_ypos_selector = out_ypos_selector;		
+			/*DIR_ZPOS:	in_ypos_selector = out_zpos_selector;
+			DIR_XNEG:	in_ypos_selector = out_xneg_selector;		
+			DIR_YNEG:	in_ypos_selector = out_yneg_selector;
+			DIR_ZNEG:	in_ypos_selector = out_zneg_selector;*/									
+		endcase
+	 end
+	 
+	 
+	 	 
+	 assign in_avail[0] = !(((in_xpos_selector!=0) && (in_valid[0]))||(out_avail[0]));
+	 assign in_avail[1] = !(((in_ypos_selector!=1) && (in_valid[1]))||(out_avail[1]));
+	 /*assign in_avail[2] = !(((in_zpos_selector!=2) && (in_valid[2]))||(out_avail[2]));
+	 assign in_avail[3] = !(((in_xneg_selector!=3) && (in_valid[3]))||(out_avail[3]));
+	 assign in_avail[4] = !(((in_yneg_selector!=4) && (in_valid[4]))||(out_avail[4]));
+	 assign in_avail[5] = !(((in_zneg_selector!=5) && (in_valid[5]))||(out_avail[5]));*/
+
+
 	 assign out_valid[5:2] = 0;
+	 assign in_avail[5:2] = 0;
+
 	  
    
 endmodule
