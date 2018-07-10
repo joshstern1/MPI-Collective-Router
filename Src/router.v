@@ -4,7 +4,8 @@ module router#(
     parameter cur_x = 0,
     parameter cur_y = 0,
     parameter cur_z = 0,
-	 parameter lg_numprocs = 3
+	 parameter lg_numprocs = 3,
+	 parameter PayloadWidth = 32
 )(
     input clk,
     input rst,
@@ -71,30 +72,52 @@ module router#(
 	 localparam input_Q_size = 5;
 	 localparam PORT_NUM = 6;
 	 
-	 localparam DIR_INJECT=3'd0;
 	 localparam DIR_XPOS=3'd1;
 	 localparam DIR_YPOS=3'd2;
 	 localparam DIR_ZPOS=3'd3;
 	 localparam DIR_XNEG=3'd4;
 	 localparam DIR_YNEG=3'd5;
 	 localparam DIR_ZNEG=3'd6;
-	 localparam DIR_EJECT=3'd7;
 	 
 	 localparam num_procs = 1 << lg_numprocs;
-
-	 localparam ValidBitPos = 81;
+	 
+	 localparam opPos = PayloadWidth;
+	 localparam opWidth = 4;
+	 localparam AlgTypePos = opPos+opWidth;
+	 localparam AlgTypeWidth = 2;
+	 localparam TagPos=AlgTypePos+AlgTypeWidth;
+	 localparam TagWidth = 8;
+	 localparam ContextIdPos = TagPos+TagWidth;
+	 localparam ContextIdWidth = 8;
+	 localparam RankPos = ContextIdPos + ContextIdWidth;
+	 localparam RankWidth = 9;
+	 localparam Src_XPos = RankPos+RankWidth;
+	 localparam Src_XWidth = 3;
+	 localparam Src_YPos = Src_XPos+Src_XWidth;
+	 localparam Src_YWidth = 3;
+	 localparam Src_ZPos = Src_YPos+Src_YWidth;
+	 localparam Src_ZWidth = 3;
+	 localparam Dst_XPos = Src_ZPos+Src_ZWidth;
+	 localparam Dst_XWidth = 3;
+	 localparam Dst_YPos = Dst_XPos+Dst_XWidth;
+	 localparam Dst_YWidth = 3;
+	 localparam Dst_ZPos = Dst_YPos+Dst_YWidth;
+	 localparam Dst_ZWidth = 3;
+	 localparam SrcPos = Src_XPos;
+	 localparam SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
+	 localparam DstPos = Dst_XPos;
+	 localparam DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
+	 localparam ValidBitPos = Dst_ZPos+Dst_ZWidth;
 	 localparam FlitWidth = ValidBitPos + 1;
-
+	 
 	 localparam ChildrenPos=ValidBitPos+1;
 	 localparam ChildrenWidth=lg_numprocs;
-	 
 	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
-	 localparam DstWidth = 9;
+
 	 localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
-	 localparam ContextIdWidth = 8;
 	 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 	 
-
+	 localparam ReductionBitPos=opPos+opWidth-1;
 	 
 //buffer output and IR input
 	 wire [FlitWidth - 1 : 0]in_xpos_IR;
@@ -178,7 +201,8 @@ module router#(
 		.rank_x(cur_x),
 		.rank_y(cur_y),
 		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs)
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
 	)
 	xpos_IR(
 	 .packetOut(in_xpos_RC),
@@ -193,7 +217,8 @@ module router#(
 		.rank_x(cur_x),
 		.rank_y(cur_y),
 		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs)
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
 	)
 	ypos_IR(
 	 .packetOut(in_ypos_RC),
@@ -211,9 +236,10 @@ module router#(
         .cur_x(cur_x),
         .cur_y(cur_y),
         .cur_z(cur_z),
-		  .DstPos(72),
-		  .DstWidth(9),
-		  .Dst_XWidth(3)
+		  .DstPos(DstPos),
+		  .DstWidth(DstWidth),
+		  .Dst_XWidth(Dst_XWidth),
+		  .ValidBitPos(ValidBitPos)
     )xpos_route_comp(
         .clk(clk),
         .rst(rst),
@@ -231,9 +257,10 @@ module router#(
         .cur_x(cur_x),
         .cur_y(cur_y),
         .cur_z(cur_z),
-		  .DstPos(72),
-		  .DstWidth(9),
-		  .Dst_XWidth(3)
+		  .DstPos(DstPos),
+		  .DstWidth(DstWidth),
+		  .Dst_XWidth(Dst_XWidth),
+		  .ValidBitPos(ValidBitPos)
     )ypos_route_comp(
         .clk(clk),
         .rst(rst),
@@ -409,12 +436,12 @@ module router#(
     wire [FlitChildWidth-1:0]out_zneg_switch = ((flit_valid_ST[5]) && (~inject_zneg_valid))? out_ST[6 * FlitChildWidth - 1 : 5 * FlitChildWidth] : inject_zneg_hold;*/
 	  
 
-	wire [FlitChildWidth-1:0]xpos_reduce_special = ((out_xpos_switch[35:34] == 2'b11)&&(out_xpos_switch[ValidBitPos]))? out_xpos_switch : 0;
-	wire [FlitChildWidth-1:0]ypos_reduce_special = ((out_ypos_switch[35:34] == 2'b11)&&(out_ypos_switch[ValidBitPos]))? out_ypos_switch : 0;
-	/*wire [FlitChildWidth-1:0]zpos_reduce_special = ((out_zpos_switch[35:34] == 2'b11)&&(out_zpos_switch[ValidBitPos]))? out_zpos_switch : 0;
-	wire [FlitChildWidth-1:0]xneg_reduce_special = ((out_xneg_switch[35:34] == 2'b11)&&(out_xneg_switch[ValidBitPos]))? out_xneg_switch : 0;
-	wire [FlitChildWidth-1:0]yneg_reduce_special = ((out_yneg_switch[35:34] == 2'b11)&&(out_yneg_switch[ValidBitPos]))? out_yneg_switch : 0;
-	wire [FlitChildWidth-1:0]zneg_reduce_special = ((out_zneg_switch[35:34] == 2'b11)&&(out_zneg_switch[ValidBitPos]))? out_zneg_switch : 0;*/
+	wire [FlitChildWidth-1:0]xpos_reduce_special = ((out_xpos_switch[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(out_xpos_switch[ValidBitPos]))? out_xpos_switch : 0;
+	wire [FlitChildWidth-1:0]ypos_reduce_special = ((out_ypos_switch[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(out_ypos_switch[ValidBitPos]))? out_ypos_switch : 0;
+	/*wire [FlitChildWidth-1:0]zpos_reduce_special = ((out_zpos_switch[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(out_zpos_switch[ValidBitPos]))? out_zpos_switch : 0;
+	wire [FlitChildWidth-1:0]xneg_reduce_special = ((out_xneg_switch[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(out_xneg_switch[ValidBitPos]))? out_xneg_switch : 0;
+	wire [FlitChildWidth-1:0]yneg_reduce_special = ((out_yneg_switch[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(out_yneg_switch[ValidBitPos]))? out_yneg_switch : 0;
+	wire [FlitChildWidth-1:0]zneg_reduce_special = ((out_zneg_switch[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(out_zneg_switch[ValidBitPos]))? out_zneg_switch : 0;*/
 	 
 	 
 	 //reduction unit logic 	 
@@ -464,12 +491,16 @@ module router#(
 ////////////////////////////////////////////////////////////
 //reduce unit
 	
-	 fifo xpos_reduce_fifo (
+	 fifo#(
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
+	 )	 
+	 xpos_reduce_fifo (
 	 .clk(clk),
 	 .rst(rst),
 	 .buf_in(xpos_reduce_special),
 	 .buf_out(in_xpos_reduce),
-	 .wr_en(1'b1),
+	 .wr_en(xpos_reduce_special[ValidBitPos]),
 	 .rd_en(xpos_rd_en),
 	 .buf_empty(),
 	 .buf_full(),
@@ -481,7 +512,8 @@ module router#(
 		.rank_x(cur_x),
 		.rank_y(cur_y),
 		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs)
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
 	)
 	xpos_reduce_unit(
 	 .Outpacket(out_xpos_reduce),
@@ -506,7 +538,7 @@ module router#(
         .clk(clk),
         .rst(rst),
         .in(out_xpos_switch[FlitWidth-1:0]),
-        .produce((out_xpos_switch[ValidBitPos])&&(out_xpos_switch[35:34]!=2'b11)),
+        .produce((out_xpos_switch[ValidBitPos])&&(out_xpos_switch[ReductionBitPos:ReductionBitPos-1]!=2'b11)),
         .consume(!xpos_reduce_done),
         .full(),
         .empty(),
@@ -515,12 +547,16 @@ module router#(
     );
 	 
 	 
-	 fifo ypos_reduce_fifo (
+	 fifo#(
+		.lg_numprocs(lg_numprocs),
+		.PayloadWidth(PayloadWidth)
+	 )	 
+	 ypos_reduce_fifo (
 	 .clk(clk),
 	 .rst(rst),
 	 .buf_in(ypos_reduce_special),
 	 .buf_out(in_ypos_reduce),
-	 .wr_en(1'b1),
+	 .wr_en(ypos_reduce_special[ValidBitPos]),
 	 .rd_en(ypos_rd_en),
 	 .buf_empty(),
 	 .buf_full(),
@@ -557,7 +593,7 @@ module router#(
         .clk(clk),
         .rst(rst),
         .in(out_ypos_switch[FlitWidth-1:0]),
-        .produce((out_ypos_switch[ValidBitPos])&&(out_ypos_switch[35:34]!=2'b11)),
+        .produce((out_ypos_switch[ValidBitPos])&&(out_ypos_switch[ReductionBitPos:ReductionBitPos-1]!=2'b11)),
         .consume(!ypos_reduce_done),
         .full(),
         .empty(),
