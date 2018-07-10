@@ -27,10 +27,11 @@ module node_test1;
 	// Inputs
 	reg clk;
 	reg rst;
-	reg [81:0] inject_xpos;
-	reg [81:0] inject_ypos;
+	reg [84:0] inject_xpos;
+	reg [84:0] inject_ypos;
 	reg [81:0] in_xpos_ser;
 	reg [81:0] in_ypos_ser;
+	reg [60:0] newcomm;
 
 	// Outputs
 	wire [81:0] out_xpos_ser;
@@ -44,6 +45,7 @@ module node_test1;
 		.inject_ypos(inject_ypos),
 		.in_xpos_ser(in_xpos_ser), 
 		.in_ypos_ser(in_ypos_ser), 
+		.newcomm(newcomm),
 		.out_xpos_ser(out_xpos_ser), 
 		.out_ypos_ser(out_ypos_ser)
 	);
@@ -56,6 +58,7 @@ module node_test1;
 		inject_ypos = 0;
 		in_xpos_ser = 0;
 		in_ypos_ser = 0;
+		newcomm = {1'b1, 8'b0, 9'b0, 9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
 
 		// Wait 100 ns for global reset to finish
 		#105;
