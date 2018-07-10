@@ -11,7 +11,8 @@ module route_comp
     parameter cur_z = 0,
 	 parameter DstPos = 72,
 	 parameter DstWidth = 9,
-	 parameter Dst_XWidth = 3
+	 parameter Dst_XWidth = 3,
+	 parameter ValidBitPos = 81
 )(
     input clk,
     input rst,
@@ -27,7 +28,6 @@ module route_comp
 	 localparam lg_numprocs = 3;
 	 localparam num_procs = 1 << lg_numprocs;
 
-	 localparam ValidBitPos = 81;
 	 localparam FlitWidth = ValidBitPos + 1;
 
 	 localparam ChildrenPos=ValidBitPos+1;
