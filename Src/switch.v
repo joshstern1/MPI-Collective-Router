@@ -2,7 +2,8 @@
 
 module switch#(
     parameter M_IN = PORT_NUM,				//6
-	 parameter ValidBitPos = 81
+	 parameter ValidBitPos = 81,
+	 parameter lg_numprocs = 3
 )
 (
     input clk,
@@ -17,22 +18,21 @@ module switch#(
     output [2*FlitChildWidth-1:0] out    //////////////////remember to change this
 );
 
-	 parameter lg_numprocs = 3;
-	 parameter num_procs = 1 << lg_numprocs;
+	 localparam num_procs = 1 << lg_numprocs;
 
-	 parameter FlitWidth = ValidBitPos + 1;
-	 parameter ChildrenWidth=lg_numprocs;
-	 parameter FlitChildWidth = FlitWidth+ChildrenWidth;
+	 localparam FlitWidth = ValidBitPos + 1;
+	 localparam ChildrenWidth=lg_numprocs;
+	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
 
-	 parameter ROUTE_LEN = 3;
-	 parameter PORT_NUM = 6;
+	 localparam ROUTE_LEN = 3;
+	 localparam PORT_NUM = 6;
 	 
-	 parameter DIR_XPOS=3'd1;
-	 parameter DIR_YPOS=3'd2;
-	 parameter DIR_ZPOS=3'd3;
-	 parameter DIR_XNEG=3'd4;
-	 parameter DIR_YNEG=3'd5;
-	 parameter DIR_ZNEG=3'd6;
+	 localparam DIR_XPOS=3'd1;
+	 localparam DIR_YPOS=3'd2;
+	 localparam DIR_ZPOS=3'd3;
+	 localparam DIR_XNEG=3'd4;
+	 localparam DIR_YNEG=3'd5;
+	 localparam DIR_ZNEG=3'd6;
 
     wire [M_IN - 1 : 0] xpos_in_valid;
     wire [M_IN - 1 : 0] ypos_in_valid;
@@ -63,7 +63,8 @@ module switch#(
 
     reduction_tree#(
         .FAN_IN(M_IN),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )xpos_reduction(
         .clk(clk),
         .rst(rst),
@@ -78,7 +79,8 @@ module switch#(
      
     reduction_tree#(
         .FAN_IN(M_IN),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )ypos_reduction(
         .clk(clk),
         .rst(rst),
