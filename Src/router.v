@@ -3,7 +3,8 @@
 module router#(
     parameter cur_x = 0,
     parameter cur_y = 0,
-    parameter cur_z = 0
+    parameter cur_z = 0,
+	 parameter lg_numprocs = 3
 )(
     input clk,
     input rst,
@@ -34,6 +35,7 @@ module router#(
     output out_xneg_valid,
     output out_yneg_valid,
     output out_zneg_valid,
+	 
     //interface to application kernel
     //inputs */
     output [FlitChildWidth-1:0] eject_xpos,
@@ -48,7 +50,6 @@ module router#(
     output eject_xneg_valid,
     output eject_yneg_valid,
     output eject_zneg_valid,*/
-
     input [FlitChildWidth-1:0] inject_xpos,
     input [FlitChildWidth-1:0] inject_ypos,
     /*input [FlitChildWidth-1:0] inject_zpos,
@@ -56,36 +57,42 @@ module router#(
     input [FlitChildWidth-1:0] inject_yneg,
     input [FlitChildWidth-1:0] inject_zneg,*/
     input inject_xpos_valid,
-    input inject_ypos_valid/*,
-    input inject_zpos_valid,
+    input inject_ypos_valid,
+    /*input inject_zpos_valid,
     input inject_xneg_valid,
     input inject_yneg_valid,
     input inject_zneg_valid*/
+	 
+	 input [NewCommWidth-1:0]newcomm
+	 
     );
 	 
-	 parameter ROUTE_LEN = 3;
-	 parameter input_Q_size = 5;
-	 parameter PORT_NUM = 6;
+	 localparam ROUTE_LEN = 3;
+	 localparam input_Q_size = 5;
+	 localparam PORT_NUM = 6;
 	 
-	 parameter DIR_INJECT=3'd0;
-	 parameter DIR_XPOS=3'd1;
-	 parameter DIR_YPOS=3'd2;
-	 parameter DIR_ZPOS=3'd3;
-	 parameter DIR_XNEG=3'd4;
-	 parameter DIR_YNEG=3'd5;
-	 parameter DIR_ZNEG=3'd6;
-	 parameter DIR_EJECT=3'd7;
+	 localparam DIR_INJECT=3'd0;
+	 localparam DIR_XPOS=3'd1;
+	 localparam DIR_YPOS=3'd2;
+	 localparam DIR_ZPOS=3'd3;
+	 localparam DIR_XNEG=3'd4;
+	 localparam DIR_YNEG=3'd5;
+	 localparam DIR_ZNEG=3'd6;
+	 localparam DIR_EJECT=3'd7;
 	 
-	 parameter lg_numprocs = 3;
-	 parameter num_procs = 1 << lg_numprocs;
+	 localparam num_procs = 1 << lg_numprocs;
 
-	 parameter ValidBitPos = 81;
-	 parameter FlitWidth = ValidBitPos + 1;
+	 localparam ValidBitPos = 81;
+	 localparam FlitWidth = ValidBitPos + 1;
 
-	 parameter ChildrenPos=ValidBitPos+1;
-	 parameter ChildrenWidth=lg_numprocs;
+	 localparam ChildrenPos=ValidBitPos+1;
+	 localparam ChildrenWidth=lg_numprocs;
 	 
-	 parameter FlitChildWidth = FlitWidth+ChildrenWidth;
+	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
+	 localparam DstWidth = 9;
+	 localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
+	 localparam ContextIdWidth = 8;
+	 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 	 
 
 	 
@@ -175,7 +182,7 @@ module router#(
 	)
 	xpos_IR(
 	 .packetOut(in_xpos_RC),
-	 .new_comm(61'b0),
+	 .new_comm(newcomm),
 	 .packetIn(in_xpos_IR),
 	 .clk(clk),
 	 .rst(rst),
@@ -190,7 +197,7 @@ module router#(
 	)
 	ypos_IR(
 	 .packetOut(in_ypos_RC),
-	 .new_comm(61'b0),
+	 .new_comm(newcomm),
 	 .packetIn(in_ypos_IR),
 	 .clk(clk),
 	 .rst(rst),
@@ -349,7 +356,8 @@ module router#(
 
     switch#(
         .M_IN(PORT_NUM),	//6
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )sw_inst(
         .clk(clk),
         .rst(rst),
