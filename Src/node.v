@@ -4,13 +4,14 @@ module node
 #(
     parameter cur_x = 0,
     parameter cur_y = 0,
-    parameter cur_z = 0
+    parameter cur_z = 0,
+	 parameter lg_numprocs = 3
 )(
 	 input clk,
     input rst,
 	 
-	 input [FLIT_SIZE : 0]inject_xpos,
-	 input [FLIT_SIZE : 0]inject_ypos,
+	 input [FlitChildWidth - 1 : 0]inject_xpos,
+	 input [FlitChildWidth - 1 : 0]inject_ypos,
 	 /*input [FLIT_SIZE : 0]inject_zpos,
 	 input [FLIT_SIZE : 0]inject_xneg,
 	 input [FLIT_SIZE : 0]inject_yneg,
@@ -24,16 +25,27 @@ module node
 	 input [FLIT_SIZE -1 : 0] in_zneg_ser,	*/
 	 
     output [FLIT_SIZE - 1 : 0] out_xpos_ser,
-    output [FLIT_SIZE - 1 : 0] out_ypos_ser/*,	
-	 output [FLIT_SIZE - 1 : 0] out_zpos_ser,
+    output [FLIT_SIZE - 1 : 0] out_ypos_ser,	
+	 /*output [FLIT_SIZE - 1 : 0] out_zpos_ser,
     output [FLIT_SIZE - 1 : 0] out_xneg_ser,	    	
     output [FLIT_SIZE - 1 : 0] out_yneg_ser,
     output [FLIT_SIZE - 1 : 0] out_zneg_ser*/
+	 
+	 input [NewCommWidth-1:0]newcomm
 );
 
-	parameter FLIT_SIZE = 82;
-	parameter LinkDelay = 6;
-	parameter ValidBitPos = 81;
+	localparam FLIT_SIZE = 82;
+	localparam LinkDelay = 6;
+
+	localparam ValidBitPos = 81;
+	localparam FlitWidth = ValidBitPos + 1;
+	localparam ChildrenWidth=lg_numprocs;	 
+	localparam FlitChildWidth = FlitWidth+ChildrenWidth;
+	localparam DstWidth = 9;
+	localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
+	localparam ContextIdWidth = 8;
+	localparam NewCommWidth = CommTableWidth+ContextIdWidth;
+	
 
 	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
@@ -68,15 +80,15 @@ module node
     wire inject_ypos_valid = inject_ypos[ValidBitPos];
     /*wire inject_zpos_valid = inject_zpos[ValidBitPos];
     wire inject_xneg_valid = inject_xneg[ValidBitPos];
-    wire inject_yneg_valid = inject_yneg[ValidBitPos];
+    wire inject_yneg_valid = inject_yneg[ValidBitPos]; 
     wire inject_zneg_valid = inject_zneg[ValidBitPos];*/
  
-    wire [FLIT_SIZE - 1 : 0] eject_xpos;
-    wire [FLIT_SIZE - 1 : 0] eject_ypos;
-    /*wire [FLIT_SIZE - 1 : 0] eject_zpos;
-    wire [FLIT_SIZE - 1 : 0] eject_xneg;
-    wire [FLIT_SIZE - 1 : 0] eject_yneg;
-    wire [FLIT_SIZE - 1 : 0] eject_zneg;*/
+    wire [FlitChildWidth - 1 : 0] eject_xpos;
+    wire [FlitChildWidth - 1 : 0] eject_ypos;
+    /*wire [FlitChildWidth - 1 : 0] eject_zpos;
+    wire [FlitChildWidth - 1 : 0] eject_xneg;
+    wire [FlitChildWidth - 1 : 0] eject_yneg;
+    wire [FlitChildWidth - 1 : 0] eject_zneg;*/
     
     wire eject_xpos_valid;
     wire eject_ypos_valid;
@@ -89,7 +101,8 @@ module node
     router#(
         .cur_x(cur_x),
         .cur_y(cur_y),
-        .cur_z(cur_z)
+        .cur_z(cur_z),
+		  .lg_numprocs(lg_numprocs)
     )
     switch_inst(
         .clk(clk),
@@ -121,6 +134,7 @@ module node
         .out_xneg_valid(out_xneg_valid),
         .out_yneg_valid(out_yneg_valid),
         .out_zneg_valid(out_zneg_valid),*/
+		  
     //interface to application kernel
     //inputs 
         .eject_xpos(eject_xpos),
@@ -135,7 +149,6 @@ module node
         .eject_xneg_valid(eject_xneg_valid),
         .eject_yneg_valid(eject_yneg_valid),
         .eject_zneg_valid(eject_zneg_valid),*/
-
         .inject_xpos(inject_xpos),
         .inject_ypos(inject_ypos),
         /*.inject_zpos(inject_zpos),
@@ -143,11 +156,13 @@ module node
         .inject_yneg(inject_yneg),
         .inject_zneg(inject_zneg),*/
         .inject_xpos_valid(inject_xpos_valid),
-        .inject_ypos_valid(inject_ypos_valid)/*,
-        .inject_zpos_valid(inject_zpos_valid),
+        .inject_ypos_valid(inject_ypos_valid),
+        /*.inject_zpos_valid(inject_zpos_valid),
         .inject_xneg_valid(inject_xneg_valid),
         .inject_yneg_valid(inject_yneg_valid),
         .inject_zneg_valid(inject_zneg_valid),*/
+		  
+		  .newcomm(newcomm)
     );
         
 //xpos link
