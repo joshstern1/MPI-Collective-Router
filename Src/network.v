@@ -20,21 +20,48 @@
 	 output valid
 );
 
-	localparam FLIT_SIZE = 82;
-	localparam lg_numprocs = 3;
 	localparam num_procs = 1 << lg_numprocs;
- 
-	localparam ValidBitPos = 81;
-	localparam FlitWidth = ValidBitPos + 1;
+	localparam lg_numprocs = 3;
+
+	//packet structure
+	localparam PayloadWidth=32;
+	localparam opPos = PayloadWidth;
+	localparam opWidth = 4;
+	localparam AlgTypePos = opPos+opWidth;
+	localparam AlgTypeWidth = 2;
+	localparam TagPos=AlgTypePos+AlgTypeWidth;
+	localparam TagWidth = 8;
+	localparam ContextIdPos = TagPos+TagWidth;
+	localparam ContextIdWidth = 8;
+	localparam RankPos = ContextIdPos + ContextIdWidth;
+	localparam RankWidth = 9;
+	localparam Src_XPos = RankPos+RankWidth;
+	localparam Src_XWidth = 3;
+	localparam Src_YPos = Src_XPos+Src_XWidth;
+	localparam Src_YWidth = 3;
+	localparam Src_ZPos = Src_YPos+Src_YWidth;
+	localparam Src_ZWidth = 3;
+	localparam Dst_XPos = Src_ZPos+Src_ZWidth;
+	localparam Dst_XWidth = 3;
+	localparam Dst_YPos = Dst_XPos+Dst_XWidth;
+	localparam Dst_YWidth = 3;
+	localparam Dst_ZPos = Dst_YPos+Dst_YWidth;
+	localparam Dst_ZWidth = 3;
+	localparam SrcPos = Src_XPos;
+	localparam SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
+	localparam DstPos = Dst_XPos;
+	localparam DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
+	localparam ValidBitPos = Dst_ZPos+Dst_ZWidth;
+	localparam FlitWidth = ValidBitPos + 1;	
 
 	localparam ChildrenPos=ValidBitPos+1;
-	localparam ChildrenWidth=lg_numprocs;
-	 
+	localparam ChildrenWidth=lg_numprocs;	 
 	localparam FlitChildWidth = FlitWidth+ChildrenWidth;
-   localparam DstWidth = 9;
+	
 	localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
-	localparam ContextIdWidth = 8;
 	localparam NewCommWidth = CommTableWidth+ContextIdWidth;
+	
+	localparam FLIT_SIZE = FlitWidth;
 	
 	assign valid = 1'b1;
 
@@ -157,7 +184,8 @@
         .cur_x(0),
         .cur_y(0),
         .cur_z(0),
-		  .lg_numprocs(lg_numprocs)
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_0_0_0(
         .clk(clk),
         .rst(rst),
@@ -184,7 +212,9 @@
     node#(
         .cur_x(0),
         .cur_y(0),
-        .cur_z(1)
+        .cur_z(1),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_0_0_1(
         .clk(clk),
         .rst(rst),
