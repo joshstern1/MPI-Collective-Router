@@ -21,7 +21,21 @@ inside the fifo
 //extra bit/counting down is 1 if the wait count was ever set to the proper latency
 /////////////////////////////////////////////////////////////////////////////////*/
 
-module fifo( clk, rst, buf_in, buf_out, wr_en, rd_en, buf_empty, buf_full, fifo_counter);
+module fifo#(
+	parameter lg_numprocs = 3,
+	parameter PayloadWidth = 32
+)
+(
+	input rst,
+	input clk,
+	input wr_en,
+   input	rd_en,
+	input [FlitWidth+ChildrenWidth-1:0] buf_in,              	 
+	output[FlitWidth+ChildrenWidth-1:0] buf_out,          	 
+	output buf_empty, 
+	output buf_full,
+	output[fifo_lg_size:0] fifo_counter 
+);
 
 //////////////////////////////////////////
 //current rank, root, and world size
@@ -34,12 +48,10 @@ parameter root_z = 3'b0;
 parameter root_y = 3'b0;
 parameter root_x = 3'b0;
 
-parameter lg_numprocs = 3;
 parameter num_procs = 1 << lg_numprocs;
 
 ///////////////////////////////////////////
 //packet structure
-parameter PayloadWidth=32;
 parameter opPos = PayloadWidth;
 parameter opWidth = 4;
 parameter AlgTypePos = opPos+opWidth;
@@ -90,7 +102,7 @@ parameter ReductionBitPos=opPos+opWidth-1;
 
 ///////////////////////////////////////
 //fifo
-parameter fifo_lg_size = 12;
+parameter fifo_lg_size = 4;
 parameter FifoSize = 1<<fifo_lg_size;
 
 /////////////////////////////////////
@@ -119,13 +131,6 @@ parameter ShortAllReduce = 4'b1110;
 parameter LargeAllReduce = 4'b1111;
 
 ////////////////////////////////////
-
-input rst, clk, wr_en, rd_en;  
-input [FlitWidth+ChildrenWidth-1:0] buf_in;              	 
-output[FlitWidth+ChildrenWidth-1:0] buf_out;          	 
-output buf_empty, buf_full; 	 
-output[fifo_lg_size:0] fifo_counter;        	 
-
 reg[FlitWidth+ChildrenWidth-1:0] buf_out;
 reg buf_empty, buf_full;
 reg[fifo_lg_size :0]	fifo_counter;
@@ -237,4 +242,3 @@ endmodule
 
 
 
- 
