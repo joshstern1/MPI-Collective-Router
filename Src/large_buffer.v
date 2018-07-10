@@ -40,7 +40,7 @@ module large_buffer
     always@(posedge clk) begin
 		if(rst) begin
 			for(i = 0; i <= buffer_depth; i = i + 1) begin
-				fifo[i] = 0;
+				fifo[i] <= 0;
 			end
 		end
       else if(produce) begin
@@ -71,4 +71,3 @@ module large_buffer
 
 
 endmodule
- 
