@@ -10,7 +10,10 @@ module top
 	input [15:0] 	rx_parallel_data_B3,			// data received from RX Board 3		
 	
 	input [7:0] BRAM_ready_mask,
-	output triggering_status 	// Triggering status
+	output triggering_status, 	// Triggering status\
+	
+	input DRAM_Read_Valid
+	
 );
 
 	wire [15:0]    triggering_time_stamp;
@@ -112,15 +115,17 @@ module top
 		.channel_offsets(channel_offsets)
 	);
 	
+	parameter Ethernet_Width = 8;
+	wire [Ethernet_Width-1:0]PC_data;
 
-	wire [255:0]DRAM_Read_data = 255'b0;
-	wire DRAM_Read_Valid = 1'b0;
+	wire [255:0]DRAM_Read_Data = 255'd21;
+	//wire DRAM_Read_Valid = 1'b0;
 	wire DRAM_Read_Enable;
 	wire [24:0]DRAM_Read_Addr;
 	
 	UDP_Control UDP(
 		.clk(clk),
-		.rst(rst),
+		.rst_n(rst),
 		.triggering_time_stamp(triggering_time_stamp),
 		.triggering_status(triggering_status),
 		.prev_channel_offsets(channel_offsets),
@@ -128,7 +133,7 @@ module top
 		.DRAM_Read_Enable(DRAM_Read_Enable),
 		.DRAM_Read_Valid(DRAM_Read_Valid),
 		.DRAM_Read_Addr(DRAM_Read_Addr),	
-		.DRAM_Read_data(DRAM_Read_data)
+		.DRAM_Read_Data(DRAM_Read_Data)
 	);
 	
 
