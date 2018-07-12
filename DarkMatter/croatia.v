@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 1ns
 
 ////////////////////////////////////////////////////////////////////////////////
 // Company: 
@@ -32,6 +32,7 @@ module croatia;
 	reg [15:0] rx_parallel_data_B2;
 	reg [15:0] rx_parallel_data_B3;
 	reg [7:0] BRAM_ready_mask;
+	reg DRAM_Read_Valid;
 
 	// Outputs
 	wire triggering_status;
@@ -45,6 +46,7 @@ module croatia;
 		.rx_parallel_data_B2(rx_parallel_data_B2), 
 		.rx_parallel_data_B3(rx_parallel_data_B3), 
 		.BRAM_ready_mask(BRAM_ready_mask),
+		.DRAM_Read_Valid(DRAM_Read_Valid),
 		.triggering_status(triggering_status)
 	);
 
@@ -57,6 +59,7 @@ module croatia;
 		rx_parallel_data_B2 = 18;
 		rx_parallel_data_B3 = 19;
 		BRAM_ready_mask = 8'b0;
+		DRAM_Read_Valid = 0;
 
 		// Wait 100 ns for global reset to finish
 		#100;
@@ -64,8 +67,10 @@ module croatia;
 		 BRAM_ready_mask = 8'b00000001;
 		#10;
 		 rx_parallel_data_B0 = 21;
+		 DRAM_Read_Valid = 1;
 		#10;
 		 rx_parallel_data_B0 = 16;
+		 DRAM_Read_Valid = 0;
 	end
       
 	always begin
