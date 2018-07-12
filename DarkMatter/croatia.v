@@ -31,7 +31,7 @@ module croatia;
 	reg [15:0] rx_parallel_data_B1;
 	reg [15:0] rx_parallel_data_B2;
 	reg [15:0] rx_parallel_data_B3;
-	reg [3:0] BRAM_ready_mask;
+	reg [7:0] BRAM_ready_mask;
 
 	// Outputs
 	wire triggering_status;
@@ -56,12 +56,12 @@ module croatia;
 		rx_parallel_data_B1 = 17;
 		rx_parallel_data_B2 = 18;
 		rx_parallel_data_B3 = 19;
-		BRAM_ready_mask = 4'b0;
+		BRAM_ready_mask = 8'b0;
 
 		// Wait 100 ns for global reset to finish
 		#100;
        rst = 1;
-		 BRAM_ready_mask = 4'b0001;
+		 BRAM_ready_mask = 8'b00000001;
 		#10;
 		 rx_parallel_data_B0 = 21;
 		#10;
