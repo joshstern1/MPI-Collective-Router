@@ -30,6 +30,10 @@ module Thresholder_top_direct(
 	input [15:0]RX_data_1,										
 	input [15:0]RX_data_2,									
 	input [15:0]RX_data_3,	
+	input [15:0]RX_data_4,							
+	input [15:0]RX_data_5,										
+	input [15:0]RX_data_6,									
+	input [15:0]RX_data_7,
 
 	
 	// The first tiggered timestamp, valid only if threshold_decision_to_DRAM_ctrl=1
@@ -42,14 +46,19 @@ module Thresholder_top_direct(
 
 	parameter THRESHOLD = 20;
 
-	wire [3:0]checker;
+	wire [7:0]checker;
 	reg [20:0]counter;
 	reg [4:0]countdown;
 	reg [2:0]state;
+	
 	assign checker[0] = (RX_data_0 > THRESHOLD);
 	assign checker[1] = (RX_data_1 > THRESHOLD);
 	assign checker[2] = (RX_data_2 > THRESHOLD);
 	assign checker[3] = (RX_data_3 > THRESHOLD);
+	assign checker[4] = (RX_data_4 > THRESHOLD);
+	assign checker[5] = (RX_data_5 > THRESHOLD);
+	assign checker[6] = (RX_data_6 > THRESHOLD);
+	assign checker[7] = (RX_data_7 > THRESHOLD);
 	
 	always @(posedge clk)begin
 		if(!rst_n)begin
@@ -60,17 +69,16 @@ module Thresholder_top_direct(
 			countdown <= 0;
 		end
 		else begin
+			counter <= counter + 1;
 			if(state == 0)begin
 				threshold_decision_to_DRAM_ctrl <= (checker > 0);
 				triggering_time_stamp <= (checker>0)? counter : triggering_time_stamp;
-				counter <= counter + 1;
 				state <= (checker > 0)? 1 : 0;
 				countdown <= 0;
 			end
 			else if (state == 1)begin
 				threshold_decision_to_DRAM_ctrl = (!(countdown == 10));
 				state <= (!(countdown == 10));
-				counter <= counter + 1;
 				countdown <= (countdown == 10)? 5'b0 : countdown + 1;
 			end
 		end
