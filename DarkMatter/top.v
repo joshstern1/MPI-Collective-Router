@@ -116,12 +116,12 @@ module top
 	);
 	
 	parameter Ethernet_Width = 8;
-	wire [Ethernet_Width-1:0]PC_data;
+	wire [Ethernet_Width-1:0]tx_data;
+	wire tx_data_valid;
 
-	wire [255:0]DRAM_Read_Data = 255'd21;
-	//wire DRAM_Read_Valid = 1'b0;
-	wire DRAM_Read_Enable;
 	wire [24:0]DRAM_Read_Addr;
+	wire DRAM_Read_Enable;
+	wire [255:0]DRAM_Read_Data = 255'd21;
 	
 	UDP_Control UDP(
 		.clk(clk),
@@ -129,11 +129,14 @@ module top
 		.triggering_time_stamp(triggering_time_stamp),
 		.triggering_status(triggering_status),
 		.prev_channel_offsets(channel_offsets),
-		.PC_data(PC_data),
+
 		.DRAM_Read_Enable(DRAM_Read_Enable),
 		.DRAM_Read_Valid(DRAM_Read_Valid),
 		.DRAM_Read_Addr(DRAM_Read_Addr),	
-		.DRAM_Read_Data(DRAM_Read_Data)
+		.DRAM_Read_Data(DRAM_Read_Data),
+		
+		.tx_data(tx_data),
+		.tx_data_valid(tx_data_valid)
 	);
 	
 
