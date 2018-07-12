@@ -9,20 +9,16 @@ module top
 	input [15:0] 	rx_parallel_data_B2,			// data received from RX Board 2
 	input [15:0] 	rx_parallel_data_B3,			// data received from RX Board 3		
 	
-	input [3:0] BRAM_ready_mask,
+	input [7:0] BRAM_ready_mask,
 	output triggering_status 	// Triggering status
 );
 
-	wire [1:0]     rx_syncstatus_0 = 0;
-	wire [1:0]     rx_syncstatus_1 = 0;
-	wire [1:0]     rx_syncstatus_2 = 0;
-	wire [1:0]     rx_syncstatus_3 = 0;
-	wire [1:0]     rx_datak_0 = 0;
-	wire [1:0]     rx_datak_1 = 0;
-	wire [1:0]     rx_datak_2 = 0;
-	wire [1:0]     rx_datak_3 = 0;
-
 	wire [15:0]    triggering_time_stamp;
+	
+	wire [15:0] rx_parallel_data_B4 = 16'b0;
+	wire [15:0] rx_parallel_data_B5 = 16'b0;
+	wire [15:0] rx_parallel_data_B6 = 16'b0;
+	wire [15:0] rx_parallel_data_B7 = 16'b0;
 	
 	Thresholder_top_direct Threshold(
 		.rst_n(rst),								
@@ -31,6 +27,10 @@ module top
 		.RX_data_1(rx_parallel_data_B1),								
 		.RX_data_2(rx_parallel_data_B2),									
 		.RX_data_3(rx_parallel_data_B3),	
+		.RX_data_4(rx_parallel_data_B4),								
+		.RX_data_5(rx_parallel_data_B5),								
+		.RX_data_6(rx_parallel_data_B6),									
+		.RX_data_7(rx_parallel_data_B7),
 
 		// The first tiggered timestamp is valid only if triggering_status=1
 		// Send to DRAM controller so it can be directly used for mask updating
@@ -46,26 +46,33 @@ module top
 	wire avalon_clk = clk;
 	
 	// DRAM Controller signal
-	wire [3:0] FIFO_ready_mask;
-	wire [3:0] FIFO_empty;
-	wire [3:0] FIFO_rd_request;
-	wire [3:0] BRAM_rd_request;
+	wire [7:0] BRAM_rd_request;
 	wire [2:0] BRAM_Sel;
 	wire [24:0] DRAM_WR_address;
 	wire [255:0] DRAM_Write_Data;
 	wire DRAM_Write_Enable;
 	wire [4:0] DRAM_Write_Burst_Count;	
 	wire DRAM_Write_Burst_Begin;
-	wire DRAM_Wait_Request = 1'b0; //////////////////////////////////////////////
+	wire DRAM_Wait_Request = 1'b1; //////////////////////////////////////////////
 	
 	// FIFO read out data to DRAM controller
 	wire [255:0] Buffer_RD_Data_0 = rx_parallel_data_B0;
 	wire [255:0] Buffer_RD_Data_1 = rx_parallel_data_B1;
 	wire [255:0] Buffer_RD_Data_2 = rx_parallel_data_B2;
 	wire [255:0] Buffer_RD_Data_3 = rx_parallel_data_B3;
+	wire [255:0] Buffer_RD_Data_4 = rx_parallel_data_B4;
+	wire [255:0] Buffer_RD_Data_5 = rx_parallel_data_B5;
+	wire [255:0] Buffer_RD_Data_6 = rx_parallel_data_B6;
+	wire [255:0] Buffer_RD_Data_7 = rx_parallel_data_B7;
 
 	reg [255:0] Selected_Data_to_DRAM;
 	
+	parameter CHANNEL_OFFSET_LEN = 14;
+	parameter NUM_BOARDS = 8;
+	parameter BOARDS_X_OFFSETS = CHANNEL_OFFSET_LEN * NUM_BOARDS;
+
+	wire [BOARDS_X_OFFSETS-1:0] channel_offsets;
+
 
 	// Logic to select read data from 8 FIFOs
 	always@(posedge avalon_clk)
@@ -77,6 +84,10 @@ module top
 				1: Selected_Data_to_DRAM <= Buffer_RD_Data_1;
 				2: Selected_Data_to_DRAM <= Buffer_RD_Data_2;
 				3: Selected_Data_to_DRAM <= Buffer_RD_Data_3;
+				4: Selected_Data_to_DRAM <= Buffer_RD_Data_4;
+				5: Selected_Data_to_DRAM <= Buffer_RD_Data_5;
+				6: Selected_Data_to_DRAM <= Buffer_RD_Data_6;
+				7: Selected_Data_to_DRAM <= Buffer_RD_Data_7;
 			endcase
 			
 	// DRAM controller
@@ -96,8 +107,11 @@ module top
 		.DRAM_Write_Burst_Begin(DRAM_Write_Burst_Begin),
 		.DRAM_Write_Burst_Count(DRAM_Write_Burst_Count),
 		.DRAM_Write_Addr(DRAM_WR_address),
-		.DRAM_Write_Data(DRAM_Write_Data)
+		.DRAM_Write_Data(DRAM_Write_Data),
+		.MASK_output(),
+		.channel_offsets(channel_offsets)
 	);
+	
 
 	wire [255:0]DRAM_Read_data = 255'b0;
 	wire DRAM_Read_Valid = 1'b0;
@@ -109,6 +123,7 @@ module top
 		.rst(rst),
 		.triggering_time_stamp(triggering_time_stamp),
 		.triggering_status(triggering_status),
+		.prev_channel_offsets(channel_offsets),
 		.PC_data(PC_data),
 		.DRAM_Read_Enable(DRAM_Read_Enable),
 		.DRAM_Read_Valid(DRAM_Read_Valid),
