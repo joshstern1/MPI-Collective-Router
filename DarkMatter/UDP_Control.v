@@ -13,7 +13,8 @@ module UDP_Control(
 	input DRAM_Read_Valid
 );
 
-	parameter MAX = 10;
+	parameter HEAD_DIFF = 0; //5ns should be 312500
+	parameter TAIL_DIFF = 10; //should be 937500
 
 	assign PC_data = DRAM_Read_data;
 	reg [2:0]state;
@@ -28,7 +29,7 @@ module UDP_Control(
 		else begin
 			if(state == 0)begin
 				DRAM_Read_Enable <= triggering_status;
-				DRAM_Read_Addr <= (triggering_status)? triggering_time_stamp : 25'b0;
+				DRAM_Read_Addr <= triggering_time_stamp - HEAD_DIFF;
 				state <= triggering_status;
 				countdown <= 0;
 			end
@@ -36,7 +37,7 @@ module UDP_Control(
 				countdown <= countdown + 1;
 				DRAM_Read_Addr <= DRAM_Read_Addr + 1;
 				DRAM_Read_Enable <= 1;
-				state <= (!(countdown == MAX));
+				state <= (!(countdown == (triggering_time_stamp + TAIL_DIFF)));
 			end
 		end
 	end
