@@ -3,26 +3,33 @@
 module UDP_Control(
 	input clk,
 	input rst_n,
+	
+	//signals for address generating
 	input [15:0] triggering_time_stamp,
    input triggering_status,
 	input [BOARDS_X_OFFSETS-1:0] prev_channel_offsets,
-   output [Ethernet_Width-1:0]PC_data,
-	
+		
+	//signals for reading from DRAM
 	output reg DRAM_Read_Enable,
 	output reg [24:0]  DRAM_Read_Addr,	
 	input [255:0]DRAM_Read_Data,
-	input DRAM_Read_Valid
+	input DRAM_Read_Valid,
+	
+	//signals for Ethernet
+	output reg[Ethernet_Width-1:0]tx_data,
+	output reg tx_data_valid
 );
 
-	parameter HEAD_DIFF = 0; //5ms should be 312
-	parameter MAX_COUNTER = NUM_BOARDS * CHANNELS_PER_BOARD * 1250;
+	parameter Ethernet_Width = 8;
 	
-	parameter CHANNEL_OFFSET_LEN = 14;
 	parameter NUM_BOARDS = 8;
 	parameter BOARDS_X_OFFSETS = CHANNEL_OFFSET_LEN * NUM_BOARDS;
-	parameter CHANNELS_PER_BOARD = 125;
+	parameter CHANNELS_PER_BOARD = 125;	
+	parameter CHANNEL_OFFSET_LEN = 14;
+
+	parameter HEAD_DIFF = 0; //used to get the data from 5ms before the event, shoudl be 312
+	parameter MAX_COUNTER = NUM_BOARDS * CHANNELS_PER_BOARD * 1250;
 	
-	parameter Ethernet_Width = 8;
 
 	//address generator registers
 	reg [CHANNEL_OFFSET_LEN-1:0] channel_offset [0:NUM_BOARDS-1];
@@ -34,7 +41,6 @@ module UDP_Control(
 	reg [20:0]counter;
 	reg [3:0]i;
 
-	assign PC_data = DRAM_Read_Data;	
 	
 /////////////////////////////////////////////////////////////////////////////////////
 /////address generator for reading data from DRAM upon triggering event
@@ -53,7 +59,7 @@ module UDP_Control(
 		else if(state == 0)begin
 				DRAM_Read_Enable <= triggering_status;
 				DRAM_Read_Addr <= {1'b0, BRAM_Sel, channel_sel, prev_channel_offsets[CHANNEL_OFFSET_LEN-1:0]};
-				channel_sel <= triggering_status; //normally 0, changes to 1 on trigger so its ready for the 2nd read (1st read with state = 1) 
+				channel_sel <= triggering_status; 
 				state <= triggering_status;
 				counter <= 1;
 				for(i=0; i<NUM_BOARDS; i=i+1)begin
@@ -80,8 +86,9 @@ module UDP_Control(
 			end
 		end
 	end
-/////end address generator for reading data from DRAM upon triggering event
+	
 /////////////////////////////////////////////////////////////////////////////////////
+//build packet header
 
 	parameter Version = 4'b0100;			//always 4 for ipv4
 	parameter IHL = 4'b0101;				//# of 32-bit words in header = 5 
@@ -108,9 +115,9 @@ module UDP_Control(
 	
 	wire [223:0]Packet_Header = {Version, IHL, DSCP, ECN, IP_Len, Identification, Flags, FragmentOffset, TTL, Protocol, IP_Checksum, SrcIp, DstIp, SrcPort, DstPort, UDP_Len, UDP_Checksum};
 
-
-	parameter Queue_Size = 10;
-		
+///////////////////////////////////////////////////////////////////////////////////
+//read data from DRAM and store in queue until ethernet is ready
+	parameter Queue_Size = 10;		
 	wire [255:0]Queue_Out;
 	reg rd_en;
 	
@@ -127,15 +134,15 @@ module UDP_Control(
         .empty(),
         .out(Queue_Out)
     );
-	 
+
+////////////////////////////////////////////////////////////////////////////////
+//send packet header and data	 
 	 
 	 parameter IDLE = 0;
 	 parameter SENDING_HEADER = 1;
 	 parameter SENDING_DATA = 2;
 	 
 	 reg [1:0]send_state;
-	 reg [Ethernet_Width-1:0]tx_data;
-	 reg tx_data_valid;
 	 reg [9:0]header_tracker;
 	 reg [9:0]data_tracker;	 
 	 reg [255:0]Packet_Data;
