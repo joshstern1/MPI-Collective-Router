@@ -28,9 +28,9 @@ module DRAM_Addr_Gen(
 	input 			    triggering_status,	   // input from Threshold_Global_Coordinator
 	
 	// Signal to buffer
-	input	 [3:0]	    BRAM_ready_mask,			// bit mask for those ready reorder buffers. Each connect to the Channel_Data_Reorder_Buffer module's BRAM_ready_mask pin
+	input	 [7:0]	    BRAM_ready_mask,			// bit mask for those ready reorder buffers. Each connect to the Channel_Data_Reorder_Buffer module's BRAM_ready_mask pin
 	input  [255:0]     BRAM_rd_data,				// The readin data from reorder buffer
-	output reg [3:0]	 BRAM_rd_request,		   // bit mask for rd_request, each bit connect to Channel_Data_Reorder_Buffer module's BRAM_rd_request pin
+	output reg [7:0]	 BRAM_rd_request,		   // bit mask for rd_request, each bit connect to Channel_Data_Reorder_Buffer module's BRAM_rd_request pin
 	output [2:0]		 BRAM_Sel,					// output the arbitration results to select from 1 of the 8 reorder buffers
 
 	// Signal to DRAM controller
@@ -39,9 +39,20 @@ module DRAM_Addr_Gen(
 	output reg         DRAM_Write_Burst_Begin,
 	output reg [4:0]   DRAM_Write_Burst_Count,
 	output reg [24:0]  DRAM_Write_Addr,			//{1'b0, BRAM_Sel, channel_sel, in_channel_offset} 0 MSB, 3 bit Board selection, 7 bit channel selection on each board, 14-bit channel offset based on sampling time
-	output reg [255:0] DRAM_Write_Data
+	output reg [255:0] DRAM_Write_Data,
+	
+	// dummy output for address mask
+	output reg		    MASK_output,
+	
+	output [BOARDS_X_OFFSETS-1:0] channel_offsets
+	
 );
 
+	parameter CHANNEL_OFFSET_LEN = 14;
+	parameter NUM_BOARDS = 8;
+	parameter BOARDS_X_OFFSETS = CHANNEL_OFFSET_LEN * NUM_BOARDS;
+	
+	assign channel_offsets = {prev_in_channel_offset[7], prev_in_channel_offset[6], prev_in_channel_offset[5], prev_in_channel_offset[4], prev_in_channel_offset[3], prev_in_channel_offset[2], prev_in_channel_offset[1], prev_in_channel_offset[0]};
 
 	parameter ARBITRATION     = 3'b000;
 	parameter READFIRSTDATA   = 3'b001;
@@ -69,7 +80,7 @@ module DRAM_Addr_Gen(
 	//assign DRAM_Write_Addr = {1'b0, BRAM_Sel, channel_sel, in_channel_offset};		// 0 MSB, 3 bit Board selection, 7 bit channel selection on each board, 14-bit channel offset based on sampling time
 	
 	wire       arbitor_enable;
-	wire [4:0] arbitor;
+	wire [7:0] arbitor;
 	
 	wire [4:0] MASK_dummy_output;
 	
@@ -125,7 +136,7 @@ module DRAM_Addr_Gen(
 					waiting_counter <= 3'd0;				// counter used for generating waiting cycles
 					
 					//if(board_sel == 4'd8)				// If arbitration gives no results
-					if(BRAM_ready_mask == 4'd0)			// If there's no reorder buffer is ready
+					if(BRAM_ready_mask == 8'd0)			// If there's no reorder buffer is ready
 						begin
 						state <= ARBITRATION;
 						end
@@ -204,7 +215,7 @@ module DRAM_Addr_Gen(
 		begin
 		if(!rst_n)
 			begin
-			BRAM_rd_request <= 4'd0;
+			BRAM_rd_request <= 8'd0;
 			
 			DRAM_Write_Enable <= 1'b0;
 			DRAM_Write_Burst_Begin <= 1'b0;
@@ -217,7 +228,7 @@ module DRAM_Addr_Gen(
 			case(state)
 			ARBITRATION:
 				begin
-				BRAM_rd_request <= 4'd0;
+				BRAM_rd_request <= 8'd0;
 				
 				DRAM_Write_Enable <= 1'b0;
 				DRAM_Write_Burst_Begin <= 1'b0;
@@ -253,7 +264,7 @@ module DRAM_Addr_Gen(
 				else
 					begin
 					// do not read data from Reorder Buffer if DRAM not ready to write
-					BRAM_rd_request <= 4'd0;
+					BRAM_rd_request <= 8'd0;
 					
 					DRAM_Write_Enable <= 1'b0;
 					DRAM_Write_Burst_Begin <= 1'b0;
@@ -264,7 +275,7 @@ module DRAM_Addr_Gen(
 				end
 			WAIT:
 				begin
-				BRAM_rd_request <= 4'd0;
+				BRAM_rd_request <= 8'd0;
 				
 				DRAM_Write_Enable <= 1'b0;
 				DRAM_Write_Burst_Begin <= 1'b0;
