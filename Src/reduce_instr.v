@@ -219,7 +219,7 @@ always @(posedge clk) begin
 	end
 	else if (packetIn[ValidBitPos])begin
 	
-		{dst_x_ring, dst_y_ring, dst_z_ring} = (home_ring)? {rank_x, rank_y, rank_z} : (local_rank == (num_procs-1))? t_root : comm_table[context][ring_offset+:DstWidth];  //ring (long allgather)	
+		{dst_x_ring, dst_y_ring, dst_z_ring} = (home_ring)? {rank_x, rank_y, rank_z} : (local_rank == (num_procs-1))? t_root : comm_table[context][ring_offset+:DstWidth];  
 
 		home_ring = ((from_guest) && (!home_ring) && (t_op==LargeAllGather));
 		
@@ -236,7 +236,7 @@ end
 
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [DstWidth:0]uptree_offset = (lg_commsize-communicator_children-1)*DstWidth;	
-assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (local_rank == 0)? rank_table[1] : comm_table[context][uptree_offset+:DstWidth]; //short reduction, gather, barrier
+assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (local_rank == 0)? {rank_z, rank_y, rank_x} : comm_table[context][uptree_offset+:DstWidth]; //short reduction, gather, barrier
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
