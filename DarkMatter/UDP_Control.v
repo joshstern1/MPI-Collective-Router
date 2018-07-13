@@ -20,7 +20,7 @@ module UDP_Control(
 	output reg tx_data_valid
 );
 
-	parameter Ethernet_Width = 8;
+	parameter Ethernet_Width = 16;
 	
 	parameter NUM_BOARDS = 8;
 	parameter BOARDS_X_OFFSETS = CHANNEL_OFFSET_LEN * NUM_BOARDS;
@@ -90,6 +90,14 @@ module UDP_Control(
 /////////////////////////////////////////////////////////////////////////////////////
 //build packet header
 
+
+	parameter SrcPort = 16'b0;
+	parameter DstPort = 16'b01;
+	parameter UDP_Len = 16'b0101000;	//8 bytes UDP header + 32 bytes of data = 40
+	parameter UDP_Checksum = 16'b0;		//UDP checksum is optional
+
+	parameter UDP_Packet_Header = {SrcPort, DstPort, UDP_Len, UDP_Checksum};
+
 	parameter Version = 4'b0100;			//always 4 for ipv4
 	parameter IHL = 4'b0101;				//# of 32-bit words in header = 5 
 	parameter DSCP = 6'b0;					//???
@@ -103,17 +111,29 @@ module UDP_Control(
 	parameter SrcIp = 32'hac10;			//TBD
 	parameter DstIp = 32'h0a0c;			//TBD
 	
-	parameter EarlySum = 16'hc54d;	//header sum without src ip + dst ip
-	wire [19:0]T1 = EarlySum + SrcIp + DstIp;
-	wire [15:0]T2 = T1[15:0] + T1[19:16];
-	wire [15:0]IP_Checksum = ~T2;
+	parameter EarlySum = 16'hc54d;	
+	parameter T1 = EarlySum + SrcIp + DstIp;
+	parameter T2 = T1[15:0] + T1[19:16];
+	parameter IP_Checksum = ~T2;			//IP Header Checksum
 	
-	parameter SrcPort = 16'b0;
-	parameter DstPort = 16'b01;
-	parameter UDP_Len = 16'b0101000;	//8 bytes UDP header + 32 bytes of data = 40
-	parameter UDP_Checksum = 16'b0;		//UDP checksum is optional
+	parameter IP_Packet_Header = {Version, IHL, DSCP, ECN, IP_Len, Identification, Flags, FragmentOffset, TTL, Protocol, IP_Checksum, SrcIp, DstIp, UDP_Packet_Header};
 	
-	wire [223:0]Packet_Header = {Version, IHL, DSCP, ECN, IP_Len, Identification, Flags, FragmentOffset, TTL, Protocol, IP_Checksum, SrcIp, DstIp, SrcPort, DstPort, UDP_Len, UDP_Checksum};
+	parameter Preamble = 64'haaaaaaaaaaaaaaab;
+	parameter DstMAC = 48'h1;
+	parameter SrcMAC = 48'h0;
+	parameter Type = 16'h0800;	
+	
+	wire [591:0]Ethernet_No_CRC = {DstMAC, SrcMAC, Type, IP_Packet_Header, Queue_Out};
+	
+	parameter CRC_Len = 32;
+	parameter CRC_Gen = 9;
+	wire [591+CRC_Len:0]CRC_helper = (Ethernet_No_CRC << CRC_Len)%CRC_Gen;
+	wire [31:0]CRC = (CRC_Gen - CRC_helper);
+	
+	parameter Ethernet_Packet_Header = {Preamble, DstMAC, SrcMAC, Type};
+	
+	
+	
 
 ///////////////////////////////////////////////////////////////////////////////////
 //read data from DRAM and store in queue until ethernet is ready
@@ -138,13 +158,17 @@ module UDP_Control(
 ////////////////////////////////////////////////////////////////////////////////
 //send packet header and data	 
 	 
+	 wire [399:0]Packet_Header = {Ethernet_Packet_Header, IP_Packet_Header};
+	 
 	 parameter IDLE = 0;
 	 parameter SENDING_HEADER = 1;
 	 parameter SENDING_DATA = 2;
+	 parameter SENDING_CRC = 3;
 	 
 	 reg [1:0]send_state;
 	 reg [9:0]header_tracker;
 	 reg [9:0]data_tracker;	 
+	 reg [9:0]crc_tracker;	 
 	 reg [255:0]Packet_Data;
 	 
 	 
@@ -155,6 +179,7 @@ module UDP_Control(
 			tx_data_valid <= 0;
 			header_tracker <= 0;
 			data_tracker <= 0;
+			crc_tracker <= 0;
 			rd_en <= 0;
 			Packet_Data <= 0;
 		end
@@ -165,24 +190,31 @@ module UDP_Control(
 						send_state <= DRAM_Read_Valid;
 						tx_data <= 0;
 						tx_data_valid <= 0;
+						rd_en <= DRAM_Read_Valid;
 						header_tracker <= 0;
 						data_tracker <= 0;
-						rd_en <= DRAM_Read_Valid;
+						crc_tracker <= 0;
 					end
 				SENDING_HEADER:	
 					begin	
-						tx_data <= Packet_Header[(224-Ethernet_Width-header_tracker)+:Ethernet_Width];
+						tx_data <= Packet_Header[(400-Ethernet_Width-header_tracker)+:Ethernet_Width];
 						tx_data_valid <= 1;
 						header_tracker <= header_tracker + Ethernet_Width;
 						Packet_Data <= (rd_en)? Queue_Out : Packet_Data;
 						rd_en <= 0;
-						send_state <= (header_tracker == (224 - Ethernet_Width))? SENDING_DATA : SENDING_HEADER;							
+						send_state <= (header_tracker == (400 - Ethernet_Width))? SENDING_DATA : SENDING_HEADER;							
 					end
 				SENDING_DATA:
 					begin
 						tx_data <= Packet_Data[(256-Ethernet_Width-data_tracker)+:Ethernet_Width];
 						data_tracker <= data_tracker + Ethernet_Width;
-						send_state <= (data_tracker == (256 - Ethernet_Width))? IDLE : SENDING_DATA;
+						send_state <= (data_tracker == (256 - Ethernet_Width))? SENDING_CRC : SENDING_DATA;
+					end
+				SENDING_CRC:
+					begin
+						tx_data <= CRC[(32-Ethernet_Width-crc_tracker)+:Ethernet_Width];
+						crc_tracker <= crc_tracker + Ethernet_Width;
+						send_state <= (crc_tracker == (32 - Ethernet_Width))? IDLE : SENDING_CRC;
 					end
 			endcase
 		end	 
