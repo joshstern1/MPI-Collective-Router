@@ -113,7 +113,7 @@ module route_comp
         end
         else if(cur_z != dst_z) begin
             if(cur_z > dst_z) begin
-                dir = (cur_z - dst_z >= ZSIZE/2)? DIR_ZPOS : DIR_XPOS;//change this to DIR_ZNEG
+                dir = (cur_z - dst_z >= ZSIZE/2)? DIR_ZPOS : DIR_ZNEG;
             end
             else begin
                 dir = (dst_z - cur_z <= ZSIZE/2)? DIR_ZPOS : DIR_ZNEG;
