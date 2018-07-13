@@ -26,7 +26,8 @@ module reduce_unit#(
 	parameter rank_y = 3'b0,
 	parameter rank_x = 3'b0,
 	parameter lg_numprocs = 3,
-	parameter PayloadWidth = 32
+	parameter PayloadWidth = 32,
+	parameter ReductionTableSize = 2
 )
 (
 	input clk,
@@ -91,8 +92,7 @@ localparam LeafBitPos=ExtraWaitPos+1;
 //////////////////////////////////////////
 //reduce unit table and adder
 localparam ReductionTableWidth = LeafBitPos+1;
-localparam ReductionTableSize = 2;
-localparam AdderLatency = 14;
+localparam AdderLatency = 4;
 localparam ReductionBitPos=opPos+opWidth-1;
 
 ////////////////////////////////////
@@ -134,7 +134,7 @@ assign rd_en = (reduction_table[packetIndex][ExtraWaitPos]==0);
 assign wr_en = 1'b1;
 
 
-assign packetIndex = (packetA[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})? packetA[TagPos+TagWidth-1:TagPos]:{5'b0,packetA[Dst_ZPos+Dst_ZWidth-1:Dst_ZPos]}; //have to eventually change this
+assign packetIndex = ((packetA[DstPos+DstWidth-1:DstPos]!={rank_z, rank_y, rank_x})&&(packetA[opPos+opWidth-1:opPos] == ShortAllReduce))? {5'b0,packetA[Dst_ZPos+Dst_ZWidth-1:Dst_ZPos]} : packetA[TagPos+TagWidth-1:TagPos]; //have to eventually change this
 /*
 IMPORTANT NOTE: Recall that the final router would have separate reduction units for local data and outgoing data, meaning that you don't
 have to worry about overlapping tags between data that is destined for me and data that is destined for someone else.
