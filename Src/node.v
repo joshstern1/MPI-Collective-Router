@@ -66,12 +66,16 @@ module node
 
 	 localparam ChildrenWidth=lg_numprocs;	 
 	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
+	 
+	 localparam ReductionBitPos=opPos+opWidth-1;
+	 localparam ReductionTableSize = 2;
 
 	 localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
 	 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 	
 	 localparam FLIT_SIZE = FlitWidth;
-	 localparam LinkDelay = 6;
+	 localparam LinkDelay = 2;
+	 localparam input_Q_size = 10;
 
 	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
@@ -192,59 +196,171 @@ module node
 		  .newcomm(newcomm)
     );
 	 
-	 wire [FlitChildWidth-1:0]xpos_reduce_special = ((eject_xpos[35:34] == 2'b11)&&(eject_xpos[ValidBitPos]))? eject_xpos : 0;
-	 wire [FlitChildWidth-1:0]ypos_reduce_special = ((eject_ypos[35:34] == 2'b11)&&(eject_ypos[ValidBitPos]))? eject_ypos : 0;
-	 /*wire [FlitChildWidth-1:0]zpos_reduce_special = ((eject_zpos[35:34] == 2'b11)&&(eject_zpos[ValidBitPos]))? eject_zpos : 0;
-	 wire [FlitChildWidth-1:0]xneg_reduce_special = ((eject_xneg[35:34] == 2'b11)&&(eject_xneg[ValidBitPos]))? eject_xneg : 0;
-	 wire [FlitChildWidth-1:0]yneg_reduce_special = ((eject_yneg[35:34] == 2'b11)&&(eject_yneg[ValidBitPos]))? eject_yneg : 0;
-	 wire [FlitChildWidth-1:0]zneg_reduce_special = ((eject_zneg[35:34] == 2'b11)&&(eject_zneg[ValidBitPos]))? eject_zneg : 0;*/
+	 wire xpos_reduce_special = ((eject_xpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xpos[ValidBitPos]));
+	 wire ypos_reduce_special = ((eject_ypos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_ypos[ValidBitPos]));
+	 /*wire zpos_reduce_special = ((eject_zpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zpos[ValidBitPos]));
+	 wire xneg_reduce_special = ((eject_xneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xneg[ValidBitPos]));
+	 wire yneg_reduce_special = ((eject_yneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_yneg[ValidBitPos]));
+	 wire zneg_reduce_special = ((eject_zneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zneg[ValidBitPos]));*/
+	 
+	 wire [2:0]selector;
+	 
+	 wire xpos_reduce_grant = ((selector==0)&&(valid_switch_out));
+	 wire ypos_reduce_grant = ((selector==1)&&(valid_switch_out));
+	 wire zpos_reduce_grant = ((selector==2)&&(valid_switch_out));
+	 wire xneg_reduce_grant = ((selector==3)&&(valid_switch_out));
+	 wire yneg_reduce_grant = ((selector==4)&&(valid_switch_out));
+	 wire zneg_reduce_grant = ((selector==5)&&(valid_switch_out));
+	 
+	 wire xpos_reduce_empty;
+	 wire ypos_reduce_empty;
+	 wire zpos_reduce_empty;
+	 wire xneg_reduce_empty;
+	 wire yneg_reduce_empty;
+	 wire zneg_reduce_empty;
+
 	
-	 wire [FlitChildWidth-1:0] in_xpos_reduce;
-	 wire [FlitChildWidth-1:0] in_ypos_reduce;
-	 /*wire [FlitChildWidth-1:0] in_zpos_reduce;
-	 wire [FlitChildWidth-1:0] in_xneg_reduce;
-	 wire [FlitChildWidth-1:0] in_yneg_reduce;
-	 wire [FlitChildWidth-1:0] in_zneg_reduce;*/
+	 wire [FlitChildWidth-1:0] xpos_reduce;
+	 wire [FlitChildWidth-1:0] ypos_reduce;
+	 wire [FlitChildWidth-1:0] zpos_reduce;
+	 wire [FlitChildWidth-1:0] xneg_reduce;
+	 wire [FlitChildWidth-1:0] yneg_reduce;
+	 wire [FlitChildWidth-1:0] zneg_reduce;
 	 
-	 wire [FlitWidth - 1 : 0] out_xpos_reduce;
-	 wire [FlitWidth - 1 : 0] out_ypos_reduce;
-	 /*wire [FlitWidth - 1 : 0] out_zpos_reduce;
-	 wire [FlitWidth - 1 : 0] out_xneg_reduce;
-	 wire [FlitWidth - 1 : 0] out_yneg_reduce;
-	 wire [FlitWidth - 1 : 0] out_zneg_reduce;*/
+	 wire [FlitWidth - 1 : 0] out_reduce;
+	 wire reduce_done;
+	 wire reduce_valid_out;
 	
-	 wire xpos_rd_en;
-	 wire ypos_rd_en;
-	 /*wire zpos_rd_en;
-	 wire xneg_rd_en;
-	 wire yneg_rd_en;
-	 wire zneg_rd_en;*/
+	 wire rd_en;
+	 wire valid_switch_out;
+	 wire [FlitChildWidth-1:0]reduce_switch_out;
+	 wire [FlitChildWidth-1:0]reduce_in;
 	 
-	 wire xpos_reduce_done;
-	 wire ypos_reduce_done;
-	 /*wire zpos_reduce_done;
-	 wire xneg_reduce_done;
-	 wire yneg_reduce_done;
-	 wire zneg_reduce_done;*/
+	
+
 	 
-	 wire xpos_reduce_valid_out;
-	 wire ypos_reduce_valid_out;
-	 /*wire zpos_reduce_valid_out;
-	 wire xneg_reduce_valid_out;
-	 wire yneg_reduce_valid_out;
-	 wire zneg_reduce_valid_out;*/
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FlitChildWidth)
+    )
+    xpos_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(eject_xpos),
+        .produce(xpos_reduce_special),
+        .consume(xpos_reduce_grant),
+        .full(),
+        .empty(xpos_reduce_empty),
+        .out(xpos_reduce),
+        .usedw()
+    ); 
+	 
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FlitChildWidth)
+    )
+    ypos_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(eject_ypos),
+        .produce(ypos_reduce_special),
+        .consume(ypos_reduce_grant),
+        .full(),
+        .empty(ypos_reduce_empty),
+        .out(ypos_reduce),
+        .usedw()
+    ); 
+	 
+	/*large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FlitChildWidth)
+    )
+    zpos_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(eject_zpos),
+        .produce(zpos_reduce_special),
+        .consume(zpos_reduce_grant),
+        .full(),
+        .empty(zpos_reduce_empty),
+        .out(zpos_reduce),
+        .usedw()
+    ); 
+	 
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FlitChildWidth)
+    )
+    xneg_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(eject_xneg),
+        .produce(xneg_reduce_special),
+        .consume(xneg_reduce_grant),
+        .full(),
+        .empty(xneg_reduce_empty),
+        .out(xneg_reduce),
+        .usedw()
+    );
+
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FlitChildWidth)
+    )
+    yneg_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(eject_yneg),
+        .produce(yneg_reduce_special),
+        .consume(yneg_reduce_grant),
+        .full(),
+        .empty(yneg_reduce_empty),
+        .out(yneg_reduce),
+        .usedw()
+    ); 	 
+	 
+	large_buffer#(
+        .buffer_depth(input_Q_size),
+        .buffer_width(FlitChildWidth)
+    )
+    zneg_reduce_fifo(
+        .clk(clk),
+        .rst(rst),
+        .in(eject_zneg),
+        .produce(zneg_reduce_special),
+        .consume(zneg_reduce_grant),
+        .full(),
+        .empty(zneg_reduce_empty),
+        .out(zneg_reduce),
+        .usedw()
+    ); */
+	 
+	 reduction_tree#(
+	     .FAN_IN(6),
+			.ValidBitPos(ValidBitPos),
+			.lg_numprocs(lg_numprocs)
+	 )
+	 node_reduce(
+		.clk(clk),
+		.rst(rst),
+		.in({340'b0, ypos_reduce, xpos_reduce}),
+		.in_valid({4'b0, (!ypos_reduce_empty), (!xpos_reduce_empty)}),
+		.out(reduce_switch_out),
+		.out_valid(valid_switch_out),
+		.selector(selector)
+	 );
 	 
 	fifo#(
 		.lg_numprocs(lg_numprocs),
 		.PayloadWidth(PayloadWidth)
 	 )	 
-	xpos_reduce_fifo (
+	reduce_fifo (
 	 .clk(clk),
 	 .rst(rst),
-	 .buf_in(xpos_reduce_special),
-	 .buf_out(in_xpos_reduce),
-	 .wr_en(xpos_reduce_special[ValidBitPos]),
-	 .rd_en(xpos_rd_en),
+	 .buf_in(reduce_switch_out),
+	 .buf_out(reduce_in),
+	 .wr_en(valid_switch_out),
+	 .rd_en(rd_en),
 	 .buf_empty(),
 	 .buf_full(),
 	 .fifo_counter()
@@ -256,216 +372,25 @@ module node
 		.rank_y(cur_y),
 		.rank_z(cur_z),
 		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
+		.PayloadWidth(PayloadWidth),
+		.ReductionTableSize(ReductionTableSize)
 	)
-	xpos_reduce_unit(
-	 .Outpacket(out_xpos_reduce),
-	 .done(xpos_reduce_done),
+	node_reduce_unit(
+	 .Outpacket(out_reduce),
+	 .done(reduce_done),
 	 .valid_out(xpos_reduce_valid_out),
 	 .clk(clk),
 	 .rst(rst),
-	 .packetA(in_xpos_reduce),
-	 .rd_en(xpos_rd_en),
+	 .packetA(reduce_in),
+	 .rd_en(rd_en),
 	 .wr_en(),
 	 .fifo_counter(),
 	 .buf_empty(),
 	 .buf_full()
 	);
 	
-	
-	fifo#(
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	 )	 
-	ypos_reduce_fifo (
-	 .clk(clk),
-	 .rst(rst),
-	 .buf_in(ypos_reduce_special),
-	 .buf_out(in_ypos_reduce),
-	 .wr_en(ypos_reduce_special[ValidBitPos]),
-	 .rd_en(ypos_rd_en),
-	 .buf_empty(),
-	 .buf_full(),
-	 .fifo_counter()
-	);
 	
 
-	reduce_unit#(
-		.rank_x(cur_x),
-		.rank_y(cur_y),
-		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	)
-	ypos_reduce_unit(
-	 .Outpacket(out_ypos_reduce),
-	 .done(ypos_reduce_done),
-	 .valid_out(ypos_reduce_valid_out),
-	 .clk(clk),
-	 .rst(rst),
-	 .packetA(in_ypos_reduce),
-	 .rd_en(ypos_rd_en),
-	 .wr_en(),
-	 .fifo_counter(),
-	 .buf_empty(),
-	 .buf_full()
-	);
-	
-	
-	/*fifo#(
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	 )	 
-	zpos_reduce_fifo (
-	 .clk(clk),
-	 .rst(rst),
-	 .buf_in(zpos_reduce_special),
-	 .buf_out(in_zpos_reduce),
-	 .wr_en(zpos_reduce_special[ValidBitPos]),
-	 .rd_en(zpos_rd_en),
-	 .buf_empty(),
-	 .buf_full(),
-	 .fifo_counter()
-	);
-	
-
-	reduce_unit#(
-		.rank_x(cur_x),
-		.rank_y(cur_y),
-		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	)
-	zpos_reduce_unit(
-	 .Outpacket(out_zpos_reduce),
-	 .done(zpos_reduce_done),
-	 .valid_out(zpos_reduce_valid_out),
-	 .clk(clk),
-	 .rst(rst),
-	 .packetA(in_zpos_reduce),
-	 .rd_en(zpos_rd_en),
-	 .wr_en(),
-	 .fifo_counter(),
-	 .buf_empty(),
-	 .buf_full()
-	);
-	
-	
-	fifo#(
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	 )	 
-	xneg_reduce_fifo (
-	 .clk(clk),
-	 .rst(rst),
-	 .buf_in(xneg_reduce_special),
-	 .buf_out(in_xneg_reduce),
-	 .wr_en(xneg_reduce_special[ValidBitPos]),
-	 .rd_en(xneg_rd_en),
-	 .buf_empty(),
-	 .buf_full(),
-	 .fifo_counter()
-	);
-	
-
-	reduce_unit#(
-		.rank_x(cur_x),
-		.rank_y(cur_y),
-		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	)
-	xneg_reduce_unit(
-	 .Outpacket(out_xneg_reduce),
-	 .done(xneg_reduce_done),
-	 .valid_out(xneg_reduce_valid_out),
-	 .clk(clk),
-	 .rst(rst),
-	 .packetA(in_xneg_reduce),
-	 .rd_en(xneg_rd_en),
-	 .wr_en(),
-	 .fifo_counter(),
-	 .buf_empty(),
-	 .buf_full()
-	);
-	
-	
-	fifo#(
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	 )	 
-	yneg_reduce_fifo (
-	 .clk(clk),
-	 .rst(rst),
-	 .buf_in(yneg_reduce_special),
-	 .buf_out(in_yneg_reduce),
-	 .wr_en(yneg_reduce_special[ValidBitPos]),
-	 .rd_en(yneg_rd_en),
-	 .buf_empty(),
-	 .buf_full(),
-	 .fifo_counter()
-	);
-	
-
-	reduce_unit#(
-		.rank_x(cur_x),
-		.rank_y(cur_y),
-		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	)
-	yneg_reduce_unit(
-	 .Outpacket(out_yneg_reduce),
-	 .done(yneg_reduce_done),
-	 .valid_out(yneg_reduce_valid_out),
-	 .clk(clk),
-	 .rst(rst),
-	 .packetA(in_yneg_reduce),
-	 .rd_en(yneg_rd_en),
-	 .wr_en(),
-	 .fifo_counter(),
-	 .buf_empty(),
-	 .buf_full()
-	);
-	
-	
-	fifo#(
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	 )	 
-	zneg_reduce_fifo (
-	 .clk(clk),
-	 .rst(rst),
-	 .buf_in(zneg_reduce_special),
-	 .buf_out(in_zneg_reduce),
-	 .wr_en(zneg_reduce_special[ValidBitPos]),
-	 .rd_en(zneg_rd_en),
-	 .buf_empty(),
-	 .buf_full(),
-	 .fifo_counter()
-	);
-	
-
-	reduce_unit#(
-		.rank_x(cur_x),
-		.rank_y(cur_y),
-		.rank_z(cur_z),
-		.lg_numprocs(lg_numprocs),
-		.PayloadWidth(PayloadWidth)
-	)
-	zneg_reduce_unit(
-	 .Outpacket(out_zneg_reduce),
-	 .done(zneg_reduce_done),
-	 .valid_out(zneg_reduce_valid_out),
-	 .clk(clk),
-	 .rst(rst),
-	 .packetA(in_zneg_reduce),
-	 .rd_en(zneg_rd_en),
-	 .wr_en(),
-	 .fifo_counter(),
-	 .buf_empty(),
-	 .buf_full()
-	);*/
 
         
 //xpos link
