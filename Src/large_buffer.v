@@ -64,8 +64,12 @@ module large_buffer
             head <= 0;
         end
         else begin
-            if(consume && ~empty)
+            if(consume && ~empty)begin
                 head <= head_next;
+				end
+				else if ((consume) && (empty) && (in==0))begin
+					fifo[head] = 0;
+				end
         end
     end
 
