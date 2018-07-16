@@ -13,24 +13,24 @@ module node
 	 
 	 input [FlitChildWidth - 1 : 0]inject_xpos,
 	 input [FlitChildWidth - 1 : 0]inject_ypos,
-	 /*input [FLIT_SIZE : 0]inject_zpos,
+	 input [FLIT_SIZE : 0]inject_zpos,
 	 input [FLIT_SIZE : 0]inject_xneg,
 	 input [FLIT_SIZE : 0]inject_yneg,
-	 input [FLIT_SIZE : 0]inject_zneg,*/
+	 input [FLIT_SIZE : 0]inject_zneg,
 	 
 	 input [FLIT_SIZE - 1 : 0] in_xpos_ser,	
 	 input [FLIT_SIZE - 1 : 0] in_ypos_ser,	
-	 /*input [FLIT_SIZE -1 : 0] in_zpos_ser,
+	 input [FLIT_SIZE -1 : 0] in_zpos_ser,
 	 input [FLIT_SIZE - 1 : 0] in_xneg_ser,
 	 input [FLIT_SIZE - 1 : 0] in_yneg_ser,
-	 input [FLIT_SIZE -1 : 0] in_zneg_ser,	*/
+	 input [FLIT_SIZE -1 : 0] in_zneg_ser,	
 	 
     output [FLIT_SIZE - 1 : 0] out_xpos_ser,
     output [FLIT_SIZE - 1 : 0] out_ypos_ser,	
-	 /*output [FLIT_SIZE - 1 : 0] out_zpos_ser,
+	 output [FLIT_SIZE - 1 : 0] out_zpos_ser,
     output [FLIT_SIZE - 1 : 0] out_xneg_ser,	    	
     output [FLIT_SIZE - 1 : 0] out_yneg_ser,
-    output [FLIT_SIZE - 1 : 0] out_zneg_ser*/
+    output [FLIT_SIZE - 1 : 0] out_zneg_ser,
 	 
 	 input [NewCommWidth-1:0]newcomm
 );
@@ -80,10 +80,10 @@ module node
 	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
     wire [FLIT_SIZE - 1 : 0] in_ypos;
-    /*wire [FLIT_SIZE - 1 : 0] in_zpos;
+    wire [FLIT_SIZE - 1 : 0] in_zpos;
     wire [FLIT_SIZE - 1 : 0] in_xneg;
     wire [FLIT_SIZE - 1 : 0] in_yneg;
-    wire [FLIT_SIZE - 1 : 0] in_zneg;*/
+    wire [FLIT_SIZE - 1 : 0] in_zneg;
     
     wire in_xpos_valid;
     wire in_ypos_valid;
@@ -94,38 +94,38 @@ module node
 
     wire [FLIT_SIZE - 1 : 0] out_xpos;
     wire [FLIT_SIZE - 1 : 0] out_ypos;
-    /*wire [FLIT_SIZE - 1 : 0] out_zpos;
+    wire [FLIT_SIZE - 1 : 0] out_zpos;
     wire [FLIT_SIZE - 1 : 0] out_xneg;
     wire [FLIT_SIZE - 1 : 0] out_yneg;
-    wire [FLIT_SIZE - 1 : 0] out_zneg;*/
+    wire [FLIT_SIZE - 1 : 0] out_zneg;
     
     wire out_xpos_valid;
     wire out_ypos_valid;
-    /*wire out_zpos_valid;
+    wire out_zpos_valid;
     wire out_xneg_valid;
     wire out_yneg_valid;
-    wire out_zneg_valid;*/
+    wire out_zneg_valid;
    
     wire inject_xpos_valid = inject_xpos[ValidBitPos];
     wire inject_ypos_valid = inject_ypos[ValidBitPos];
-    /*wire inject_zpos_valid = inject_zpos[ValidBitPos];
+    wire inject_zpos_valid = inject_zpos[ValidBitPos];
     wire inject_xneg_valid = inject_xneg[ValidBitPos];
     wire inject_yneg_valid = inject_yneg[ValidBitPos]; 
-    wire inject_zneg_valid = inject_zneg[ValidBitPos];*/
+    wire inject_zneg_valid = inject_zneg[ValidBitPos];
  
     wire [FlitChildWidth - 1 : 0] eject_xpos;
     wire [FlitChildWidth - 1 : 0] eject_ypos;
-    /*wire [FlitChildWidth - 1 : 0] eject_zpos;
+    wire [FlitChildWidth - 1 : 0] eject_zpos;
     wire [FlitChildWidth - 1 : 0] eject_xneg;
     wire [FlitChildWidth - 1 : 0] eject_yneg;
-    wire [FlitChildWidth - 1 : 0] eject_zneg;*/
+    wire [FlitChildWidth - 1 : 0] eject_zneg;
     
     wire eject_xpos_valid;
     wire eject_ypos_valid;
-    /*wire eject_zpos_valid;
+    wire eject_zpos_valid;
     wire eject_xneg_valid;
     wire eject_yneg_valid;
-    wire eject_zneg_valid;*/
+    wire eject_zneg_valid;
 
     
     router#(
@@ -142,66 +142,66 @@ module node
     //interface from 6 MGTs
         .in_xpos(in_xpos),
         .in_ypos(in_ypos),
-        /*.in_zpos(in_zpos),
+        .in_zpos(in_zpos),
         .in_xneg(in_xneg),
         .in_yneg(in_yneg),
-        .in_zneg(in_zneg),*/
+        .in_zneg(in_zneg),
         .in_xpos_valid(in_xpos_valid),
         .in_ypos_valid(in_ypos_valid),
-        /*.in_zpos_valid(in_zpos_valid),
+        .in_zpos_valid(in_zpos_valid),
         .in_xneg_valid(in_xneg_valid),
         .in_yneg_valid(in_yneg_valid),
-        .in_zneg_valid(in_zneg_valid),*/
+        .in_zneg_valid(in_zneg_valid),
     //interface to 6 MGTs
         .out_xpos(out_xpos),
         .out_ypos(out_ypos),
-        /*.out_zpos(out_zpos),
+        .out_zpos(out_zpos),
         .out_xneg(out_xneg),
         .out_yneg(out_yneg),
-        .out_zneg(out_zneg),*/
+        .out_zneg(out_zneg),
         .out_xpos_valid(out_xpos_valid),
         .out_ypos_valid(out_ypos_valid),
-        /*.out_zpos_valid(out_zpos_valid),
+        .out_zpos_valid(out_zpos_valid),
         .out_xneg_valid(out_xneg_valid),
         .out_yneg_valid(out_yneg_valid),
-        .out_zneg_valid(out_zneg_valid),*/
+        .out_zneg_valid(out_zneg_valid),
 		  
     //interface to application kernel
     //inputs 
         .eject_xpos(eject_xpos),
         .eject_ypos(eject_ypos),
-        /*.eject_zpos(eject_zpos),
+        .eject_zpos(eject_zpos),
         .eject_xneg(eject_xneg),
         .eject_yneg(eject_yneg),
-        .eject_zneg(eject_zneg),*/
+        .eject_zneg(eject_zneg),
         .eject_xpos_valid(eject_xpos_valid),
         .eject_ypos_valid(eject_ypos_valid),
-        /*.eject_zpos_valid(eject_zpos_valid),
+        .eject_zpos_valid(eject_zpos_valid),
         .eject_xneg_valid(eject_xneg_valid),
         .eject_yneg_valid(eject_yneg_valid),
-        .eject_zneg_valid(eject_zneg_valid),*/
+        .eject_zneg_valid(eject_zneg_valid),
         .inject_xpos(inject_xpos),
         .inject_ypos(inject_ypos),
-        /*.inject_zpos(inject_zpos),
+        .inject_zpos(inject_zpos),
         .inject_xneg(inject_xneg),
         .inject_yneg(inject_yneg),
-        .inject_zneg(inject_zneg),*/
+        .inject_zneg(inject_zneg),
         .inject_xpos_valid(inject_xpos_valid),
         .inject_ypos_valid(inject_ypos_valid),
-        /*.inject_zpos_valid(inject_zpos_valid),
+        .inject_zpos_valid(inject_zpos_valid),
         .inject_xneg_valid(inject_xneg_valid),
         .inject_yneg_valid(inject_yneg_valid),
-        .inject_zneg_valid(inject_zneg_valid),*/
-		  
+        .inject_zneg_valid(inject_zneg_valid),
+		 
 		  .newcomm(newcomm)
     );
 	 
 	 wire xpos_reduce_special = ((eject_xpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xpos[ValidBitPos]));
 	 wire ypos_reduce_special = ((eject_ypos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_ypos[ValidBitPos]));
-	 /*wire zpos_reduce_special = ((eject_zpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zpos[ValidBitPos]));
+	 wire zpos_reduce_special = ((eject_zpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zpos[ValidBitPos]));
 	 wire xneg_reduce_special = ((eject_xneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xneg[ValidBitPos]));
 	 wire yneg_reduce_special = ((eject_yneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_yneg[ValidBitPos]));
-	 wire zneg_reduce_special = ((eject_zneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zneg[ValidBitPos]));*/
+	 wire zneg_reduce_special = ((eject_zneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zneg[ValidBitPos]));
 	 
 	 wire [2:0]selector;
 	 
@@ -271,7 +271,7 @@ module node
         .usedw()
     ); 
 	 
-	/*large_buffer#(
+	large_buffer#(
         .buffer_depth(input_Q_size),
         .buffer_width(FlitChildWidth)
     )
@@ -333,18 +333,18 @@ module node
         .empty(zneg_reduce_empty),
         .out(zneg_reduce),
         .usedw()
-    ); */
+    ); 
 	 
 	 reduction_tree#(
 	     .FAN_IN(6),
 			.ValidBitPos(ValidBitPos),
 			.lg_numprocs(lg_numprocs)
 	 )
-	 node_reduce(
+	 node_reduce_switch(
 		.clk(clk),
 		.rst(rst),
-		.in({340'b0, ypos_reduce, xpos_reduce}),
-		.in_valid({4'b0, (!ypos_reduce_empty), (!xpos_reduce_empty)}),
+		.in({zneg_reduce, yneg_reduce, xneg_reduce, zpos_reduce, ypos_reduce, xpos_reduce}),
+		.in_valid({(!zneg_reduce_empty), (!yneg_reduce_empty), (!xneg_reduce_empty), (!zpos_reduce_empty), (!ypos_reduce_empty), (!xpos_reduce_empty)}),
 		.out(reduce_switch_out),
 		.out_valid(valid_switch_out),
 		.selector(selector)
@@ -429,7 +429,7 @@ module node
         .rx_ready()
     );
 	 
-/*
+
     //zpos link
     internode_link#(
         .DELAY(LinkDelay),
@@ -498,7 +498,7 @@ module node
         .rx_par_data_valid(in_zneg_valid),
         .rx_ser_data(in_zneg_ser),
         .rx_ready()
-    );*/
+    );
 
 
 
