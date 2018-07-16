@@ -8,14 +8,14 @@ module switch#(
 (
     input clk,
     input rst,
-    input [M_IN*FlitChildWidth-1:0] in,	//////////////////remember to change this
+    input [M_IN*FlitChildWidth-1:0] in,	
     input [M_IN * ROUTE_LEN - 1 : 0] route_in,
     input [M_IN - 1 : 0] in_valid,
 	 input [M_IN - 1 : 0] out_avail,
 	 
     output [M_IN - 1 : 0] in_avail,
     output [M_IN - 1 : 0] out_valid,
-    output [M_IN*FlitChildWidth-1:0] out    //////////////////remember to change this
+    output [M_IN*FlitChildWidth-1:0] out   
 );
 
 	 localparam num_procs = 1 << lg_numprocs;
