@@ -9,6 +9,7 @@
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_0_0_0,
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_0_0_0,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_0_0_0,
+	 input [FlitChildWidth - 1 : 0]reduce_me_0_0_0,
 	 input [NewCommWidth - 1 : 0]newcomm_0_0_0,
 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_0_0_1,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_0_0_1,
@@ -16,6 +17,7 @@
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_0_0_1,
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_0_0_1,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_0_0_1,
+	 input [FlitChildWidth - 1 : 0]reduce_me_0_0_1,
 	 input [NewCommWidth - 1 : 0]newcomm_0_0_1,
 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_0_1_0,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_0_1_0,
@@ -23,6 +25,7 @@
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_0_1_0,
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_0_1_0,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_0_1_0,
+	 input [FlitChildWidth - 1 : 0]reduce_me_0_1_0,
 	 input [NewCommWidth - 1 : 0]newcomm_0_1_0,
 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_0,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_1_0_0,
@@ -30,6 +33,7 @@
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_1_0_0,
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_1_0_0,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_1_0_0,
+	 input [FlitChildWidth - 1 : 0]reduce_me_1_0_0,
 	 input [NewCommWidth - 1 : 0]newcomm_1_0_0,
 	 output valid
 );
@@ -236,6 +240,7 @@
         .out_zpos_ser(out_zpos_ser_0_0_0),
         .in_zneg_ser(in_zneg_ser_0_0_0),
         .out_zneg_ser(out_zneg_ser_0_0_0),
+		  .reduce_me(reduce_me_0_0_0),
 		  .newcomm(newcomm_0_0_0)
       );
     node#(
@@ -265,6 +270,7 @@
         .out_zpos_ser(out_zpos_ser_0_0_1),
         .in_zneg_ser(in_zneg_ser_0_0_1),
         .out_zneg_ser(out_zneg_ser_0_0_1),
+		  .reduce_me(reduce_me_0_0_1),
 		  .newcomm(newcomm_0_0_1)
       );
     node#(
@@ -292,6 +298,7 @@
         .out_zpos_ser(out_zpos_ser_0_1_0),
         .in_zneg_ser(in_zneg_ser_0_1_0),
         .out_zneg_ser(out_zneg_ser_0_1_0),
+		  .reduce_me(reduce_me_0_1_0),
 		  .newcomm(newcomm_0_1_0)
       );
 	
@@ -320,6 +327,7 @@
         .out_zpos_ser(out_zpos_ser_1_0_0),
         .in_zneg_ser(in_zneg_ser_1_0_0),
         .out_zneg_ser(out_zneg_ser_1_0_0),
+		  .reduce_me(reduce_me_1_0_0),
 		  .newcomm(newcomm_1_0_0)
       );	
 	
