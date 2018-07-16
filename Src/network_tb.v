@@ -41,6 +41,20 @@ module network_tb;
 	reg [84:0] in_yneg_inject_0_0_1;
 	reg [84:0] in_zneg_inject_0_0_1;
 	reg [60:0] newcomm_0_0_1;
+	reg [84:0] in_xpos_inject_0_1_0;
+	reg [84:0] in_ypos_inject_0_1_0;
+	reg [84:0] in_zpos_inject_0_1_0;
+	reg [84:0] in_xneg_inject_0_1_0;
+	reg [84:0] in_yneg_inject_0_1_0;
+	reg [84:0] in_zneg_inject_0_1_0;
+	reg [60:0] newcomm_0_1_0;
+	reg [84:0] in_xpos_inject_1_0_0;
+	reg [84:0] in_ypos_inject_1_0_0;
+	reg [84:0] in_zpos_inject_1_0_0;
+	reg [84:0] in_xneg_inject_1_0_0;
+	reg [84:0] in_yneg_inject_1_0_0;
+	reg [84:0] in_zneg_inject_1_0_0;
+	reg [60:0] newcomm_1_0_0;
 
 	// Outputs
 	wire valid;
@@ -63,8 +77,24 @@ module network_tb;
 		.in_yneg_inject_0_0_1(in_yneg_inject_0_0_1), 
 		.in_zneg_inject_0_0_1(in_zneg_inject_0_0_1), 
 		.newcomm_0_0_1(newcomm_0_0_1), 
+		.in_xpos_inject_0_1_0(in_xpos_inject_0_1_0), 
+		.in_ypos_inject_0_1_0(in_ypos_inject_0_1_0), 
+		.in_zpos_inject_0_1_0(in_zpos_inject_0_1_0), 
+		.in_xneg_inject_0_1_0(in_xneg_inject_0_1_0), 
+		.in_yneg_inject_0_1_0(in_yneg_inject_0_1_0), 
+		.in_zneg_inject_0_1_0(in_zneg_inject_0_1_0), 
+		.newcomm_0_1_0(newcomm_0_1_0), 
+		.in_xpos_inject_1_0_0(in_xpos_inject_1_0_0), 
+		.in_ypos_inject_1_0_0(in_ypos_inject_1_0_0), 
+		.in_zpos_inject_1_0_0(in_zpos_inject_1_0_0), 
+		.in_xneg_inject_1_0_0(in_xneg_inject_1_0_0), 
+		.in_yneg_inject_1_0_0(in_yneg_inject_1_0_0), 
+		.in_zneg_inject_1_0_0(in_zneg_inject_1_0_0), 
+		.newcomm_1_0_0(newcomm_1_0_0), 
 		.valid(valid)
 	);
+
+	integer i;
 
 	initial begin
 		// Initialize Inputs 
@@ -77,21 +107,52 @@ module network_tb;
 		in_yneg_inject_0_0_0 = 0;
 		in_zneg_inject_0_0_0 = 0;
 		newcomm_0_0_0 = {1'b1, 8'b0, 9'b0, 9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
+		
+	//|	60  |  59-52  |51-43|  42-34   | 33-31  |   30-27   |26-18| 17-9 | 8-0 |     	
+	//|valid|contextid|root |local_rank|children|lg_commsize|third|second|first|
+		
 		in_xpos_inject_0_0_1 = 0;
 		in_ypos_inject_0_0_1 = 0;
 		in_zpos_inject_0_0_1 = 0;
 		in_xneg_inject_0_0_1 = 0;
 		in_yneg_inject_0_0_1 = 0;
 		in_zneg_inject_0_0_1 = 0;
-		newcomm_0_0_1 = {1'b1, 8'b0, 9'b0, 9'b001, 3'b0, 4'b0011, 9'b0, 9'b011, 9'b101};
+		newcomm_0_0_1 = {1'b1, 8'b0, 9'b0, 9'b011, 3'b0, 4'b0011, 9'b010, 9'b001, 9'b111};
+		
+		in_xpos_inject_0_1_0 = 0;
+		in_ypos_inject_0_1_0 = 0;
+		in_zpos_inject_0_1_0 = 0;
+		in_xneg_inject_0_1_0 = 0;
+		in_yneg_inject_0_1_0 = 0;
+		in_zneg_inject_0_1_0 = 0;
+		newcomm_0_1_0 = {1'b1, 8'b0, 9'b0, 9'b010, 3'b0, 4'b0011, 9'b011, 9'b000, 9'b110};
+		
+		in_xpos_inject_1_0_0 = 0;
+		in_ypos_inject_1_0_0 = 0;
+		in_zpos_inject_1_0_0 = 0;
+		in_xneg_inject_1_0_0 = 0;
+		in_yneg_inject_1_0_0 = 0;
+		in_zneg_inject_1_0_0 = 0;
+		newcomm_1_0_0 = {1'b1, 8'b0, 9'b0, 9'b001, 3'b0, 4'b0011, 9'b0, 9'b011, 9'b101};
+
+		//85'b000 1 000000000 001000000 000000001 00000000 00000001 00 1100 00000000000000000000000000000110;
 
 		// Wait 100 ns for global reset to finish
 		#105;
 		rst = 0;
-		in_xpos_inject_0_0_1 = 85'b0001000000000001000000000000001000000000000000100110000000000000000000000000000000110;
-		#40;
-		in_xpos_inject_0_0_1 = 85'b0;
-        
+		for(i=0;i<1;i=i+1)begin
+			in_xneg_inject_1_0_0 = 85'b0001000000000000000001000000001000000000000000100110000000000000000000000000000000110;
+			in_yneg_inject_0_1_0 = 85'b0001000000000000001000000000010000000000000000100110000000000000000000000000000000110;
+			in_zneg_inject_0_0_1 = 85'b0001000000000001000000000000011000000000000000100110000000000000000000000000000000110;
+			#10;
+		end
+		
+		//in_xpos_inject_0_0_1 = 85'b0001000000000001000000000000001000000000000000100110000000000000000000000000000000110;
+		//#40;
+		in_zneg_inject_0_0_1 = 85'b0;
+		in_yneg_inject_0_1_0 = 85'b0;
+      #10;
+		in_xneg_inject_1_0_0 = 85'b0;
 		// Add stimulus here
 
 	end
