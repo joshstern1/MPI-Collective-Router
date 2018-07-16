@@ -133,7 +133,8 @@ module node
         .cur_y(cur_y),
         .cur_z(cur_z),
 		  .lg_numprocs(lg_numprocs),
-		  .PayloadWidth(PayloadWidth)
+		  .PayloadWidth(PayloadWidth),
+		  .ReductionTableSize(ReductionTableSize)
     )
     switch_inst(
         .clk(clk),
