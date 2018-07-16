@@ -5,7 +5,8 @@ module router#(
     parameter cur_y = 0,
     parameter cur_z = 0,
 	 parameter lg_numprocs = 3,
-	 parameter PayloadWidth = 32
+	 parameter PayloadWidth = 32,
+	 parameter ReductionTableSize = 2
 )(
     input clk,
     input rst,
@@ -69,7 +70,7 @@ module router#(
     );
 	 
 	 localparam ROUTE_LEN = 3;
-	 localparam input_Q_size = 5;
+	 localparam input_Q_size = 10;
 	 localparam PORT_NUM = 6;
 	 
 	 localparam DIR_XPOS=3'd1;
@@ -118,7 +119,6 @@ module router#(
 	 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 	 
 	 localparam ReductionBitPos=opPos+opWidth-1;
-	 localparam ReductionTableSize =  2;
 	 
 //buffer output and IR input
 	 wire [FlitWidth - 1 : 0]in_xpos_IR;
