@@ -171,6 +171,9 @@ begin
    else if( rd_en && !buf_empty )begin
      	buf_out <= buf_mem[rd_ptr];
    end
+	else if (rd_en && buf_empty)begin
+		buf_out <= 0;
+	end
    else begin
      	buf_out <= buf_out;
    end
