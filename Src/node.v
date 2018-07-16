@@ -13,17 +13,17 @@ module node
 	 
 	 input [FlitChildWidth - 1 : 0]inject_xpos,
 	 input [FlitChildWidth - 1 : 0]inject_ypos,
-	 input [FLIT_SIZE : 0]inject_zpos,
-	 input [FLIT_SIZE : 0]inject_xneg,
-	 input [FLIT_SIZE : 0]inject_yneg,
-	 input [FLIT_SIZE : 0]inject_zneg,
+	 input [FlitChildWidth - 1 : 0]inject_zpos,
+	 input [FlitChildWidth - 1 : 0]inject_xneg,
+	 input [FlitChildWidth - 1 : 0]inject_yneg,
+	 input [FlitChildWidth - 1 : 0]inject_zneg,
 	 
 	 input [FLIT_SIZE - 1 : 0] in_xpos_ser,	
 	 input [FLIT_SIZE - 1 : 0] in_ypos_ser,	
-	 input [FLIT_SIZE -1 : 0] in_zpos_ser,
+	 input [FLIT_SIZE - 1 : 0] in_zpos_ser,
 	 input [FLIT_SIZE - 1 : 0] in_xneg_ser,
 	 input [FLIT_SIZE - 1 : 0] in_yneg_ser,
-	 input [FLIT_SIZE -1 : 0] in_zneg_ser,	
+	 input [FLIT_SIZE - 1 : 0] in_zneg_ser,	
 	 
     output [FLIT_SIZE - 1 : 0] out_xpos_ser,
     output [FLIT_SIZE - 1 : 0] out_ypos_ser,	
