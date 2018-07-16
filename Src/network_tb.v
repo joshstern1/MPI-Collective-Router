@@ -28,8 +28,18 @@ module network_tb;
 	reg clk;
 	reg rst;
 	reg [84:0] in_xpos_inject_0_0_0;
+	reg [84:0] in_ypos_inject_0_0_0;
+	reg [84:0] in_zpos_inject_0_0_0;
+	reg [84:0] in_xneg_inject_0_0_0;
+	reg [84:0] in_yneg_inject_0_0_0;
+	reg [84:0] in_zneg_inject_0_0_0;
 	reg [60:0] newcomm_0_0_0;
 	reg [84:0] in_xpos_inject_0_0_1;
+	reg [84:0] in_ypos_inject_0_0_1;
+	reg [84:0] in_zpos_inject_0_0_1;
+	reg [84:0] in_xneg_inject_0_0_1;
+	reg [84:0] in_yneg_inject_0_0_1;
+	reg [84:0] in_zneg_inject_0_0_1;
 	reg [60:0] newcomm_0_0_1;
 
 	// Outputs
@@ -40,8 +50,18 @@ module network_tb;
 		.clk(clk), 
 		.rst(rst), 
 		.in_xpos_inject_0_0_0(in_xpos_inject_0_0_0), 
+		.in_ypos_inject_0_0_0(in_ypos_inject_0_0_0), 
+		.in_zpos_inject_0_0_0(in_zpos_inject_0_0_0), 
+		.in_xneg_inject_0_0_0(in_xneg_inject_0_0_0), 
+		.in_yneg_inject_0_0_0(in_yneg_inject_0_0_0), 
+		.in_zneg_inject_0_0_0(in_zneg_inject_0_0_0), 
 		.newcomm_0_0_0(newcomm_0_0_0), 
 		.in_xpos_inject_0_0_1(in_xpos_inject_0_0_1), 
+		.in_ypos_inject_0_0_1(in_ypos_inject_0_0_1), 
+		.in_zpos_inject_0_0_1(in_zpos_inject_0_0_1), 
+		.in_xneg_inject_0_0_1(in_xneg_inject_0_0_1), 
+		.in_yneg_inject_0_0_1(in_yneg_inject_0_0_1), 
+		.in_zneg_inject_0_0_1(in_zneg_inject_0_0_1), 
 		.newcomm_0_0_1(newcomm_0_0_1), 
 		.valid(valid)
 	);
@@ -51,8 +71,18 @@ module network_tb;
 		clk = 0;
 		rst = 1;
 		in_xpos_inject_0_0_0 = 0;
+		in_ypos_inject_0_0_0 = 0;
+		in_zpos_inject_0_0_0 = 0;
+		in_xneg_inject_0_0_0 = 0;
+		in_yneg_inject_0_0_0 = 0;
+		in_zneg_inject_0_0_0 = 0;
 		newcomm_0_0_0 = {1'b1, 8'b0, 9'b0, 9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
 		in_xpos_inject_0_0_1 = 0;
+		in_ypos_inject_0_0_1 = 0;
+		in_zpos_inject_0_0_1 = 0;
+		in_xneg_inject_0_0_1 = 0;
+		in_yneg_inject_0_0_1 = 0;
+		in_zneg_inject_0_0_1 = 0;
 		newcomm_0_0_1 = {1'b1, 8'b0, 9'b0, 9'b001, 3'b0, 4'b0011, 9'b0, 9'b011, 9'b101};
 
 		// Wait 100 ns for global reset to finish
@@ -72,4 +102,3 @@ module network_tb;
       
 endmodule
 
- 
