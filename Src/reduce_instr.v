@@ -127,8 +127,18 @@ reg [SrcWidth-1:0] rank_table [num_procs-1:0];	//rank table matches ranks to phy
 
 always @(posedge clk) begin
 
+
+	 rank_table[0] <= {3'b0, 3'b0, 3'b0};
+	 rank_table[1] <= {3'b0, 3'b0, 3'b01};
+	 rank_table[2] <= {3'b0, 3'b01, 3'b0};
+	 rank_table[3] <= {3'b0, 3'b1, 3'b1};	 
+	 rank_table[4] <= {3'b1, 3'b0, 3'b0};
+	 rank_table[5] <= {3'b01, 3'b0, 3'b01};
+	 rank_table[6] <= {3'b01, 3'b01, 3'b0};
+	 rank_table[7] <= {3'b01, 3'b01, 3'b01};
+
 							//x      y       z
-	 rank_table[0] <= {3'b001, 3'b001, 3'b001};
+	 /*rank_table[0] <= {3'b001, 3'b001, 3'b001};
 	 rank_table[1] <= {3'b001, 3'b001, 3'b000};
 	 rank_table[2] <= {3'b001, 3'b000, 3'b001};
 	 rank_table[3] <= {3'b001, 3'b000, 3'b000};
@@ -136,8 +146,7 @@ always @(posedge clk) begin
 	 rank_table[5] <= {3'b000, 3'b001, 3'b000};
 	 rank_table[6] <= {3'b000, 3'b000, 3'b001};
 	 rank_table[7] <= {3'b000, 3'b000, 3'b000};
-	 
-	 /*rank_table[8] <= {3'b001, 3'b001, 3'b010};
+	 rank_table[8] <= {3'b001, 3'b001, 3'b010};
 	 rank_table[9] <= {3'b001, 3'b001, 3'b011};
 	 rank_table[10] <= {3'b001, 3'b000, 3'b010};
 	 rank_table[11] <= {3'b001, 3'b000, 3'b011};
@@ -236,7 +245,7 @@ end
 
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [DstWidth:0]uptree_offset = (lg_commsize-communicator_children-1)*DstWidth;	
-assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (local_rank == 0)? {rank_z, rank_y, rank_x} : comm_table[context][uptree_offset+:DstWidth]; //short reduction, gather, barrier
+assign {dst_x_uptree, dst_y_uptree, dst_z_uptree} = (local_rank == 0)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][uptree_offset+:DstWidth]]; //short reduction, gather, barrier
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
