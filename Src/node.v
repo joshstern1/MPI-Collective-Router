@@ -32,6 +32,7 @@ module node
     output [FLIT_SIZE - 1 : 0] out_yneg_ser,
     output [FLIT_SIZE - 1 : 0] out_zneg_ser,
 	 
+	 input [FlitChildWidth - 1 : 0]reduce_me,	 
 	 input [NewCommWidth-1:0]newcomm
 );
 
@@ -206,12 +207,12 @@ module node
 	 
 	 wire [2:0]selector;
 	 
-	 wire xpos_reduce_grant = ((selector==0)&&(valid_switch_out));
-	 wire ypos_reduce_grant = ((selector==1)&&(valid_switch_out));
-	 wire zpos_reduce_grant = ((selector==2)&&(valid_switch_out));
-	 wire xneg_reduce_grant = ((selector==3)&&(valid_switch_out));
-	 wire yneg_reduce_grant = ((selector==4)&&(valid_switch_out));
-	 wire zneg_reduce_grant = ((selector==5)&&(valid_switch_out));
+	 wire xpos_reduce_grant = ((selector==0)&&(valid_switch_out)&&(!reduce_me[ValidBitPos]));
+	 wire ypos_reduce_grant = ((selector==1)&&(valid_switch_out)&&(!reduce_me[ValidBitPos]));
+	 wire zpos_reduce_grant = ((selector==2)&&(valid_switch_out)&&(!reduce_me[ValidBitPos]));
+	 wire xneg_reduce_grant = ((selector==3)&&(valid_switch_out)&&(!reduce_me[ValidBitPos]));
+	 wire yneg_reduce_grant = ((selector==4)&&(valid_switch_out)&&(!reduce_me[ValidBitPos]));
+	 wire zneg_reduce_grant = ((selector==5)&&(valid_switch_out)&&(!reduce_me[ValidBitPos]));
 	 
 	 wire xpos_reduce_empty;
 	 wire ypos_reduce_empty;
@@ -351,6 +352,8 @@ module node
 		.selector(selector)
 	 );
 	 
+	 wire [FlitChildWidth - 1 : 0]reduce_fifo_in = (reduce_me[ValidBitPos])? reduce_me : reduce_switch_out;
+	 
 	fifo#(
 		.lg_numprocs(lg_numprocs),
 		.PayloadWidth(PayloadWidth)
@@ -358,9 +361,9 @@ module node
 	reduce_fifo (
 	 .clk(clk),
 	 .rst(rst),
-	 .buf_in(reduce_switch_out),
+	 .buf_in(reduce_fifo_in),
 	 .buf_out(reduce_in),
-	 .wr_en(valid_switch_out),
+	 .wr_en((valid_switch_out)||(reduce_me[ValidBitPos])),
 	 .rd_en(rd_en),
 	 .buf_empty(),
 	 .buf_full(),
