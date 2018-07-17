@@ -118,8 +118,7 @@ localparam LargeAllReduce = 4'b1111;
 
 ////////////////////////////////////
 
-reg rd_en_reg;
-assign rd_en = ((t_op==ShortAllReduce)||(t_op==ShortAllGather))?rd_en_doubling: (t_op == LargeAllGather)? rd_en_ring : (t_op == ShortBcast) ? rd_en_bcast : rd_en_reg;
+assign rd_en = ((t_op==ShortAllReduce)||(t_op==ShortAllGather))?rd_en_doubling: (t_op == LargeAllGather)? rd_en_ring : (t_op == ShortBcast) ? rd_en_bcast : 1'b1;
 
 /////////////////////////////////////////////////////////////////////////////////
 //rank table
@@ -298,15 +297,9 @@ reg [Dst_XWidth-1:0] dst_x_halving, dst_y_halving, dst_z_halving;
 reg [lg_numprocs-1:0]bitmask;
 reg [lg_numprocs-1:0]bitmarker[lg_numprocs-2:0];
 reg [DstWidth:0]halving_offset;
-reg [lg_numprocs:0]k, p, f, w, y;
-
-reg home_halving;
-reg [DstWidth-1:0]new_gather_dst;
-wire start_gather = ((t_tag == local_rank)&&(t_op == LargeBcast));
+reg [lg_numprocs:0]p, f, y;
 
 always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, scatter (scatter also used in medium and long broadcast)
-
-
 	for(f=1; f<lg_numprocs; f=f+1)begin
 		bitmarker[f-1] = 0;
 		for(y=0; y<f; y=y+1) begin
@@ -317,33 +310,17 @@ always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, 
 	
 	bitmask[0] = (t_tag[lg_numprocs-1] != local_rank[lg_numprocs-1]);
 	
-	
 	halving_offset=0;
 	for(p=0; 2**p<=bitmask; p=p+1) begin
 		halving_offset = p*DstWidth;
 	end
 	
-	new_gather_dst =  ((local_rank == (commsize-1))? t_root : comm_row[(DstWidth*(lg_commsize-1))+:DstWidth]);
-	
 	if (rst) begin
-		home_halving = 0;
 		{dst_z_halving, dst_y_halving, dst_x_halving} = 0;
 	end
 	else if (packetIn[ValidBitPos])begin
-		case(t_op)
-			LargeBcast: {dst_z_halving, dst_y_halving, dst_x_halving} = (home_halving)? {rank_z, rank_y, rank_x} : (start_gather)? new_gather_dst :	
-																							(t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_row[halving_offset+:DstWidth]];
-																							
-			LargeReduce:{dst_z_halving, dst_y_halving, dst_x_halving} =	((t_tag == local_rank)&&(t_op == LargeReduce))? {dst_z_uptree, dst_y_uptree, dst_x_uptree} :
-																							(t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_row[halving_offset+:DstWidth]];
-																							
-			default: 	{dst_z_halving, dst_y_halving, dst_x_halving} = (t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_row[halving_offset+:DstWidth]];//////////////
-		endcase													
-
-		home_halving = ((t_tag == local_rank)&&(t_op == LargeBcast)&&(!home_halving));
-
-	end
-	
+		{dst_z_halving, dst_y_halving, dst_x_halving} = (t_tag == local_rank[TagWidth-1:0])? my_rank : rank_table[comm_row[halving_offset+:DstWidth]];
+	end	
 end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -400,8 +377,6 @@ end
 
 wire meant_for_me = ((packetIn[DstPos+DstWidth-1:DstPos]==my_rank)&&(comm_row[CommTableWidth-1]));
 reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
-reg [opWidth-1:0]op;
-reg [AlgTypeWidth-1:0]algtype;
 reg [ChildrenWidth-1:0]children;
 reg [TagWidth-1:0]tag;
 
@@ -409,119 +384,68 @@ reg [TagWidth-1:0]tag;
 always @(posedge clk) begin
 	if(rst) begin
 		{dst1, dst2, dst3} <= 0;
-		rd_en_reg <= 1'b1;
-		op <= 0;
-		algtype <= 0;
 		children <= 0;
 		tag <= 0;
 	end
 	else if((meant_for_me)&&(t_op>4'b0)) begin
+	
+		tag <= ((t_op == ShortAllReduce)||(t_op == ShortAllGather))? tag + 1 : packetIn[TagPos+TagWidth-1:TagPos]; 
+		
 		case(t_op)
 			LargeBcast: 	begin
-									op <= (!home_halving)? LargeBcast : LargeAllGather;
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= ((home_halving)||(!start_gather));
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			MediumBcast: 	begin
-									op <= t_op; 
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			ShortBcast: 	begin
-									op <= ShortBcast;
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1;//(!valid_bcast)? 1 : (local_rank==0)? (bcast_offset == bcast_threshold) : (communicator_children == 1)? one_child : ((home_bcast)||(local_rank[0]));
 									{dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
 								end
 			Scatter: 		begin
-									op <= Scatter;
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			LargeAllGather:begin
-									op <= LargeAllGather;
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_ring, dst_y_ring, dst_z_ring};
 								end
 			ShortAllGather:begin 
-									op <= ShortAllGather;
-									algtype <= 0;
-									tag <= tag + 1;
 									children <= 0;
-									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
 								end
 			Gather: 			begin
-									op <= Gather;
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_uptree, dst_y_uptree, dst_z_uptree};
 								end
 			ShortReduce: 	begin
-									op <= ShortReduce;
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= communicator_children;
-									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_uptree, dst_y_uptree, dst_z_uptree};
 								end
 			LargeReduce: 	begin
-									op <= (!home_halving)? LargeReduce : Gather; 
-									algtype <= (t_tag == local_rank)? 1 :0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= (t_tag == local_rank)? lg_commsize : (halving_offset/DstWidth);
-									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			ShortAllReduce:begin
-									op <= ShortAllReduce;
-									algtype <= 0;
-									tag <= tag + 1;
 									children <= ((send_home_doubling)||(diff==(commsize/2)))? lg_commsize : ((lg_commsize-1)-(doubling_offset/DstWidth));
-									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
 								end
 			LargeAllReduce:begin 	
-									op <= t_op; 
-									algtype <= 0;
-									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= (t_tag == local_rank)? lg_commsize : (halving_offset/DstWidth);
-									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			default: 		begin
-									op <= t_op;
-									algtype <= packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
-									tag<=packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1'b1;
 									{dst3, dst2, dst1} <= packetIn[DstPos+DstWidth-1:DstPos];
 								end
 		endcase
 
 	end
 	else begin
-			op <= t_op;
-			algtype <= packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
 			tag <= packetIn[TagPos+TagWidth-1:TagPos];
 			children <= 0;
-			rd_en_reg <= 1'b1;
 		   {dst3, dst2, dst1} <= packetIn[DstPos+DstWidth-1:DstPos];
 	end
 end
@@ -531,6 +455,8 @@ end
 
 reg [PayloadWidth-1:0]payload;
 reg [ContextIdWidth-1:0]contextId;
+reg [opWidth-1:0]op;
+reg [AlgTypeWidth-1:0]algtype;
 reg [RankWidth-1:0]rank;
 reg [Src_XWidth-1:0] src_x, src_y, src_z;
 reg valid;
@@ -542,6 +468,8 @@ always @(posedge clk) begin
  if ((rst) || (!packetIn[ValidBitPos])) begin //if rst, set everything to 0
   payload<=0;
   contextId<=0;
+  op <= 0;
+  algtype <= 0;
   rank<=0;
   {src_z, src_y, src_x}<=0;
   valid<=0;
@@ -552,7 +480,9 @@ always @(posedge clk) begin
  else begin
 
   payload<=packetIn[PayloadWidth-1:0];
-  contextId<=context;
+  contextId <= context;
+  op <= t_op;
+  algtype <= packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
   rank<= t_rank;
   {src_x, src_y, src_x}<= packetIn[SrcPos+SrcWidth-1:SrcPos];
   valid<=packetIn[ValidBitPos];
