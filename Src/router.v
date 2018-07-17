@@ -128,12 +128,7 @@ module router#(
 	 wire [FlitWidth - 1 : 0]in_yneg_IR;
 	 wire [FlitWidth - 1 : 0]in_zneg_IR;
 	 
-	 //delete these
-	 wire eject_zpos_valid=0;
-    wire eject_xneg_valid=0;
-    wire eject_yneg_valid=0;
-    wire eject_zneg_valid=0;
-	 
+
 //IR output and buffer input
 	 wire xpos_IR_consume;
 	 wire ypos_IR_consume;
