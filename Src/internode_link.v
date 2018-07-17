@@ -1,3 +1,4 @@
+
 `timescale 1ns / 1ns
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
@@ -79,6 +80,3 @@ module internode_link
     assign rx_par_data = shift_reg_rx[0][FLIT_SIZE - 1 : 0];
     assign rx_par_data_valid = rx_par_data[FLIT_SIZE-1];
 endmodule
-    
-
-    
