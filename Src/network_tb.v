@@ -294,7 +294,7 @@ module network_tb;
 		in_yneg_inject_0_1_0 = 85'b0;
 		in_zneg_inject_1_0_0 = 85'b0;*/
 		
-		for(i=0;i<1;i=i+1)begin
+		/*for(i=0;i<1;i=i+1)begin
 		
 			reduce_me_0_0_0 = {4'b0111, 9'b000000000, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortAllReduce, 32'b00000000000000000000000000000110};
 			in_xpos_inject_0_0_0 = {4'b0001, 9'b000000001, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortAllReduce, 32'b00000000000000000000000000000110};
@@ -339,8 +339,14 @@ module network_tb;
 		
 		in_xpos_inject_1_0_0 = 85'b0;
 		in_ypos_inject_1_0_0 = 85'b0;
-		in_zneg_inject_1_0_0 = 85'b0;
+		in_zneg_inject_1_0_0 = 85'b0;*/
 		
+		for(i=0;i<1;i=i+1)begin
+			in_xpos_inject_0_0_0 = {4'b0001, 9'b000000001, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, LargeAllGather, 32'b00000000000000000000000000000110};
+			#10;
+		end		
+		
+		in_xpos_inject_0_0_0 = 85'b0;		
 
 	end
 	
