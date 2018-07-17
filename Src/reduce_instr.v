@@ -119,7 +119,7 @@ localparam LargeAllReduce = 4'b1111;
 ////////////////////////////////////
 
 reg rd_en_reg;
-assign rd_en = ((t_op==ShortAllReduce)||(t_op==ShortAllGather))?rd_en_doubling: (t_op == LargeAllGather)? rd_en_ring : rd_en_reg;
+assign rd_en = ((t_op==ShortAllReduce)||(t_op==ShortAllGather))?rd_en_doubling: (t_op == LargeAllGather)? rd_en_ring : (t_op == ShortBcast) ? rd_en_bcast : rd_en_reg;
 
 /////////////////////////////////////////////////////////////////////////////////
 //rank table
@@ -192,10 +192,7 @@ always @(posedge clk) begin
 		comm_table[new_comm_context][CommTableWidth-2:0] <= new_comm[CommTableWidth-2:0];	
 		comm_table[new_comm_context][CommTableWidth-1] <= 1'b1;
  end
- 
- 	//|  52 |51-43|  42-34   | 33-31  |   30-27   |26-18| 17-9 | 8-0 |     	
-	//|valid|root |local_rank|children|lg_commsize|third|second|first|
- 
+  
  //comm_table[0] <= {1'b1, 9'b0, 9'b0, 3'b011, 4'b0011, 9'b01, 9'b10, 9'b100};
  //comm_table[0] <= {1'b1, 9'b0, 9'b000000100, 3'b010, 4'b0011, 9'b000000101, 9'b000000110, 9'b000};
  //comm_table[0] <= {1'b1, 9'b0, 9'b000000010, 3'b001, 4'b0011, 9'b000000011, 9'b0, 9'b000000110};
@@ -224,7 +221,7 @@ reg [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
 reg home_ring;
 wire [DstWidth-1:0] ring_offset = DstWidth*(lg_commsize-1);
 
-wire rd_en_ring = ((home_ring) || (!from_guest)||(t_op != LargeAllGather));
+wire rd_en_ring = ((home_ring) || (!from_guest));
 
 always @(posedge clk) begin
 	if(rst) begin
@@ -260,6 +257,8 @@ wire valid_bcast = (t_op == ShortBcast);
 wire [DstWidth:0]bcast_offset = ((lg_commsize - communicator_children)+send_again_bcast)*DstWidth;
 wire [DstWidth:0]bcast_threshold = (lg_commsize-2)*DstWidth;
 
+wire rd_en_bcast = (local_rank==0)? (bcast_offset == bcast_threshold) : (communicator_children == 1)? one_child : ((home_bcast)||(local_rank[0]));
+
 always @(posedge clk) begin	
 	if(rst) begin
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 0;
@@ -268,35 +267,28 @@ always @(posedge clk) begin
 		one_child = 0;
 	end
 	
-	else if (packetIn[ValidBitPos])begin	
-	
+	else if (packetIn[ValidBitPos])begin		
 		if(send_again_bcast == communicator_children-1) begin
 			send_again_bcast=0;
 			home_bcast = (local_rank!=0);
-		end		
+		end					
 		else begin
 			send_again_bcast = ((!home_bcast)&&(valid_bcast))? send_again_bcast+1 : send_again_bcast;
 			home_bcast = 0;
 		end
 		
 		case(communicator_children)
-			3'b000: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = {rank_z, rank_y, rank_x};
-			3'b001: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (one_child)? {rank_z, rank_y, rank_x} : rank_table[comm_row[(DstWidth*(lg_numprocs-1))+:DstWidth]];
-			default: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (send_home_bcast)? {rank_z, rank_y, rank_x} : rank_table[comm_row[bcast_offset+:DstWidth]]; 
+			3'b000: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = my_rank;
+			3'b001: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (one_child)? my_rank : rank_table[comm_row[(DstWidth*(lg_numprocs-1))+:DstWidth]];
+			default: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (send_home_bcast)? my_rank : rank_table[comm_row[bcast_offset+:DstWidth]]; 
 		endcase
 				
 		one_child = ((communicator_children==1) && (!one_child) && (t_op==ShortBcast));
-		
 	end
 end
 
 always @(posedge clk)begin
-	if(rst) begin
-		send_home_bcast <= 0;
-	end
-	else begin
-		send_home_bcast <= home_bcast;
-	end
+	send_home_bcast <= (rst)? 0 : home_bcast;
 end
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -367,7 +359,7 @@ wire valid_doubling = ((t_op == ShortAllGather) || (t_op == ShortAllReduce));
 wire [DstWidth - 1 : 0] diff  = (t_rank > local_rank)? t_rank - local_rank : local_rank - t_rank;
 wire [DstWidth : 0] doubling_offset = (((lg_commsize - 1) - (send_again_doubling+base2)) * DstWidth);
 
-wire rd_en_doubling = (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
+wire rd_en_doubling = (from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
 
 always @(*)begin
 	base2 = (diff>0);
@@ -401,7 +393,6 @@ end
 always @(posedge clk) begin
 	send_home_doubling <= (rst)? 0 : home_doubling;
 end
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -447,7 +438,7 @@ always @(posedge clk) begin
 									algtype <= 0;
 									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= (!valid_bcast)? 1 : (local_rank==0)? (bcast_offset == bcast_threshold) : (communicator_children == 1)? one_child : ((home_bcast)||(local_rank[0]));
+									rd_en_reg <= 1;//(!valid_bcast)? 1 : (local_rank==0)? (bcast_offset == bcast_threshold) : (communicator_children == 1)? one_child : ((home_bcast)||(local_rank[0]));
 									{dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
 								end
 			Scatter: 		begin
@@ -463,7 +454,7 @@ always @(posedge clk) begin
 									algtype <= 0;
 									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= 1;//((home_ring) || (!from_guest)||(t_op != LargeAllGather));
+									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_ring, dst_y_ring, dst_z_ring};
 								end
 			ShortAllGather:begin 
@@ -471,7 +462,7 @@ always @(posedge clk) begin
 									algtype <= 0;
 									tag <= tag + 1;
 									children <= 0;
-									rd_en_reg <= (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
+									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
 								end
 			Gather: 			begin
@@ -503,7 +494,7 @@ always @(posedge clk) begin
 									algtype <= 0;
 									tag <= tag + 1;
 									children <= ((send_home_doubling)||(diff==(commsize/2)))? lg_commsize : ((lg_commsize-1)-(doubling_offset/DstWidth));
-									rd_en_reg <= (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
+									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
 								end
 			LargeAllReduce:begin 	
