@@ -119,7 +119,7 @@ localparam LargeAllReduce = 4'b1111;
 ////////////////////////////////////
 
 reg rd_en_reg;
-assign rd_en = ((t_op==ShortAllReduce)&&(send_home_doubling==0)&&(base2 != lg_commsize))? 0 : rd_en_reg;
+assign rd_en = ((t_op==ShortAllReduce)||(t_op==ShortAllGather))?rd_en_doubling: (t_op == LargeAllGather)? rd_en_ring : rd_en_reg;
 
 /////////////////////////////////////////////////////////////////////////////////
 //rank table
@@ -213,8 +213,9 @@ wire [DstWidth-1:0]t_root = comm_row[RootPos+DstWidth-1:RootPos];
 wire [TagWidth-1:0]t_tag = (packetIn[TagPos+TagWidth-1:TagPos])%commsize;
 wire [DstWidth-1:0]t_rank = packetIn[RankPos+RankWidth-1:RankPos];
 wire [opWidth-1:0]t_op = packetIn[opPos+opWidth-1:opPos];
+wire [DstWidth-1:0]my_rank = {rank_z[Dst_ZWidth-1:0], rank_y[Dst_YWidth-1:0], rank_x[Dst_XWidth-1:0]};
 
-wire from_guest = ({rank_z, rank_y, rank_x}!=packetIn[SrcPos+SrcWidth-1:SrcPos]);
+wire from_guest = (my_rank!=packetIn[SrcPos+SrcWidth-1:SrcPos]);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //ring (long allgather)
@@ -223,22 +224,21 @@ reg [Dst_XWidth-1:0] dst_x_ring, dst_y_ring, dst_z_ring;
 reg home_ring;
 wire [DstWidth-1:0] ring_offset = DstWidth*(lg_commsize-1);
 
+wire rd_en_ring = ((home_ring) || (!from_guest)||(t_op != LargeAllGather));
+
 always @(posedge clk) begin
 	if(rst) begin
 		home_ring = 0;
 		{dst_z_ring, dst_y_ring, dst_x_ring} = 0;
 	end
-	else if (packetIn[ValidBitPos])begin
 	
-		{dst_z_ring, dst_y_ring, dst_x_ring} = (home_ring)? {rank_z, rank_y, rank_x} : (local_rank == (num_procs-1))? t_root : rank_table[comm_row[ring_offset+:DstWidth]];  
-
+	else if (packetIn[ValidBitPos])begin	
+		{dst_z_ring, dst_y_ring, dst_x_ring} = (home_ring)? my_rank : (local_rank == (num_procs-1))? t_root : rank_table[local_rank+1];  
 		home_ring = ((from_guest) && (!home_ring) && (t_op==LargeAllGather));
-		
 	end
 	else begin
 		{dst_z_ring, dst_y_ring, dst_x_ring} = 0;
-	end
-	
+	end	
 end
 
 
@@ -247,7 +247,7 @@ end
 
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [DstWidth:0]uptree_offset = (lg_commsize-communicator_children-1)*DstWidth;	
-assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (local_rank == 0)? {rank_z, rank_y, rank_x} : rank_table[comm_row[uptree_offset+:DstWidth]]; //short reduction, gather, barrier
+assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (local_rank == 0)? my_rank : rank_table[comm_row[uptree_offset+:DstWidth]]; //short reduction, gather, barrier
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -360,13 +360,14 @@ end
 reg [Dst_XWidth-1:0]dst_x_doubling, dst_y_doubling, dst_z_doubling;
 reg [lg_numprocs:0]send_again_doubling;
 reg [lg_numprocs:0]base2;
-reg home_doubling;
-reg send_home_doubling;
+reg home_doubling, send_home_doubling;
 reg [lg_numprocs-1:0]a;
 
 wire valid_doubling = ((t_op == ShortAllGather) || (t_op == ShortAllReduce));
 wire [DstWidth - 1 : 0] diff  = (t_rank > local_rank)? t_rank - local_rank : local_rank - t_rank;
 wire [DstWidth : 0] doubling_offset = (((lg_commsize - 1) - (send_again_doubling+base2)) * DstWidth);
+
+wire rd_en_doubling = (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
 
 always @(*)begin
 	base2 = (diff>0);
@@ -375,7 +376,7 @@ always @(*)begin
 	end	
 end
 
-always @(posedge clk)begin
+always @(posedge clk)begin	
 	if(rst) begin
 		{dst_z_doubling, dst_y_doubling, dst_x_doubling} = 0;
 		send_again_doubling = 0;
@@ -393,23 +394,20 @@ always @(posedge clk)begin
 			end			
 			home_doubling = 0;	
 		end
-		{dst_z_doubling, dst_y_doubling, dst_x_doubling} = ((send_home_doubling)||(diff==(commsize/2)))? {rank_z[2:0], rank_y[2:0], rank_x[2:0]} : rank_table[comm_row[doubling_offset+:DstWidth]];
+		{dst_z_doubling, dst_y_doubling, dst_x_doubling} = ((send_home_doubling)||(diff==(commsize/2)))? my_rank : rank_table[comm_row[doubling_offset+:DstWidth]];
 	end		
 end
 
 always @(posedge clk) begin
-	if(rst) begin
-		send_home_doubling <= 0;
-	end
-	else begin
-		send_home_doubling <= home_doubling;
-	end
+	send_home_doubling <= (rst)? 0 : home_doubling;
 end
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //mux
 
-wire meant_for_me = ((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(comm_row[CommTableWidth-1]));
+wire meant_for_me = ((packetIn[DstPos+DstWidth-1:DstPos]==my_rank)&&(comm_row[CommTableWidth-1]));
 reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [opWidth-1:0]op;
 reg [AlgTypeWidth-1:0]algtype;
@@ -465,7 +463,7 @@ always @(posedge clk) begin
 									algtype <= 0;
 									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
-									rd_en_reg <= ((home_ring) || (!from_guest)||(t_op != LargeAllGather));
+									rd_en_reg <= 1;//((home_ring) || (!from_guest)||(t_op != LargeAllGather));
 									{dst1, dst2, dst3} <= {dst_x_ring, dst_y_ring, dst_z_ring};
 								end
 			ShortAllGather:begin 
@@ -584,8 +582,8 @@ assign packetOut[DstPos+DstWidth-1:DstPos] = {dst3, dst2, dst1};
 /* 1. only change src and rank if the packet was initially meant for me, but I am now forwarding it somewhere else
 	2. if it is not meant for me, then dont change it
 	3. if it is meant for me but I am keeping it, then keep the original sender	*/
-assign packetOut[RankPos+RankWidth-1:RankPos] = ((ok_meant_for_me)&&({dst3, dst2, dst1}!={rank_z, rank_y, rank_x}))? loc_rank : rank;
-assign packetOut[SrcPos+SrcWidth-1:SrcPos] = ((ok_meant_for_me)&&({dst3, dst2, dst1}!={rank_z, rank_y, rank_x}))? {rank_z, rank_y, rank_x} : {src_z, src_y, src_x};
+assign packetOut[RankPos+RankWidth-1:RankPos] = ((ok_meant_for_me)&&({dst3, dst2, dst1}!=my_rank))? loc_rank : rank;
+assign packetOut[SrcPos+SrcWidth-1:SrcPos] = ((ok_meant_for_me)&&({dst3, dst2, dst1}!=my_rank))? my_rank : {src_z, src_y, src_x};
 assign packetOut[ValidBitPos] = valid;
 assign packetOut[ChildrenPos+ChildrenWidth-1:ChildrenPos] = children;
 
