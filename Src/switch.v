@@ -240,3 +240,4 @@ module switch#(
 	 assign in_avail[5] = !(((in_zneg_selector!=5) && (in_valid[5]))||(out_avail[5]));
    
 endmodule
+ 
