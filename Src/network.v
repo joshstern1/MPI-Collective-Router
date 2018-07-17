@@ -31,14 +31,14 @@
 	 input [FlitChildWidth - 1 : 0]reduce_me_0_1_0,
 	 input [NewCommWidth - 1 : 0]newcomm_0_1_0,
 	 
- 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_0_1_1,
+ 	 /*input [FlitChildWidth - 1 : 0]in_xpos_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_zpos_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]reduce_me_0_1_1,
-	 input [NewCommWidth - 1 : 0]newcomm_0_1_1,
+	 input [NewCommWidth - 1 : 0]newcomm_0_1_1,*/
 	 
 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_0,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_1_0_0,
@@ -49,7 +49,7 @@
 	 input [FlitChildWidth - 1 : 0]reduce_me_1_0_0,
 	 input [NewCommWidth - 1 : 0]newcomm_1_0_0,
 	 
-	 input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_1,
+	 /*input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_1,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_1_0_1,
 	 input [FlitChildWidth - 1 : 0]in_zpos_inject_1_0_1,
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_1_0_1,
@@ -74,7 +74,7 @@
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_1_1_1,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_1_1_1,
 	 input [FlitChildWidth - 1 : 0]reduce_me_1_1_1,
-	 input [NewCommWidth - 1 : 0]newcomm_1_1_1,
+	 input [NewCommWidth - 1 : 0]newcomm_1_1_1,*/
 	 
 	 output valid
 );
