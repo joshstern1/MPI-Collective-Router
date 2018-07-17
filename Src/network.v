@@ -31,14 +31,14 @@
 	 input [FlitChildWidth - 1 : 0]reduce_me_0_1_0,
 	 input [NewCommWidth - 1 : 0]newcomm_0_1_0,
 	 
- 	 /*input [FlitChildWidth - 1 : 0]in_xpos_inject_0_1_1,
+ 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_zpos_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_0_1_1,
 	 input [FlitChildWidth - 1 : 0]reduce_me_0_1_1,
-	 input [NewCommWidth - 1 : 0]newcomm_0_1_1,*/
+	 input [NewCommWidth - 1 : 0]newcomm_0_1_1,
 	 
 	 input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_0,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_1_0_0,
@@ -49,7 +49,7 @@
 	 input [FlitChildWidth - 1 : 0]reduce_me_1_0_0,
 	 input [NewCommWidth - 1 : 0]newcomm_1_0_0,
 	 
-	 /*input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_1,
+	 input [FlitChildWidth - 1 : 0]in_xpos_inject_1_0_1,
 	 input [FlitChildWidth - 1 : 0]in_ypos_inject_1_0_1,
 	 input [FlitChildWidth - 1 : 0]in_zpos_inject_1_0_1,
 	 input [FlitChildWidth - 1 : 0]in_xneg_inject_1_0_1,
@@ -74,7 +74,7 @@
 	 input [FlitChildWidth - 1 : 0]in_yneg_inject_1_1_1,
 	 input [FlitChildWidth - 1 : 0]in_zneg_inject_1_1_1,
 	 input [FlitChildWidth - 1 : 0]reduce_me_1_1_1,
-	 input [NewCommWidth - 1 : 0]newcomm_1_1_1,*/
+	 input [NewCommWidth - 1 : 0]newcomm_1_1_1,
 	 
 	 output valid
 );
@@ -357,10 +357,10 @@
 		  .newcomm(newcomm_1_0_0)
       );	
 	
-    /*node#(
-        .cur_x(0),
+    node#(
+        .cur_z(0),
         .cur_y(1),
-        .cur_z(1)
+        .cur_x(1)
         )n_0_1_1(
         .clk(clk),
         .rst(rst),
@@ -385,11 +385,10 @@
 		  .reduce_me(reduce_me_0_1_1),
 		  .newcomm(newcomm_0_1_1)
       );
-
 		node#(
-        .cur_x(1),
+        .cur_z(1),
         .cur_y(0),
-        .cur_z(1)
+        .cur_x(1)
         )n_1_0_1(
         .clk(clk),
         .rst(rst),
@@ -415,9 +414,9 @@
 		  .newcomm(newcomm_1_0_1)
       );
     node#(
-        .cur_x(1),
+        .cur_z(1),
         .cur_y(1),
-        .cur_z(0)
+        .cur_x(0)
         )n_1_1_0(
         .clk(clk),
         .rst(rst),
@@ -443,9 +442,9 @@
 		  .newcomm(newcomm_1_1_0)
       );
     node#(
-        .cur_x(1),
+        .cur_z(1),
         .cur_y(1),
-        .cur_z(1)
+        .cur_x(1)
         )n_1_1_1(
         .clk(clk),
         .rst(rst),
@@ -469,5 +468,5 @@
         .out_zneg_ser(out_zneg_ser_1_1_1),
 		  .reduce_me(reduce_me_1_1_1),
 		  .newcomm(newcomm_1_1_1)
-      );*/
+      );
 endmodule
