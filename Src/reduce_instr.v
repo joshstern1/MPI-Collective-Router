@@ -118,7 +118,7 @@ localparam LargeAllReduce = 4'b1111;
 ////////////////////////////////////
 
 reg rd_en_reg;
-assign rd_en = rd_en_reg;
+assign rd_en = ((t_op==ShortAllReduce)&&(send_home_doubling==0))? 0 : rd_en_reg;
 
 /////////////////////////////////////////////////////////////////////////////////
 //rank table
@@ -372,9 +372,9 @@ wire [DstWidth:0]doubling_offset = (((lg_commsize - 1) - (send_again_doubling+ba
 always @(posedge clk)begin
 
 	base2 = (diff>0);
-	//for(a=1; 2**a<=diff; a=a+1) begin
-	//	base2 = a+1;
-	//end	
+	for(a=1; 2**a<=diff; a=a+1) begin
+		base2 = a+1;
+	end	
 
 	if(rst) begin
 		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = 0;
@@ -396,7 +396,9 @@ always @(posedge clk)begin
 			home_doubling = 0;	
 		end
 
-		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = ((send_home_doubling)||(diff==(commsize/2)))? {rank_x, rank_y, rank_z} : comm_table[context][doubling_offset+:DstWidth];
+		{dst_x_doubling, dst_y_doubling, dst_z_doubling} = ((send_home_doubling)||(diff==(commsize/2)))? {rank_x[2:0], rank_y[2:0], rank_z[2:0]} : rank_table[comm_table[context][doubling_offset+:DstWidth]];
+		
+		
 		
 	end	
 	
