@@ -421,6 +421,7 @@ reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [opWidth-1:0]op;
 reg [AlgTypeWidth-1:0]algtype;
 reg [ChildrenWidth-1:0]children;
+reg [TagWidth-1:0]tag;
 
 
 always @(posedge clk) begin
@@ -430,12 +431,14 @@ always @(posedge clk) begin
 		op <= 0;
 		algtype <= 0;
 		children <= 0;
+		tag <= 0;
 	end
 	else if((meant_for_me)&&(t_op>4'b0)) begin
 		case(t_op)
 			LargeBcast: 	begin
 									op <= (!home_halving)? LargeBcast : LargeAllGather;
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= ((home_halving)||(!start_gather));
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
@@ -443,6 +446,7 @@ always @(posedge clk) begin
 			MediumBcast: 	begin
 									op <= t_op; 
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
@@ -450,6 +454,7 @@ always @(posedge clk) begin
 			ShortBcast: 	begin
 									op <= ShortBcast;
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= (!valid_bcast)? 1 : (local_rank==0)? (bcast_offset == bcast_threshold) : (communicator_children == 1)? one_child : ((home_bcast)||(local_rank[0]));
 									{dst1, dst2, dst3} <= {dst_x_bcast, dst_y_bcast, dst_z_bcast};
@@ -457,6 +462,7 @@ always @(posedge clk) begin
 			Scatter: 		begin
 									op <= Scatter;
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
@@ -464,6 +470,7 @@ always @(posedge clk) begin
 			LargeAllGather:begin
 									op <= LargeAllGather;
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= ((home_ring) || (!from_guest)||(t_op != LargeAllGather));
 									{dst1, dst2, dst3} <= {dst_x_ring, dst_y_ring, dst_z_ring};
@@ -471,6 +478,7 @@ always @(posedge clk) begin
 			ShortAllGather:begin 
 									op <= ShortAllGather;
 									algtype <= 0;
+									tag <= tag + 1;
 									children <= 0;
 									rd_en_reg <= (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
@@ -478,6 +486,7 @@ always @(posedge clk) begin
 			Gather: 			begin
 									op <= Gather;
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_uptree, dst_y_uptree, dst_z_uptree};
@@ -485,6 +494,7 @@ always @(posedge clk) begin
 			ShortReduce: 	begin
 									op <= ShortReduce;
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= communicator_children;
 									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= {dst_x_uptree, dst_y_uptree, dst_z_uptree};
@@ -492,6 +502,7 @@ always @(posedge clk) begin
 			LargeReduce: 	begin
 									op <= (!home_halving)? LargeReduce : Gather; 
 									algtype <= (t_tag == local_rank)? 1 :0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= (t_tag == local_rank)? lg_commsize : (halving_offset/DstWidth);
 									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
@@ -499,6 +510,7 @@ always @(posedge clk) begin
 			ShortAllReduce:begin
 									op <= ShortAllReduce;
 									algtype <= 0;
+									tag <= tag + 1;
 									children <= ((send_home_doubling)||(diff==(commsize/2)))? lg_commsize : ((lg_commsize-1)-(doubling_offset/DstWidth));
 									rd_en_reg <= (!valid_doubling)? 1 :(from_guest)? ((home_doubling)||(diff==(commsize/2))) : (doubling_offset == DstWidth);
 									{dst1, dst2, dst3} <= {dst_x_doubling, dst_y_doubling, dst_z_doubling};
@@ -506,13 +518,15 @@ always @(posedge clk) begin
 			LargeAllReduce:begin 	
 									op <= t_op; 
 									algtype <= 0;
+									tag <= packetIn[TagPos+TagWidth-1:TagPos];
 									children <= (t_tag == local_rank)? lg_commsize : (halving_offset/DstWidth);
 									rd_en_reg <= 1;
 									{dst1, dst2, dst3} <= {dst_x_halving, dst_y_halving, dst_z_halving};
 								end
 			default: 		begin
 									op <= t_op;
-									algtype <= 0;
+									algtype <= packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
+									tag<=packetIn[TagPos+TagWidth-1:TagPos];
 									children <= 0;
 									rd_en_reg <= 1'b1;
 									{dst1, dst2, dst3} <= packetIn[DstPos+DstWidth-1:DstPos];
@@ -523,9 +537,10 @@ always @(posedge clk) begin
 	else begin
 			op <= t_op;
 			algtype <= packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
+			tag <= packetIn[TagPos+TagWidth-1:TagPos];
 			children <= 0;
 			rd_en_reg <= 1'b1;
-		  {dst3, dst2, dst1} <= packetIn[DstPos+DstWidth-1:DstPos];
+		   {dst3, dst2, dst1} <= packetIn[DstPos+DstWidth-1:DstPos];
 	end
 end
 
@@ -533,7 +548,6 @@ end
 //keep rest of packet
 
 reg [PayloadWidth-1:0]payload;
-reg [TagWidth-1:0]tag;
 reg [ContextIdWidth-1:0]contextId;
 reg [RankWidth-1:0]rank;
 reg [Src_XWidth-1:0] src_x, src_y, src_z;
@@ -545,7 +559,6 @@ always @(posedge clk) begin
   
  if ((rst) || (!packetIn[ValidBitPos])) begin //if rst, set everything to 0
   payload<=0;
-  tag<=0;
   contextId<=0;
   rank<=0;
   {src_z, src_y, src_x}<=0;
@@ -557,7 +570,6 @@ always @(posedge clk) begin
  else begin
 
   payload<=packetIn[PayloadWidth-1:0];
-  tag<=packetIn[TagPos+TagWidth-1:TagPos];
   contextId<=context;
   rank<= t_rank;
   {src_x, src_y, src_x}<= packetIn[SrcPos+SrcWidth-1:SrcPos];
