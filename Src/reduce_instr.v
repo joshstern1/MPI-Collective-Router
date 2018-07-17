@@ -91,12 +91,13 @@ localparam FlitChildWidth = FlitWidth+ChildrenWidth;
  
 /////////////////////////////////////
 //communicator table
-localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
+//localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
 localparam CommTableSize = 4;
 localparam lgCommSizePos = lg_numprocs*DstWidth;
 localparam CommChildrenPos = lgCommSizePos+lg_numprocs+1;
 localparam LocalRankPos = CommChildrenPos + lg_numprocs;
 localparam RootPos = LocalRankPos+DstWidth;
+localparam CommTableWidth = RootPos + DstWidth + 1;
 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 
 ////////////////////////////////////
@@ -182,7 +183,7 @@ wire [ContextIdWidth-1:0]new_comm_context = new_comm[NewCommWidth-2:NewCommWidth
 
 always @(posedge clk) begin
  if (rst) begin //if rst, set everything to 0
-  for(i=1;i<CommTableSize;i=i+1)begin
+  for(i=0;i<CommTableSize;i=i+1)begin
 	comm_table[i]<=0;
   end	
  end 
@@ -202,11 +203,12 @@ always @(posedge clk) begin
 end 
 
 wire [ContextIdWidth-1:0]context = packetIn[ContextIdPos+ContextIdWidth-1:ContextIdPos];
-wire [lg_numprocs-1:0]lg_commsize = comm_table[context][lgCommSizePos+lg_numprocs-1:lgCommSizePos];
+wire [CommTableWidth-1:0]comm_row = comm_table[context];
+wire [lg_numprocs-1:0]lg_commsize = comm_row[lgCommSizePos+lg_numprocs-1:lgCommSizePos];
 wire [num_procs-1:0]commsize = 1 << lg_commsize;
-wire [lg_numprocs-1:0]communicator_children = comm_table[context][CommChildrenPos+ChildrenWidth-1:CommChildrenPos];
-wire [DstWidth-1:0]local_rank = comm_table[context][LocalRankPos+DstWidth-1:LocalRankPos];
-wire [DstWidth-1:0]t_root = 9'b0;//comm_table[context][RootPos+DstWidth-1:RootPos];
+wire [lg_numprocs-1:0]communicator_children = comm_row[CommChildrenPos+ChildrenWidth-1:CommChildrenPos];
+wire [DstWidth-1:0]local_rank = comm_row[LocalRankPos+DstWidth-1:LocalRankPos];
+wire [DstWidth-1:0]t_root = comm_row[RootPos+DstWidth-1:RootPos];
 
 wire [TagWidth-1:0]t_tag = (packetIn[TagPos+TagWidth-1:TagPos])%commsize;
 wire [DstWidth-1:0]t_rank = packetIn[RankPos+RankWidth-1:RankPos];
@@ -228,7 +230,7 @@ always @(posedge clk) begin
 	end
 	else if (packetIn[ValidBitPos])begin
 	
-		{dst_z_ring, dst_y_ring, dst_x_ring} = (home_ring)? {rank_z, rank_y, rank_x} : (local_rank == (num_procs-1))? t_root : rank_table[comm_table[context][ring_offset+:DstWidth]];  
+		{dst_z_ring, dst_y_ring, dst_x_ring} = (home_ring)? {rank_z, rank_y, rank_x} : (local_rank == (num_procs-1))? t_root : rank_table[comm_row[ring_offset+:DstWidth]];  
 
 		home_ring = ((from_guest) && (!home_ring) && (t_op==LargeAllGather));
 		
@@ -245,7 +247,7 @@ end
 
 wire [Dst_XWidth-1:0] dst_x_uptree, dst_y_uptree, dst_z_uptree;
 wire [DstWidth:0]uptree_offset = (lg_commsize-communicator_children-1)*DstWidth;	
-assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (local_rank == 0)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][uptree_offset+:DstWidth]]; //short reduction, gather, barrier
+assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (local_rank == 0)? {rank_z, rank_y, rank_x} : rank_table[comm_row[uptree_offset+:DstWidth]]; //short reduction, gather, barrier
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,8 +281,8 @@ always @(posedge clk) begin
 		
 		case(communicator_children)
 			3'b000: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = {rank_z, rank_y, rank_x};
-			3'b001: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (one_child)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][(DstWidth*(lg_numprocs-1))+:DstWidth]];
-			default: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (send_home_bcast)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][bcast_offset+:DstWidth]]; 
+			3'b001: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (one_child)? {rank_z, rank_y, rank_x} : rank_table[comm_row[(DstWidth*(lg_numprocs-1))+:DstWidth]];
+			default: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (send_home_bcast)? {rank_z, rank_y, rank_x} : rank_table[comm_row[bcast_offset+:DstWidth]]; 
 		endcase
 				
 		one_child = ((communicator_children==1) && (!one_child) && (t_op==ShortBcast));
@@ -329,7 +331,7 @@ always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, 
 		halving_offset = p*DstWidth;
 	end
 	
-	new_gather_dst =  ((local_rank == (commsize-1))? t_root : comm_table[context][(DstWidth*(lg_commsize-1))+:DstWidth]);
+	new_gather_dst =  ((local_rank == (commsize-1))? t_root : comm_row[(DstWidth*(lg_commsize-1))+:DstWidth]);
 	
 	if (rst) begin
 		home_halving = 0;
@@ -338,12 +340,12 @@ always @(posedge clk)begin	//recursive halving for long reduce, long allreduce, 
 	else if (packetIn[ValidBitPos])begin
 		case(t_op)
 			LargeBcast: {dst_z_halving, dst_y_halving, dst_x_halving} = (home_halving)? {rank_z, rank_y, rank_x} : (start_gather)? new_gather_dst :	
-																							(t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][halving_offset+:DstWidth]];
+																							(t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_row[halving_offset+:DstWidth]];
 																							
 			LargeReduce:{dst_z_halving, dst_y_halving, dst_x_halving} =	((t_tag == local_rank)&&(t_op == LargeReduce))? {dst_z_uptree, dst_y_uptree, dst_x_uptree} :
-																							(t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][halving_offset+:DstWidth]];
+																							(t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_row[halving_offset+:DstWidth]];
 																							
-			default: 	{dst_z_halving, dst_y_halving, dst_x_halving} = (t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_table[context][halving_offset+:DstWidth]];//////////////
+			default: 	{dst_z_halving, dst_y_halving, dst_x_halving} = (t_tag == local_rank)? {rank_z, rank_y, rank_x} : rank_table[comm_row[halving_offset+:DstWidth]];//////////////
 		endcase													
 
 		home_halving = ((t_tag == local_rank)&&(t_op == LargeBcast)&&(!home_halving));
@@ -391,7 +393,7 @@ always @(posedge clk)begin
 			end			
 			home_doubling = 0;	
 		end
-		{dst_z_doubling, dst_y_doubling, dst_x_doubling} = ((send_home_doubling)||(diff==(commsize/2)))? {rank_z[2:0], rank_y[2:0], rank_x[2:0]} : rank_table[comm_table[context][doubling_offset+:DstWidth]];
+		{dst_z_doubling, dst_y_doubling, dst_x_doubling} = ((send_home_doubling)||(diff==(commsize/2)))? {rank_z[2:0], rank_y[2:0], rank_x[2:0]} : rank_table[comm_row[doubling_offset+:DstWidth]];
 	end		
 end
 
@@ -407,7 +409,7 @@ end
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //mux
 
-wire meant_for_me = ((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(comm_table[context][CommTableWidth-1]));
+wire meant_for_me = ((packetIn[DstPos+DstWidth-1:DstPos]=={rank_z, rank_y, rank_x})&&(comm_row[CommTableWidth-1]));
 reg [Dst_XWidth-1:0] dst1, dst2, dst3; //used for testing
 reg [opWidth-1:0]op;
 reg [AlgTypeWidth-1:0]algtype;
