@@ -134,7 +134,7 @@ assign rd_en = (reduction_table[packetIndex][ExtraWaitPos]==0);
 assign wr_en = 1'b1;
 
 
-assign packetIndex = ((packetA[DstPos+DstWidth-1:DstPos]!={rank_z, rank_y, rank_x})&&(packetA[opPos+opWidth-1:opPos] == ShortAllReduce))? {5'b0,packetA[Dst_ZPos+Dst_ZWidth-1:Dst_ZPos]} : packetA[TagPos+TagWidth-1:TagPos]; //have to eventually change this
+assign packetIndex = packetA[TagPos+TagWidth-1:TagPos]; //have to eventually change this
 /*
 IMPORTANT NOTE: Recall that the final router would have separate reduction units for local data and outgoing data, meaning that you don't
 have to worry about overlapping tags between data that is destined for me and data that is destined for someone else.
@@ -327,4 +327,3 @@ end  //end always
 
 endmodule
 
- 
