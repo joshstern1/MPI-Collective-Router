@@ -11,7 +11,6 @@ inside the fifo
 	
 	*| 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |   	
 	*|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
-
 //reduction table entry 
  
 	*|   90  |     89     |  88-85  | 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |      	
@@ -164,7 +163,7 @@ assign reduction_table_entry = reduction_table[done_index];
 assign Outpacket[PayloadWidth-1:0] = reduction_table_entry[PayloadWidth-1:0];
 
 //switch to gathering for long reduce
-assign Outpacket[opPos+opWidth-1:opPos] = (reduction_table_entry[AlgTypePos+AlgTypeWidth-1:opPos]=={2'b01, LargeReduce})? Gather :  reduction_table_entry[opPos+opWidth-1:opPos];
+assign Outpacket[opPos+opWidth-1:opPos] = reduction_table_entry[opPos+opWidth-1:opPos];
 assign Outpacket[AlgTypePos+AlgTypeWidth-1:AlgTypePos] = 0;
 assign Outpacket[DstPos+DstWidth-1:TagPos] = reduction_table_entry[DstPos+DstWidth-1:TagPos];
 assign Outpacket[ValidBitPos] = 1;
@@ -326,4 +325,3 @@ always@(posedge clk) begin
 end  //end always
 
 endmodule
-
