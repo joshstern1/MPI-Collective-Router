@@ -11,7 +11,6 @@ inside the fifo
 	
 	*| 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |   	
 	*|children|valid|dst_z|dst_y|dst_x|src_z|src_y|src_x|rank |contextId| tag |algtype| op  |payload|
-
 //reduction table entry 
  
 	*|   90  |     89     |  88-85  | 84-82  | 81  |80-78|77-75|74-72|71-69|68-66|65-63|62-54|  53-46  |45-38| 37-36 |35-32| 31-0  |      	
@@ -31,109 +30,96 @@ module fifo#(
 	input wr_en,
    input	rd_en,
 	input [FlitWidth+ChildrenWidth-1:0] buf_in,              	 
-	output[FlitWidth+ChildrenWidth-1:0] buf_out,          	 
-	output buf_empty, 
-	output buf_full,
-	output[fifo_lg_size:0] fifo_counter 
+	output reg[FlitWidth+ChildrenWidth-1:0] buf_out,          	 
+	output reg buf_empty, 
+	output reg buf_full,
+	output reg[fifo_lg_size:0] fifo_counter 
 );
 
+
 //////////////////////////////////////////
-//current rank, root, and world size
-parameter cur_rank = 9'b0;
-parameter root = 9'b0;
-parameter rank_z = 3'b0;
-parameter rank_y = 3'b0;
-parameter rank_x = 3'b0;
-parameter root_z = 3'b0;
-parameter root_y = 3'b0;
-parameter root_x = 3'b0;
+localparam num_procs = 1 << lg_numprocs;
 
-parameter num_procs = 1 << lg_numprocs;
-
-///////////////////////////////////////////
 //packet structure
-parameter opPos = PayloadWidth;
-parameter opWidth = 4;
-parameter AlgTypePos = opPos+opWidth;
-parameter AlgTypeWidth = 2;
-parameter TagPos=AlgTypePos+AlgTypeWidth;
-parameter TagWidth = 8;
-parameter ContextIdPos = TagPos+TagWidth;
-parameter ContextIdWidth = 8;
-parameter RankPos = ContextIdPos + ContextIdWidth;
-parameter RankWidth = 9;
-parameter Src_XPos = RankPos+RankWidth;
-parameter Src_XWidth = 3;
-parameter Src_YPos = Src_XPos+Src_XWidth;
-parameter Src_YWidth = 3;
-parameter Src_ZPos = Src_YPos+Src_YWidth;
-parameter Src_ZWidth = 3;
-parameter Dst_XPos = Src_ZPos+Src_ZWidth;
-parameter Dst_XWidth = 3;
-parameter Dst_YPos = Dst_XPos+Dst_XWidth;
-parameter Dst_YWidth = 3;
-parameter Dst_ZPos = Dst_YPos+Dst_YWidth;
-parameter Dst_ZWidth = 3;
-parameter SrcPos = Src_XPos;
-parameter SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
-parameter DstPos = Dst_XPos;
-parameter DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
-parameter ValidBitPos = Dst_ZPos+Dst_ZWidth;
-parameter FlitWidth = ValidBitPos + 1;
+localparam opPos = PayloadWidth;
+localparam opWidth = 4;
+localparam AlgTypePos = opPos+opWidth;
+localparam AlgTypeWidth = 2;
+localparam TagPos=AlgTypePos+AlgTypeWidth;
+localparam TagWidth = 8;
+localparam ContextIdPos = TagPos+TagWidth;
+localparam ContextIdWidth = 8;
+localparam RankPos = ContextIdPos + ContextIdWidth;
+localparam RankWidth = 9;
+localparam Src_XPos = RankPos+RankWidth;
+localparam Src_XWidth = 3;
+localparam Src_YPos = Src_XPos+Src_XWidth;
+localparam Src_YWidth = 3;
+localparam Src_ZPos = Src_YPos+Src_YWidth;
+localparam Src_ZWidth = 3;
+localparam Dst_XPos = Src_ZPos+Src_ZWidth;
+localparam Dst_XWidth = 3;
+localparam Dst_YPos = Dst_XPos+Dst_XWidth;
+localparam Dst_YWidth = 3;
+localparam Dst_ZPos = Dst_YPos+Dst_YWidth;
+localparam Dst_ZWidth = 3;
+localparam SrcPos = Src_XPos;
+localparam SrcWidth = Src_XWidth+Src_YWidth+Src_ZWidth;
+localparam DstPos = Dst_XPos;
+localparam DstWidth = Dst_XWidth+Dst_YWidth+Dst_ZWidth;
+localparam ValidBitPos = Dst_ZPos+Dst_ZWidth;
+localparam FlitWidth = ValidBitPos + 1;
 
 
 /////////////////////////////////////////
 //children and countdown
-parameter ChildrenPos=ValidBitPos+1;
-parameter ChildrenWidth=lg_numprocs;
-parameter WaitPos = ChildrenPos+ChildrenWidth;
-parameter WaitWidth = 4;
-parameter ExtraWaitPos=WaitPos+WaitWidth;
-parameter LeafBitPos=ExtraWaitPos+1;
+localparam ChildrenPos=ValidBitPos+1;
+localparam ChildrenWidth=lg_numprocs;
+localparam WaitPos = ChildrenPos+ChildrenWidth;
+localparam WaitWidth = 4;
+localparam ExtraWaitPos=WaitPos+WaitWidth;
+localparam LeafBitPos=ExtraWaitPos+1;
 
  
 //////////////////////////////////////////
 //reduce unit table and adder
-parameter ReductionTableWidth = LeafBitPos+1;
-parameter ReductionTableSize = 2;
-parameter AdderLatency = 14;
-parameter ReductionBitPos=opPos+opWidth-1;
+localparam ReductionTableWidth = LeafBitPos+1;
+localparam AdderLatency = 4;
+localparam ReductionBitPos=opPos+opWidth-1;
 
 
 ///////////////////////////////////////
 //fifo
-parameter fifo_lg_size = 4;
-parameter FifoSize = 1<<fifo_lg_size;
+localparam fifo_lg_size = 4;
+localparam FifoSize = 1<<fifo_lg_size;
 
 /////////////////////////////////////
 //communicator table
-parameter CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
-parameter CommTableSize = 4;
-parameter lgCommSizePos = lg_numprocs*DstWidth;
-parameter CommChildrenPos = lgCommSizePos+lg_numprocs+1;
-parameter LocalRankPos = CommChildrenPos + lg_numprocs;
-parameter NewCommWidth = CommTableWidth+ContextIdWidth;
+localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
+localparam CommTableSize = 4;
+localparam lgCommSizePos = lg_numprocs*DstWidth;
+localparam CommChildrenPos = lgCommSizePos+lg_numprocs+1;
+localparam LocalRankPos = CommChildrenPos + lg_numprocs;
+localparam RootPos = LocalRankPos+DstWidth;
+localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 
 ////////////////////////////////////
 //algorithmic opcodes
-parameter Scan = 4'b0011;
-parameter AlltoAll = 4'b0100;
-parameter LargeBcast = 4'b0101;
-parameter MediumBcast = 4'b0110;
-parameter ShortBcast = 4'b0111;
-parameter Scatter = 4'b1000;
-parameter LargeAllGather = 4'b1001;
-parameter ShortAllGather = 4'b1010;
-parameter Gather = 4'b1011;
-parameter ShortReduce = 4'b1100;
-parameter LargeReduce = 4'b1101;
-parameter ShortAllReduce = 4'b1110;
-parameter LargeAllReduce = 4'b1111;
+localparam Scan = 4'b0011;
+localparam AlltoAll = 4'b0100;
+localparam LargeBcast = 4'b0101;
+localparam MediumBcast = 4'b0110;
+localparam ShortBcast = 4'b0111;
+localparam Scatter = 4'b1000;
+localparam LargeAllGather = 4'b1001;
+localparam ShortAllGather = 4'b1010;
+localparam Gather = 4'b1011;
+localparam ShortReduce = 4'b1100;
+localparam LargeReduce = 4'b1101;
+localparam ShortAllReduce = 4'b1110;
+localparam LargeAllReduce = 4'b1111;
 
 ////////////////////////////////////
-reg[FlitWidth+ChildrenWidth-1:0] buf_out;
-reg buf_empty, buf_full;
-reg[fifo_lg_size :0]	fifo_counter;
 reg[fifo_lg_size-1:0]  rd_ptr, wr_ptr;       
 reg[FlitWidth+ChildrenWidth-1:0] buf_mem[FifoSize-1:0];
 reg [fifo_lg_size:0]i;
@@ -242,6 +228,3 @@ end
 
 
 endmodule
-
-
-
