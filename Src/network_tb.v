@@ -230,7 +230,7 @@ module network_tb;
 		in_yneg_inject_0_1_0 = 0;
 		in_zneg_inject_0_1_0 = 0;
 		reduce_me_0_1_0 = 0;
-		newcomm_0_1_0 = {1'b1, 8'b0, 9'b0, 9'b010, 3'b0, 4'b0011, 9'b011, 9'b000, 9'b110};
+		newcomm_0_1_0 = {1'b1, 8'b0, 9'b0, 9'b010, 3'b001, 4'b0011, 9'b011, 9'b000, 9'b110};
 		
 		/*in_xpos_inject_0_1_1 = 0;
 		in_ypos_inject_0_1_1 = 0;
@@ -248,7 +248,7 @@ module network_tb;
 		in_yneg_inject_1_0_0 = 0;
 		in_zneg_inject_1_0_0 = 0;
 		reduce_me_1_0_0 = 0;
-		newcomm_1_0_0 = {1'b1, 8'b0, 9'b0, 9'b011, 3'b0, 4'b0011, 9'b101, 9'b110, 9'b0};
+		newcomm_1_0_0 = {1'b1, 8'b0, 9'b0, 9'b100, 3'b010, 4'b0011, 9'b101, 9'b110, 9'b0};
 		
 		/*in_xpos_inject_1_0_1 = 0;
 		in_ypos_inject_1_0_1 = 0;
@@ -294,7 +294,7 @@ module network_tb;
 		in_yneg_inject_0_1_0 = 85'b0;
 		in_zneg_inject_1_0_0 = 85'b0;*/
 		
-		/*for(i=0;i<1;i=i+1)begin
+		/*for(i=0;i<2;i=i+1)begin
 		
 			reduce_me_0_0_0 = {4'b0111, 9'b000000000, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortAllReduce, 32'b00000000000000000000000000000110};
 			in_xpos_inject_0_0_0 = {4'b0001, 9'b000000001, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortAllReduce, 32'b00000000000000000000000000000110};
@@ -341,12 +341,23 @@ module network_tb;
 		in_ypos_inject_1_0_0 = 85'b0;
 		in_zneg_inject_1_0_0 = 85'b0;*/
 		
-		for(i=0;i<1;i=i+1)begin
+		/*for(i=0;i<1;i=i+1)begin
 			in_xpos_inject_0_0_0 = {4'b0001, 9'b000000001, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, LargeAllGather, 32'b00000000000000000000000000000110};
 			#10;
 		end		
 		
-		in_xpos_inject_0_0_0 = 85'b0;		
+		in_xpos_inject_0_0_0 = 85'b0;*/
+		
+		for(i=0;i<1;i=i+1)begin
+			in_xpos_inject_0_0_0 = {4'b0001, 9'b000000001, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortBcast, 32'b00000000000000000000000000000110};
+			in_ypos_inject_0_0_0 = {4'b0001, 9'b000001000, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortBcast, 32'b00000000000000000000000000000110};
+			in_zpos_inject_0_0_0 = {4'b0001, 9'b001000000, 9'b000000000, 9'b000000000, 8'b00000000, i, 2'b00, ShortBcast, 32'b00000000000000000000000000000110};
+			#10;
+		end		
+		
+		in_xpos_inject_0_0_0 = 85'b0;
+		in_ypos_inject_0_0_0 = 85'b0;
+		in_zpos_inject_0_0_0 = 85'b0;
 
 	end
 	
