@@ -30,3 +30,4 @@ module reduction_tree#(
 	 assign out = ((in_valid>0) && (!rst))? in[selector*FlitChildWidth+: FlitChildWidth] : 0;
 
 endmodule
+ 
