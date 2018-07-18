@@ -484,7 +484,7 @@ always @(posedge clk) begin
   op <= t_op;
   algtype <= packetIn[AlgTypePos+AlgTypeWidth-1:AlgTypePos];
   rank<= t_rank;
-  {src_x, src_y, src_x}<= packetIn[SrcPos+SrcWidth-1:SrcPos];
+  {src_z, src_y, src_x}<= packetIn[SrcPos+SrcWidth-1:SrcPos];
   valid<=packetIn[ValidBitPos];
   ok_meant_for_me <= meant_for_me;
   loc_rank <= local_rank;
