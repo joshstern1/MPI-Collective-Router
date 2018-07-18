@@ -12,7 +12,8 @@ module route_comp
 	 parameter DstPos = 72,
 	 parameter DstWidth = 9,
 	 parameter Dst_XWidth = 3,
-	 parameter ValidBitPos = 81
+	 parameter ValidBitPos = 81,
+	 parameter lg_numprocs = 3
 )(
     input clk,
     input rst,
@@ -25,7 +26,6 @@ module route_comp
     output eject_enable
 );
 
-	 localparam lg_numprocs = 3;
 	 localparam num_procs = 1 << lg_numprocs;
 
 	 localparam FlitWidth = ValidBitPos + 1;
