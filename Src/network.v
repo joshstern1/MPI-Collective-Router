@@ -302,7 +302,9 @@
     node#(
         .cur_z(0),
         .cur_y(1),
-        .cur_x(0)
+        .cur_x(0),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_0_1_0(
         .clk(clk),
         .rst(rst),
@@ -331,7 +333,9 @@
     node#(
         .cur_z(1),
         .cur_y(0),
-        .cur_x(0)
+        .cur_x(0),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_1_0_0(
         .clk(clk),
         .rst(rst),
@@ -360,7 +364,9 @@
     node#(
         .cur_z(0),
         .cur_y(1),
-        .cur_x(1)
+        .cur_x(1),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_0_1_1(
         .clk(clk),
         .rst(rst),
@@ -388,7 +394,9 @@
 		node#(
         .cur_z(1),
         .cur_y(0),
-        .cur_x(1)
+        .cur_x(1),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_1_0_1(
         .clk(clk),
         .rst(rst),
@@ -416,7 +424,9 @@
     node#(
         .cur_z(1),
         .cur_y(1),
-        .cur_x(0)
+        .cur_x(0),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_1_1_0(
         .clk(clk),
         .rst(rst),
@@ -444,7 +454,9 @@
     node#(
         .cur_z(1),
         .cur_y(1),
-        .cur_x(1)
+        .cur_x(1),
+		  .lg_numprocs(lg_numprocs),
+		  .PayloadWidth(PayloadWidth)
         )n_1_1_1(
         .clk(clk),
         .rst(rst),
