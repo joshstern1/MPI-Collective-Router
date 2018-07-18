@@ -370,7 +370,8 @@ module router#(
 		  .DstPos(DstPos),
 		  .DstWidth(DstWidth),
 		  .Dst_XWidth(Dst_XWidth),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )xpos_route_comp(
         .clk(clk),
         .rst(rst),
@@ -391,7 +392,8 @@ module router#(
 		  .DstPos(DstPos),
 		  .DstWidth(DstWidth),
 		  .Dst_XWidth(Dst_XWidth),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )ypos_route_comp(
         .clk(clk),
         .rst(rst),
@@ -412,7 +414,8 @@ module router#(
 		  .DstPos(DstPos),
 		  .DstWidth(DstWidth),
 		  .Dst_XWidth(Dst_XWidth),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )zpos_route_comp(
         .clk(clk),
         .rst(rst),
@@ -433,7 +436,8 @@ module router#(
 		  .DstPos(DstPos),
 		  .DstWidth(DstWidth),
 		  .Dst_XWidth(Dst_XWidth),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )xneg_route_comp(
         .clk(clk),
         .rst(rst),
@@ -454,7 +458,8 @@ module router#(
 		  .DstPos(DstPos),
 		  .DstWidth(DstWidth),
 		  .Dst_XWidth(Dst_XWidth),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )yneg_route_comp(
         .clk(clk),
         .rst(rst),
@@ -475,7 +480,8 @@ module router#(
 		  .DstPos(DstPos),
 		  .DstWidth(DstWidth),
 		  .Dst_XWidth(Dst_XWidth),
-		  .ValidBitPos(ValidBitPos)
+		  .ValidBitPos(ValidBitPos),
+		  .lg_numprocs(lg_numprocs)
     )zneg_route_comp(
         .clk(clk),
         .rst(rst),
