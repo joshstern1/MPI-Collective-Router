@@ -461,7 +461,7 @@ reg [RankWidth-1:0]rank;
 reg [Src_XWidth-1:0] src_x, src_y, src_z;
 reg valid;
 reg ok_meant_for_me;
-reg loc_rank;
+reg [RankWidth-1:0]loc_rank;
 
 always @(posedge clk) begin
   
