@@ -389,7 +389,7 @@ always @(posedge clk) begin
 	end
 	else if((meant_for_me)&&(t_op>4'b0)) begin
 	
-		tag <= ((t_op == ShortAllReduce)||(t_op == ShortAllGather))? tag + 1 : packetIn[TagPos+TagWidth-1:TagPos]; 
+		tag <= packetIn[TagPos+TagWidth-1:TagPos];//((t_op == ShortAllReduce)||(t_op == ShortAllGather))? tag + 1 : packetIn[TagPos+TagWidth-1:TagPos]; 
 		
 		case(t_op)
 			LargeBcast: 	begin
