@@ -198,12 +198,12 @@ module node
 		  .newcomm(newcomm)
     );
 	 
-	 wire xpos_reduce_special = ((eject_xpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xpos[ValidBitPos]));
-	 wire ypos_reduce_special = ((eject_ypos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_ypos[ValidBitPos]));
-	 wire zpos_reduce_special = ((eject_zpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zpos[ValidBitPos]));
-	 wire xneg_reduce_special = ((eject_xneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xneg[ValidBitPos]));
-	 wire yneg_reduce_special = ((eject_yneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_yneg[ValidBitPos]));
-	 wire zneg_reduce_special = ((eject_zneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zneg[ValidBitPos]));
+	 wire xpos_reduce_special = ((eject_xpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xpos_valid));
+	 wire ypos_reduce_special = ((eject_ypos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_ypos_valid));
+	 wire zpos_reduce_special = ((eject_zpos[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zpos_valid));
+	 wire xneg_reduce_special = ((eject_xneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_xneg_valid));
+	 wire yneg_reduce_special = ((eject_yneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_yneg_valid));
+	 wire zneg_reduce_special = ((eject_zneg[ReductionBitPos:ReductionBitPos-1] == 2'b11)&&(eject_zneg_valid));
 	 
 	 wire [2:0]selector;
 	 
