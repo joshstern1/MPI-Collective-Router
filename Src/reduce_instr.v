@@ -135,41 +135,34 @@ always @(posedge clk) begin
 	 rank_table[4] <= {3'b1, 3'b0, 3'b0};
 	 rank_table[5] <= {3'b01, 3'b0, 3'b01};
 	 rank_table[6] <= {3'b01, 3'b01, 3'b0};
-	 rank_table[7] <= {3'b01, 3'b01, 3'b01};
+	 rank_table[7] <= {3'b01, 3'b01, 3'b01};	 
+	 rank_table[8] <= {3'b0, 3'b0, 3'b011};
+	 rank_table[9] <= {3'b0, 3'b0, 3'b010};
+	 rank_table[10] <= {3'b0, 3'b01, 3'b011};
+	 rank_table[11] <= {3'b0, 3'b1, 3'b010};	 
+	 rank_table[12] <= {3'b1, 3'b0, 3'b011};
+	 rank_table[13] <= {3'b01, 3'b0, 3'b010};
+	 rank_table[14] <= {3'b01, 3'b01, 3'b011};
+	 rank_table[15] <= {3'b01, 3'b01, 3'b010};
+	 
+	 /*rank_table[16] <= {3'b0, 3'b011, 3'b0};
+	 rank_table[17] <= {3'b0, 3'b011, 3'b01};
+	 rank_table[18] <= {3'b0, 3'b010, 3'b0};
+	 rank_table[19] <= {3'b0, 3'b10, 3'b1};	 
+	 rank_table[20] <= {3'b1, 3'b011, 3'b0};
+	 rank_table[21] <= {3'b01, 3'b011, 3'b01};
+	 rank_table[22] <= {3'b01, 3'b010, 3'b0};
+	 rank_table[23] <= {3'b01, 3'b010, 3'b01};	 
+	 rank_table[24] <= {3'b0, 3'b011, 3'b011};
+	 rank_table[25] <= {3'b0, 3'b011, 3'b010};
+	 rank_table[26] <= {3'b0, 3'b010, 3'b011};
+	 rank_table[27] <= {3'b0, 3'b10, 3'b010};	 
+	 rank_table[28] <= {3'b1, 3'b011, 3'b011};
+	 rank_table[29] <= {3'b01, 3'b011, 3'b010};
+	 rank_table[30] <= {3'b01, 3'b010, 3'b011};
+	 rank_table[31] <= {3'b01, 3'b010, 3'b010};*/
 
-							//x      y       z
-	 /*rank_table[0] <= {3'b001, 3'b001, 3'b001};
-	 rank_table[1] <= {3'b001, 3'b001, 3'b000};
-	 rank_table[2] <= {3'b001, 3'b000, 3'b001};
-	 rank_table[3] <= {3'b001, 3'b000, 3'b000};
-	 rank_table[4] <= {3'b000, 3'b001, 3'b001};
-	 rank_table[5] <= {3'b000, 3'b001, 3'b000};
-	 rank_table[6] <= {3'b000, 3'b000, 3'b001};
-	 rank_table[7] <= {3'b000, 3'b000, 3'b000};
-	 rank_table[8] <= {3'b001, 3'b001, 3'b010};
-	 rank_table[9] <= {3'b001, 3'b001, 3'b011};
-	 rank_table[10] <= {3'b001, 3'b000, 3'b010};
-	 rank_table[11] <= {3'b001, 3'b000, 3'b011};
-	 rank_table[12] <= {3'b000, 3'b001, 3'b010};
-	 rank_table[13] <= {3'b000, 3'b001, 3'b011};
-	 rank_table[14] <= {3'b000, 3'b000, 3'b010};
-	 rank_table[15] <= {3'b000, 3'b000, 3'b011};
-	 rank_table[16] <= {3'b001, 3'b010, 3'b001};
-	 rank_table[17] <= {3'b001, 3'b010, 3'b000};
-	 rank_table[18] <= {3'b001, 3'b011, 3'b001};
-	 rank_table[19] <= {3'b001, 3'b011, 3'b000};
-	 rank_table[20] <= {3'b000, 3'b010, 3'b001};
-	 rank_table[21] <= {3'b000, 3'b010, 3'b000};
-	 rank_table[22] <= {3'b000, 3'b011, 3'b001};
-	 rank_table[23] <= {3'b000, 3'b011, 3'b000};
-	 rank_table[24] <= {3'b001, 3'b010, 3'b010};
-	 rank_table[25] <= {3'b001, 3'b010, 3'b011};
-	 rank_table[26] <= {3'b001, 3'b011, 3'b010};
-	 rank_table[27] <= {3'b001, 3'b011, 3'b011};
-	 rank_table[28] <= {3'b000, 3'b010, 3'b010};
-	 rank_table[29] <= {3'b000, 3'b010, 3'b011};
-	 rank_table[30] <= {3'b000, 3'b011, 3'b010};
-	 rank_table[31] <= {3'b000, 3'b011, 3'b011};*/
+	
 	 
 
 end
