@@ -511,7 +511,15 @@ module network_16_tb;
 		in_zneg_inject_1_0_0 = 0;
 		in_xneg_inject_1_0_1 = 0;
 		in_yneg_inject_1_1_0 = 0;
-		in_xneg_inject_1_1_1 = 0;
+		in_xneg_inject_1_1_1 = 0;		
+		in_xpos_inject_0_0_3 = 0;
+		in_xpos_inject_0_0_2 = 0;
+		in_yneg_inject_0_1_3 = 0;
+		in_xpos_inject_0_1_2 = 0;
+		in_zneg_inject_1_0_3 = 0;
+		in_xpos_inject_1_0_2 = 0;
+		in_yneg_inject_1_1_3 = 0;
+		in_xpos_inject_1_1_2 = 0;
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//allreduce
