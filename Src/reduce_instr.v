@@ -161,6 +161,41 @@ always @(posedge clk) begin
 	 rank_table[29] <= {3'b01, 3'b011, 3'b010};
 	 rank_table[30] <= {3'b01, 3'b010, 3'b011};
 	 rank_table[31] <= {3'b01, 3'b010, 3'b010};
+	 
+	 rank_table[32] <= {3'b011, 3'b0, 3'b0};
+	 rank_table[33] <= {3'b011, 3'b0, 3'b01};
+	 rank_table[34] <= {3'b011, 3'b01, 3'b0};
+	 rank_table[35] <= {3'b011, 3'b1, 3'b1};	 
+	 rank_table[36] <= {3'b010, 3'b0, 3'b0};
+	 rank_table[37] <= {3'b010, 3'b0, 3'b01};
+	 rank_table[38] <= {3'b010, 3'b01, 3'b0};
+	 rank_table[39] <= {3'b010, 3'b01, 3'b01};	 
+	 rank_table[40] <= {3'b011, 3'b0, 3'b011};
+	 rank_table[41] <= {3'b011, 3'b0, 3'b010};
+	 rank_table[42] <= {3'b011, 3'b01, 3'b011};
+	 rank_table[43] <= {3'b011, 3'b1, 3'b010};	 
+	 rank_table[44] <= {3'b010, 3'b0, 3'b011};
+	 rank_table[45] <= {3'b010, 3'b0, 3'b010};
+	 rank_table[46] <= {3'b010, 3'b01, 3'b011};
+	 rank_table[47] <= {3'b010, 3'b01, 3'b010};
+	 
+	 rank_table[48] <= {3'b011, 3'b011, 3'b0};
+	 rank_table[49] <= {3'b011, 3'b011, 3'b01};
+	 rank_table[50] <= {3'b011, 3'b010, 3'b0};
+	 rank_table[51] <= {3'b011, 3'b10, 3'b1};	 
+	 rank_table[52] <= {3'b010, 3'b011, 3'b0};
+	 rank_table[53] <= {3'b010, 3'b011, 3'b01};
+	 rank_table[54] <= {3'b010, 3'b010, 3'b0};
+	 rank_table[55] <= {3'b010, 3'b010, 3'b01};	 
+	 rank_table[56] <= {3'b011, 3'b011, 3'b011};
+	 rank_table[57] <= {3'b011, 3'b011, 3'b010};
+	 rank_table[58] <= {3'b011, 3'b010, 3'b011};
+	 rank_table[59] <= {3'b011, 3'b10, 3'b010};	 
+	 rank_table[60] <= {3'b010, 3'b011, 3'b011};
+	 rank_table[61] <= {3'b010, 3'b011, 3'b010};
+	 rank_table[62] <= {3'b010, 3'b010, 3'b011};
+	 rank_table[63] <= {3'b010, 3'b010, 3'b010};
+
 
 	
 	 
