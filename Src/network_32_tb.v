@@ -769,7 +769,7 @@ module network_32_tb;
 		in_yneg_inject_0_3_1 = 0;
 		in_zneg_inject_0_3_1 = 0;
 		reduce_me_0_3_1 = 0;
-		newcomm_0_3_1 = {1'b1, 8'd0, 9'd0, 9'd17, 5'd0, 6'd5, 9'd18, 9'd19, 9'd21, 9'd25, 9'd1};
+		newcomm_0_3_1 = {1'b1, 8'd0, 9'd0, 9'd17, 5'd0, 6'd5, 9'd16, 9'd19, 9'd21, 9'd25, 9'd1};
 		
 		in_xpos_inject_0_2_0 = 0;
 		in_ypos_inject_0_2_0 = 0;
