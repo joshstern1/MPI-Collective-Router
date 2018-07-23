@@ -300,6 +300,41 @@ module network_32_tb;
 	localparam LargeReduce = 4'b1101;
 	localparam ShortAllReduce = 4'b1110;
 	localparam LargeAllReduce = 4'b1111;
+	
+	localparam ZERO = {3'b0, 3'b0, 3'b0};
+	localparam ONE = {3'b0, 3'b0, 3'b01};
+	localparam TWO = {3'b0, 3'b01, 3'b0};
+	localparam THREE = {3'b0, 3'b1, 3'b1};	 
+	localparam FOUR = {3'b1, 3'b0, 3'b0};
+	localparam FIVE = {3'b01, 3'b0, 3'b01};
+	localparam SIX = {3'b01, 3'b01, 3'b0};
+	localparam SEVEN = {3'b01, 3'b01, 3'b01};	 
+	localparam EIGHT = {3'b0, 3'b0, 3'b011};
+	localparam NINE = {3'b0, 3'b0, 3'b010};
+	localparam TEN = {3'b0, 3'b01, 3'b011};
+	localparam ELEVEN = {3'b0, 3'b1, 3'b010};	 
+	localparam TWELVE = {3'b1, 3'b0, 3'b011};
+	localparam THIRTEEN = {3'b01, 3'b0, 3'b010};
+	localparam FOURTEEN = {3'b01, 3'b01, 3'b011};
+	localparam FIFTEEN = {3'b01, 3'b01, 3'b010};	 
+	localparam SIXTEEN = {3'b0, 3'b011, 3'b0};
+	localparam SEVENTEEN = {3'b0, 3'b011, 3'b01};
+	localparam EIGHTEEN = {3'b0, 3'b010, 3'b0};
+	localparam NINETEEN = {3'b0, 3'b10, 3'b1};
+	localparam TWENTY = {3'b01, 3'b011, 3'b0};
+	localparam TWENTYONE = {3'b01, 3'b011, 3'b01};
+	localparam TWENTYTWO = {3'b01, 3'b010, 3'b0};
+	localparam TWENTYTHREE = {3'b01, 3'b010, 3'b01};	 
+	localparam TWENTYFOUR = {3'b0, 3'b011, 3'b011};
+	localparam TWENTYFIVE = {3'b0, 3'b011, 3'b010};
+	localparam TWENTYSIX = {3'b0, 3'b010, 3'b011};
+	localparam TWENTYSEVEN = {3'b0, 3'b10, 3'b010};	 
+	localparam TWENTYEIGHT = {3'b1, 3'b011, 3'b011};
+	localparam TWENTYNINE = {3'b01, 3'b011, 3'b010};
+	localparam THIRTY = {3'b01, 3'b010, 3'b011};
+	localparam THIRTYONE = {3'b01, 3'b010, 3'b010};
+	 
+
 
 	// Instantiate the Unit Under Test (UUT)
 	network_32 uut (
@@ -942,102 +977,231 @@ module network_32_tb;
 				
 		for(i=0;i<1;i=i+1)begin
 		
-				  reduce_me_0_0_0 = {6'b001011, 9'b000000000, 9'b000000000, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_0_0 = {6'b000001, 9'b000000001, 9'b000000000, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_0_0_0 = {6'b000011, 9'b000001000, 9'b000000000, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_0_0 = {6'b000101, 9'b001000000, 9'b000000000, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_0_0 = {6'b000111, 9'b000000011, 9'b000000000, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_0_0_0 = {6'b000111, 9'b000011000, 9'b000000000, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_0_0 = {6'b001011, ZERO, 	  ZERO, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_0_0 = {6'b000001, ONE, 	  ZERO, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_0_0 = {6'b000011, TWO, 	  ZERO, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_0_0 = {6'b000101, FOUR, 	  ZERO, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000111, EIGHT,   ZERO, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b001001, SIXTEEN, ZERO, 9'd0, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_0_1 = {6'b001011, 9'b000000001, 9'b000000001, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_0_1 = {6'b000001, 9'b000000000, 9'b000000001, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_0_0_1 = {6'b000011, 9'b000001001, 9'b000000001, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_0_1 = {6'b000101, 9'b001000001, 9'b000000001, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_0_1 = {6'b000111, 9'b000000010, 9'b000000001, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_0_1 = {6'b001011, ONE, 		 ONE, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_0_1 = {6'b000001, ZERO, 	    ONE, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_0_1 = {6'b000011, THREE, 	 ONE, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_0_1 = {6'b000101, FIVE, 		 ONE, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_0_1 = {6'b000111, NINE, 		 ONE, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_0_1 = {6'b001001, SEVENTEEN, ONE, 9'd1, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_1_0 = {6'b001011, 9'b000001000, 9'b000001000, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_1_0 = {6'b000001, 9'b000001001, 9'b000001000, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_0_1_0 = {6'b000011, 9'b000000000, 9'b000001000, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_1_0 = {6'b000101, 9'b001001000, 9'b000001000, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_1_0 = {6'b000111, 9'b000001011, 9'b000001000, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_1_0 = {6'b001011, TWO, 		TWO, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_1_0 = {6'b000001, THREE, 	TWO, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_1_0 = {6'b000011, ZERO, 		TWO, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_1_0 = {6'b000101, SIX, 		TWO, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_1_0 = {6'b000111, TEN, 		TWO, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_1_0 = {6'b001001, EIGHTEEN, TWO, 9'd2, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_1_1 = {6'b001011, 9'b000001001, 9'b000001001, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_1_1 = {6'b000001, 9'b000001000, 9'b000001001, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_0_1_1 = {6'b000011, 9'b000000001, 9'b000001001, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_1_1 = {6'b000101, 9'b001001001, 9'b000001001, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_1_1 = {6'b000111, 9'b000001010, 9'b000001001, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_1_1 = {6'b001011, THREE, 	THREE, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_1_1 = {6'b000001, TWO, 	   THREE, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_1_1 = {6'b000011, ONE, 		THREE, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_1_1 = {6'b000101, SEVEN,    THREE, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_1_1 = {6'b000111, ELEVEN,   THREE, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_1_1 = {6'b001001, NINETEEN, THREE, 9'd3, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_0_0 = {6'b001011, 9'b001000000, 9'b001000000, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_0_0 = {6'b000001, 9'b001000001, 9'b001000000, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_1_0_0 = {6'b000011, 9'b001001000, 9'b001000000, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_0_0 = {6'b000101, 9'b000000000, 9'b001000000, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_0_0 = {6'b000111, 9'b001000011, 9'b001000000, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_0_0 = {6'b001011, FOUR,   FOUR, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_0_0 = {6'b000001, FIVE,   FOUR, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_0_0 = {6'b000011, SIX, 	 FOUR, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_0_0 = {6'b000101, ZERO, 	 FOUR, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_0_0 = {6'b000111, TWELVE, FOUR, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_0_0 = {6'b001001, TWENTY, FOUR, 9'd4, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 		
-				  reduce_me_1_0_1 = {6'b001011, 9'b001000001, 9'b001000001, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_0_1 = {6'b000001, 9'b001000000, 9'b001000001, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_1_0_1 = {6'b000011, 9'b001001001, 9'b001000001, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_0_1 = {6'b000101, 9'b000000001, 9'b001000001, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_0_1 = {6'b000111, 9'b001000010, 9'b001000001, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_0_1 = {6'b001011, FIVE,		 FIVE, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_0_1 = {6'b000001, FOUR, 		 FIVE, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_0_1 = {6'b000011, SEVEN,	    FIVE, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_0_1 = {6'b000101, ONE,		 FIVE, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_0_1 = {6'b000111, THIRTEEN,  FIVE, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_0_1 = {6'b001001, TWENTYONE, FIVE, 9'd5, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_1_0 = {6'b001011, 9'b001001000, 9'b001001000, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_1_0 = {6'b000001, 9'b001001001, 9'b001001000, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_1_1_0 = {6'b000011, 9'b001000000, 9'b001001000, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_1_0 = {6'b000101, 9'b000001000, 9'b001001000, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_1_0 = {6'b000111, 9'b001001011, 9'b001001000, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_1_0 = {6'b001011, SIX, 		 SIX, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_1_0 = {6'b000001, SEVEN, 	 SIX, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_1_0 = {6'b000011, FOUR, 		 SIX, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_1_0 = {6'b000101, TWO, 		 SIX, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_1_0 = {6'b000111, FOURTEEN,  SIX, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_1_0 = {6'b001001, TWENTYTWO, SIX, 9'd6, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_1_1 = {6'b001011, 9'b001001001, 9'b001001001, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_1_1 = {6'b000001, 9'b001001000, 9'b001001001, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_1_1_1 = {6'b000011, 9'b001000001, 9'b001001001, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_1_1 = {6'b000101, 9'b000001001, 9'b001001001, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_1_1 = {6'b000111, 9'b001001010, 9'b001001001, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_1_1 = {6'b001011, SEVEN, 		SEVEN, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_1_1 = {6'b000001, SIX, 			SEVEN, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_1_1 = {6'b000011, FIVE, 			SEVEN, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_1_1 = {6'b000101, THREE, 		SEVEN, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_1_1 = {6'b000111, FIFTEEN, 		SEVEN, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_1_1 = {6'b001001, TWENTYTHREE, SEVEN, 9'd7, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_0_3 = {6'b001011, 9'b000000011, 9'b000000011, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_0_3 = {6'b000001, 9'b000000010, 9'b000000011, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_0_0_3 = {6'b000011, 9'b000001011, 9'b000000011, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_0_3 = {6'b000101, 9'b001000011, 9'b000000011, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_0_3 = {6'b000111, 9'b000000000, 9'b000000011, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_0_3 = {6'b001011, EIGHT, 	  EIGHT, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_0_3 = {6'b000001, NINE, 		  EIGHT, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_0_3 = {6'b000011, TEN, 		  EIGHT, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_0_3 = {6'b000101, TWELVE, 	  EIGHT, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_0_3 = {6'b000111, ZERO, 		  EIGHT, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_0_3 = {6'b001001, TWENTYFOUR, EIGHT, 9'd8, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_0_2 = {6'b001011, 9'b000000010, 9'b000000010, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_0_2 = {6'b000001, 9'b000000011, 9'b000000010, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_0_0_2 = {6'b000011, 9'b000001010, 9'b000000010, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_0_2 = {6'b000101, 9'b001000010, 9'b000000010, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_0_2 = {6'b000111, 9'b000000001, 9'b000000010, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_0_2 = {6'b001011, NINE, 		  NINE, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_0_2 = {6'b000001, EIGHT, 	  NINE, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_0_2 = {6'b000011, ELEVEN, 	  NINE, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_0_2 = {6'b000101, THIRTEEN,	  NINE, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_0_2 = {6'b000111, ONE, 		  NINE, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_0_2 = {6'b001001, TWENTYFIVE, NINE, 9'd9, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_1_3 = {6'b001011, 9'b000001011, 9'b000001011, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_1_3 = {6'b000001, 9'b000001010, 9'b000001011, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_0_1_3 = {6'b000011, 9'b000000011, 9'b000001011, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_1_3 = {6'b000101, 9'b001001011, 9'b000001011, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_1_3 = {6'b000111, 9'b000001000, 9'b000001011, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_1_3 = {6'b001011, TEN, 		 TEN, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_1_3 = {6'b000001, ELEVEN, 	 TEN, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_1_3 = {6'b000011, EIGHT, 	 TEN, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_1_3 = {6'b000101, FOURTEEN,  TEN, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_1_3 = {6'b000111, TWO,		 TEN, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_1_3 = {6'b001001, TWENTYSIX, TEN, 9'd10, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_0_1_2 = {6'b001011, 9'b000001010, 9'b000001010, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_0_1_2 = {6'b000001, 9'b000001011, 9'b000001010, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_0_1_2 = {6'b000011, 9'b000000010, 9'b000001010, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zpos_inject_0_1_2 = {6'b000101, 9'b001001010, 9'b000001010, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_0_1_2 = {6'b000111, 9'b000001001, 9'b000001010, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_0_1_2 = {6'b001011, ELEVEN, 		ELEVEN, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_1_2 = {6'b000001, TEN, 			ELEVEN, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_1_2 = {6'b000011, NINE, 			ELEVEN, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_1_2 = {6'b000101, FIFTEEN, 		ELEVEN, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_1_2 = {6'b000111, THREE, 		ELEVEN, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_1_3 = {6'b001001, TWENTYSEVEN, ELEVEN, 9'd11, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_0_3 = {6'b001011, 9'b001000011, 9'b001000011, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_0_3 = {6'b000001, 9'b001000010, 9'b001000011, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_1_0_3 = {6'b000011, 9'b001001011, 9'b001000011, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_0_3 = {6'b000101, 9'b000000011, 9'b001000011, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_0_3 = {6'b000111, 9'b001000000, 9'b001000011, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_0_3 = {6'b001011, TWELVE, 		TWELVE, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_0_3 = {6'b000001, THIRTEEN, 	TWELVE, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_0_3 = {6'b000011, FOURTEEN, 	TWELVE, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_0_3 = {6'b000101, EIGHT, 		TWELVE, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_0_3 = {6'b000111, FOUR, 			TWELVE, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_0_3 = {6'b001001, TWENTYEIGHT, TWELVE, 9'd12, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_0_2 = {6'b001011, 9'b001000010, 9'b001000010, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_0_2 = {6'b000001, 9'b001000011, 9'b001000010, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_ypos_inject_1_0_2 = {6'b000011, 9'b001001010, 9'b001000010, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_0_2 = {6'b000101, 9'b000000010, 9'b001000010, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_0_2 = {6'b000111, 9'b001000001, 9'b001000010, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_0_2 = {6'b001011, THIRTEEN,   THIRTEEN, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_0_2 = {6'b000001, TWELVE,     THIRTEEN, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_0_2 = {6'b000011, FIFTEEN,    THIRTEEN, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_0_2 = {6'b000101, NINE, 		  THIRTEEN, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_0_2 = {6'b000111, FIVE, 		  THIRTEEN, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_0_2 = {6'b001001, TWENTYNINE, THIRTEEN, 9'd13, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_1_3 = {6'b001011, 9'b001001011, 9'b001001011, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_1_3 = {6'b000001, 9'b001001010, 9'b001001011, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_1_1_3 = {6'b000011, 9'b001000011, 9'b001001011, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_1_3 = {6'b000101, 9'b000001011, 9'b001001011, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_1_3 = {6'b000111, 9'b001001000, 9'b001001011, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_1_3 = {6'b001011, FOURTEEN, FOURTEEN, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_1_3 = {6'b000001, FIFTEEN,  FOURTEEN, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_1_3 = {6'b000011, TWELVE,   FOURTEEN, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_1_3 = {6'b000101, TEN,      FOURTEEN, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_1_3 = {6'b000111, SIX,      FOURTEEN, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_1_3 = {6'b001001, THIRTY,   FOURTEEN, 9'd14, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
-				  reduce_me_1_1_2 = {6'b001011, 9'b001001010, 9'b001001010, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xpos_inject_1_1_2 = {6'b000001, 9'b001001011, 9'b001001010, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_yneg_inject_1_1_2 = {6'b000011, 9'b001000010, 9'b001001010, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_zneg_inject_1_1_2 = {6'b000101, 9'b000001010, 9'b001001010, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
-			in_xneg_inject_1_1_2 = {6'b000111, 9'b001001001, 9'b001001010, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+				  reduce_me_1_1_2 = {6'b001011, FIFTEEN,   FIFTEEN, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_1_2 = {6'b000001, FOURTEEN,  FIFTEEN, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_1_2 = {6'b000011, THIRTEEN,  FIFTEEN, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_1_2 = {6'b000101, ELEVEN,    FIFTEEN, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_1_2 = {6'b000111, SEVEN,     FIFTEEN, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_1_2 = {6'b001001, THIRTYONE, FIFTEEN, 9'd15, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+			//////////////////////////////////////////////////////////////////////////////////////////////////////
+			
+				  reduce_me_0_3_0 = {6'b001011, SIXTEEN, 	  SIXTEEN, 9'd16, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_3_0 = {6'b000001, SEVENTEEN,  SIXTEEN, 9'd16, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_3_0 = {6'b000011, EIGHTEEN,   SIXTEEN, 9'd16, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_3_0 = {6'b000101, TWENTY, 	  SIXTEEN, 9'd16, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_3_0 = {6'b000111, TWENTYFOUR, SIXTEEN, 9'd16, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_3_0 = {6'b001001, ZERO, 		  SIXTEEN, 9'd16, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_3_1 = {6'b001011, SEVENTEEN,  SEVENTEEN, 9'd17, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_3_1 = {6'b000001, EIGHTEEN,   SEVENTEEN, 9'd17, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_3_1 = {6'b000011, NINETEEN,   SEVENTEEN, 9'd17, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_3_1 = {6'b000101, TWENTYONE,  SEVENTEEN, 9'd17, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_3_1 = {6'b000111, TWENTYFIVE, SEVENTEEN, 9'd17, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_3_1 = {6'b001001, ONE, 		  SEVENTEEN, 9'd17, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_2_0 = {6'b001011, EIGHTEEN,	 EIGHTEEN, 9'd18, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_2_0 = {6'b000001, NINETEEN,  EIGHTEEN, 9'd18, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_2_0 = {6'b000011, SIXTEEN, 	 EIGHTEEN, 9'd18, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_2_0 = {6'b000101, TWENTYTWO, EIGHTEEN, 9'd18, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_2_0 = {6'b000111, TWENTYSIX, EIGHTEEN, 9'd18, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_2_0 = {6'b001001, TWO, 		 EIGHTEEN, 9'd18, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_2_1 = {6'b001011, NINETEEN,		NINETEEN, 9'd19, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_2_1 = {6'b000001, EIGHTEEN,		NINETEEN, 9'd19, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_2_1 = {6'b000011, SEVENTEEN, 	NINETEEN, 9'd19, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_2_1 = {6'b000101, TWENTYTHREE, NINETEEN, 9'd19, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_2_1 = {6'b000111, TWENTYSEVEN, NINETEEN, 9'd19, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_2_1 = {6'b001001, THREE, 		NINETEEN, 9'd19, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_3_0 = {6'b001011, TWENTY, 		TWENTY, 9'd20, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_3_0 = {6'b000001, TWENTYONE,   TWENTY, 9'd20, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_3_0 = {6'b000011, TWENTYTWO, 	TWENTY, 9'd20, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_3_0 = {6'b000101, SIXTEEN, 	 	TWENTY, 9'd20, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_3_0 = {6'b000111, TWENTYEIGHT, TWENTY, 9'd20, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_3_0 = {6'b001001, FOUR, 			TWENTY, 9'd20, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+		
+				  reduce_me_1_3_1 = {6'b001011, TWENTYONE, 	TWENTYONE, 9'd21, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_3_1 = {6'b000001, TWENTY, 		TWENTYONE, 9'd21, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_3_1 = {6'b000011, TWENTYTHREE,	TWENTYONE, 9'd21, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_3_1 = {6'b000101, SEVENTEEN,	TWENTYONE, 9'd21, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_3_1 = {6'b000111, TWENTYNINE,  TWENTYONE, 9'd21, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_3_1 = {6'b001001, FIVE, 			TWENTYONE, 9'd21, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_2_0 = {6'b001011, TWENTYTWO, 	TWENTYTWO, 9'd22, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_2_0 = {6'b000001, TWENTYTHREE, TWENTYTWO, 9'd22, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_2_0 = {6'b000011, TWENTY, 		TWENTYTWO, 9'd22, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_2_0 = {6'b000101, EIGHTEEN, 	TWENTYTWO, 9'd22, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_2_0 = {6'b000111, THIRTY,  		TWENTYTWO, 9'd22, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_2_0 = {6'b001001, SIX, 			TWENTYTWO, 9'd22, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_2_1 = {6'b001011, TWENTYTHREE,	TWENTYTHREE, 9'd23, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_2_1 = {6'b000001, TWENTYTWO, 	TWENTYTHREE, 9'd23, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_2_1 = {6'b000011, TWENTYONE, 	TWENTYTHREE, 9'd23, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_2_1 = {6'b000101, NINETEEN, 	TWENTYTHREE, 9'd23, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_2_1 = {6'b000111, THIRTYONE, 	TWENTYTHREE, 9'd23, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_2_1 = {6'b001001, SEVEN, 		TWENTYTHREE, 9'd23, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_3_3 = {6'b001011, TWENTYFOUR,  TWENTYFOUR, 9'd24, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_3_3 = {6'b000001, TWENTYFIVE, 	TWENTYFOUR, 9'd24, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_3_3 = {6'b000011, TWENTYSIX, 	TWENTYFOUR, 9'd24, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_3_3 = {6'b000101, TWENTYEIGHT, TWENTYFOUR, 9'd24, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_3_3 = {6'b000111, SIXTEEN, 		TWENTYFOUR, 9'd24, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_3_3 = {6'b001001, EIGHT, 		TWENTYFOUR, 9'd24, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_3_2 = {6'b001011, TWENTYFIVE,  TWENTYFIVE, 9'd25, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_3_2 = {6'b000001, TWENTYFOUR, 	TWENTYFIVE, 9'd25, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_3_2 = {6'b000011, TWENTYSEVEN, TWENTYFIVE, 9'd25, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_3_2 = {6'b000101, TWENTYNINE,	TWENTYFIVE, 9'd25, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_3_2 = {6'b000111, SEVENTEEN, 	TWENTYFIVE, 9'd25, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_3_2 = {6'b001001, NINE, 			TWENTYFIVE, 9'd25, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_2_3 = {6'b001011, TWENTYSIX, 	TWENTYSIX, 9'd26, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_2_3 = {6'b000001, TWENTYSEVEN, TWENTYSIX, 9'd26, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_2_3 = {6'b000011, TWENTYFOUR, 	TWENTYSIX, 9'd26, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_2_3 = {6'b000101, THIRTY,  		TWENTYSIX, 9'd26, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_2_3 = {6'b000111, EIGHTEEN,		TWENTYSIX, 9'd26, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_2_3 = {6'b001001, TEN, 			TWENTYSIX, 9'd26, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_0_2_2 = {6'b001011, TWENTYSEVEN, TWENTYSEVEN, 9'd27, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_0_2_2 = {6'b000001, TWENTYSIX, 	TWENTYSEVEN, 9'd27, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_0_2_2 = {6'b000011, TWENTYFIVE, 	TWENTYSEVEN, 9'd27, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zpos_inject_0_2_2 = {6'b000101, THIRTYONE, 	TWENTYSEVEN, 9'd27, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_0_2_2 = {6'b000111, NINETEEN, 	TWENTYSEVEN, 9'd27, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_0_2_3 = {6'b001001, ELEVEN, 		TWENTYSEVEN, 9'd27, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_3_3 = {6'b001011, TWENTYEIGHT,	TWENTYEIGHT, 9'd28, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_3_3 = {6'b000001, TWENTYNINE, 	TWENTYEIGHT, 9'd28, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_3_3 = {6'b000011, THIRTY, 		TWENTYEIGHT, 9'd28, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_3_3 = {6'b000101, TWENTYFOUR, 	TWENTYEIGHT, 9'd28, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_3_3 = {6'b000111, TWENTY, 		TWENTYEIGHT, 9'd28, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_3_3 = {6'b001001, TWELVE, 		TWENTYEIGHT, 9'd28, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_3_2 = {6'b001011, TWENTYNINE,  TWENTYNINE, 9'd29, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_3_2 = {6'b000001, TWENTYEIGHT, TWENTYNINE, 9'd29, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_3_2 = {6'b000011, THIRTYONE,   TWENTYNINE, 9'd29, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_3_2 = {6'b000101, TWENTYFIVE, 	TWENTYNINE, 9'd29, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_3_2 = {6'b000111, TWENTYONE, 	TWENTYNINE, 9'd29, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_3_2 = {6'b001001, THIRTEEN, 	TWENTYNINE, 9'd29, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_2_3 = {6'b001011, THIRTY,   	THIRTY, 9'd30, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_2_3 = {6'b000001, THIRTYONE,   THIRTY, 9'd30, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_2_3 = {6'b000011, TWENTYEIGHT, THIRTY, 9'd30, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_2_3 = {6'b000101, TWENTYSIX,   THIRTY, 9'd30, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_2_3 = {6'b000111, TWENTYTWO,   THIRTY, 9'd30, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_2_3 = {6'b001001, FOURTEEN,   	THIRTY, 9'd30, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			
+				  reduce_me_1_2_2 = {6'b001011, THIRTYONE, 	THIRTYONE, 9'd31, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xpos_inject_1_2_2 = {6'b000001, THIRTY,  		THIRTYONE, 9'd31, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_ypos_inject_1_2_2 = {6'b000011, TWENTYNINE,  THIRTYONE, 9'd31, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_zneg_inject_1_2_2 = {6'b000101, TWENTYSEVEN, THIRTYONE, 9'd31, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_xneg_inject_1_2_2 = {6'b000111, TWENTYTHREE, THIRTYONE, 9'd31, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
+			in_yneg_inject_1_2_2 = {6'b001001, FIFTEEN, 		THIRTYONE, 9'd31, 8'd0, i, 2'b00, ShortAllReduce, 32'd6};
 			
 			#10;
 			
@@ -1047,83 +1211,226 @@ module network_32_tb;
 			in_xpos_inject_0_0_0 = 0;
 			in_ypos_inject_0_0_0 = 0;
 			in_zpos_inject_0_0_0 = 0;
-			in_xneg_inject_0_0_0 = 0;			
+			in_xneg_inject_0_0_0 = 0;
+			in_yneg_inject_0_0_0 = 0;			
+			
 				  reduce_me_0_0_1 = 0;
 			in_xneg_inject_0_0_1 = 0;
 			in_ypos_inject_0_0_1 = 0;
 			in_zpos_inject_0_0_1 = 0;
-			in_xpos_inject_0_0_1 = 0;			
+			in_xpos_inject_0_0_1 = 0;
+			in_yneg_inject_0_0_1 = 0;			
+			
 				  reduce_me_0_1_0 = 0;
 			in_xpos_inject_0_1_0 = 0;
 			in_yneg_inject_0_1_0 = 0;
 			in_zpos_inject_0_1_0 = 0;
-			in_xneg_inject_0_1_0 = 0;			
+			in_xneg_inject_0_1_0 = 0;	
+			in_ypos_inject_0_1_0 = 0;
+			
 				  reduce_me_0_1_1 = 0;
 			in_xneg_inject_0_1_1 = 0;
 			in_yneg_inject_0_1_1 = 0;
 			in_zpos_inject_0_1_1 = 0;
-			in_xpos_inject_0_1_1 = 0;			
-				  reduce_me_1_0_0 = 0;
+			in_xpos_inject_0_1_1 = 0;	
+			in_ypos_inject_0_1_1 = 0;
+			
+				  reduce_me_1_0_0 = 0;				  
 			in_xpos_inject_1_0_0 = 0;
 			in_ypos_inject_1_0_0 = 0;
 			in_zneg_inject_1_0_0 = 0;
-			in_xneg_inject_1_0_0 = 0;			
-				  reduce_me_1_0_1 = 0;
+			in_xneg_inject_1_0_0 = 0;
+			in_yneg_inject_1_0_0 = 0;			
+			
+				  reduce_me_1_0_1 = 0;				  
 			in_xneg_inject_1_0_1 = 0;
 			in_ypos_inject_1_0_1 = 0;
 			in_zneg_inject_1_0_1 = 0;
-			in_xpos_inject_1_0_1 = 0;			
+			in_xpos_inject_1_0_1 = 0;	
+			in_yneg_inject_1_0_1 = 0;
+			
 				  reduce_me_1_1_0 = 0;
 			in_xpos_inject_1_1_0 = 0;
 			in_yneg_inject_1_1_0 = 0;
 			in_zneg_inject_1_1_0 = 0;
-			in_xneg_inject_1_1_0 = 0;			
+			in_xneg_inject_1_1_0 = 0;
+			in_ypos_inject_1_1_0 = 0;			
+			
 				  reduce_me_1_1_1 = 0;
 			in_xneg_inject_1_1_1 = 0;
 			in_yneg_inject_1_1_1 = 0;
 			in_zneg_inject_1_1_1 = 0;
-			in_xpos_inject_1_1_1 = 0;			
+			in_xpos_inject_1_1_1 = 0;	
+			in_ypos_inject_1_1_1 = 0;
+			
 				  reduce_me_0_0_3 = 0;
 			in_xpos_inject_0_0_3 = 0;
 			in_ypos_inject_0_0_3 = 0;
 			in_zpos_inject_0_0_3 = 0;
-			in_xneg_inject_0_0_3 = 0;			
+			in_xneg_inject_0_0_3 = 0;	
+			in_yneg_inject_0_0_3 = 0;
+			
 				  reduce_me_0_0_2 = 0;
 			in_xneg_inject_0_0_2 = 0;
 			in_ypos_inject_0_0_2 = 0;
 			in_zpos_inject_0_0_2 = 0;
-			in_xpos_inject_0_0_2 = 0;			
+			in_xpos_inject_0_0_2 = 0;	
+			in_yneg_inject_0_0_2 = 0;			
+				  
 				  reduce_me_0_1_3 = 0;
 			in_xpos_inject_0_1_3 = 0;
 			in_yneg_inject_0_1_3 = 0;
 			in_zpos_inject_0_1_3 = 0;
-			in_xneg_inject_0_1_3 = 0;			
+			in_xneg_inject_0_1_3 = 0;		
+			in_ypos_inject_0_1_3 = 0;
+				  
 				  reduce_me_0_1_2 = 0;
 			in_xneg_inject_0_1_2 = 0;
 			in_yneg_inject_0_1_2 = 0;
 			in_zpos_inject_0_1_2 = 0;
-			in_xpos_inject_0_1_2 = 0;			
+			in_xpos_inject_0_1_2 = 0;
+			in_ypos_inject_0_1_2 = 0;
+				  
 				  reduce_me_1_0_3 = 0;
 			in_xpos_inject_1_0_3 = 0;
 			in_ypos_inject_1_0_3 = 0;
 			in_zneg_inject_1_0_3 = 0;
-			in_xneg_inject_1_0_3 = 0;			
+			in_xneg_inject_1_0_3 = 0;
+			in_yneg_inject_1_0_3 = 0;	
+				  
 				  reduce_me_1_0_2 = 0;
 			in_xneg_inject_1_0_2 = 0;
 			in_ypos_inject_1_0_2 = 0;
 			in_zneg_inject_1_0_2 = 0;
-			in_xpos_inject_1_0_2 = 0;			
+			in_xpos_inject_1_0_2 = 0;		
+			in_yneg_inject_1_0_2 = 0;
+				  
 				  reduce_me_1_1_3 = 0;
 			in_xpos_inject_1_1_3 = 0;
 			in_yneg_inject_1_1_3 = 0;
 			in_zneg_inject_1_1_3 = 0;
-			in_xneg_inject_1_1_3 = 0;			
+			in_xneg_inject_1_1_3 = 0;	
+			in_ypos_inject_1_1_3 = 0;			
+				  
 				  reduce_me_1_1_2 = 0;
 			in_xneg_inject_1_1_2 = 0;
 			in_yneg_inject_1_1_2 = 0;
 			in_zneg_inject_1_1_2 = 0;
 			in_xpos_inject_1_1_2 = 0;
-		
+			in_ypos_inject_1_1_2 = 0;
+		/////////////////////////////	
+				  reduce_me_0_3_0 = 0;
+			in_xpos_inject_0_3_0 = 0;
+			in_yneg_inject_0_3_0 = 0;
+			in_zpos_inject_0_3_0 = 0;
+			in_xneg_inject_0_3_0 = 0;
+			in_ypos_inject_0_3_0 = 0;			
+			
+				  reduce_me_0_3_1 = 0;
+			in_xneg_inject_0_3_1 = 0;
+			in_yneg_inject_0_3_1 = 0;
+			in_zpos_inject_0_3_1 = 0;
+			in_xpos_inject_0_3_1 = 0;
+			in_ypos_inject_0_3_1 = 0;			
+			
+				  reduce_me_0_2_0 = 0;
+			in_xpos_inject_0_2_0 = 0;
+			in_ypos_inject_0_2_0 = 0;
+			in_zpos_inject_0_2_0 = 0;
+			in_xneg_inject_0_2_0 = 0;	
+			in_yneg_inject_0_2_0 = 0;
+			
+				  reduce_me_0_2_1 = 0;
+			in_xneg_inject_0_2_1 = 0;
+			in_ypos_inject_0_2_1 = 0;
+			in_zpos_inject_0_2_1 = 0;
+			in_xpos_inject_0_2_1 = 0;	
+			in_yneg_inject_0_2_1 = 0;
+			
+				  reduce_me_1_3_0 = 0;				  
+			in_xpos_inject_1_3_0 = 0;
+			in_yneg_inject_1_3_0 = 0;
+			in_zneg_inject_1_3_0 = 0;
+			in_xneg_inject_1_3_0 = 0;
+			in_ypos_inject_1_3_0 = 0;			
+			
+				  reduce_me_1_3_1 = 0;				  
+			in_xneg_inject_1_3_1 = 0;
+			in_yneg_inject_1_3_1 = 0;
+			in_zneg_inject_1_3_1 = 0;
+			in_xpos_inject_1_3_1 = 0;	
+			in_ypos_inject_1_3_1 = 0;
+			
+				  reduce_me_1_2_0 = 0;
+			in_xpos_inject_1_2_0 = 0;
+			in_ypos_inject_1_2_0 = 0;
+			in_zneg_inject_1_2_0 = 0;
+			in_xneg_inject_1_2_0 = 0;
+			in_yneg_inject_1_2_0 = 0;			
+			
+				  reduce_me_1_2_1 = 0;
+			in_xneg_inject_1_2_1 = 0;
+			in_ypos_inject_1_2_1 = 0;
+			in_zneg_inject_1_2_1 = 0;
+			in_xpos_inject_1_2_1 = 0;	
+			in_yneg_inject_1_2_1 = 0;
+			
+				  reduce_me_0_3_3 = 0;
+			in_xpos_inject_0_3_3 = 0;
+			in_yneg_inject_0_3_3 = 0;
+			in_zpos_inject_0_3_3 = 0;
+			in_xneg_inject_0_3_3 = 0;	
+			in_ypos_inject_0_3_3 = 0;
+			
+				  reduce_me_0_3_2 = 0;
+			in_xneg_inject_0_3_2 = 0;
+			in_yneg_inject_0_3_2 = 0;
+			in_zpos_inject_0_3_2 = 0;
+			in_xpos_inject_0_3_2 = 0;	
+			in_ypos_inject_0_3_2 = 0;			
+				  
+				  reduce_me_0_2_3 = 0;
+			in_xpos_inject_0_2_3 = 0;
+			in_ypos_inject_0_2_3 = 0;
+			in_zpos_inject_0_2_3 = 0;
+			in_xneg_inject_0_2_3 = 0;		
+			in_yneg_inject_0_2_3 = 0;
+				  
+				  reduce_me_0_2_2 = 0;
+			in_xneg_inject_0_2_2 = 0;
+			in_ypos_inject_0_2_2 = 0;
+			in_zpos_inject_0_2_2 = 0;
+			in_xpos_inject_0_2_2 = 0;
+			in_yneg_inject_0_2_2 = 0;
+				  
+				  reduce_me_1_3_3 = 0;
+			in_xpos_inject_1_3_3 = 0;
+			in_yneg_inject_1_3_3 = 0;
+			in_zneg_inject_1_3_3 = 0;
+			in_xneg_inject_1_3_3 = 0;
+			in_ypos_inject_1_3_3 = 0;	
+				  
+				  reduce_me_1_3_2 = 0;
+			in_xneg_inject_1_3_2 = 0;
+			in_yneg_inject_1_3_2 = 0;
+			in_zneg_inject_1_3_2 = 0;
+			in_xpos_inject_1_3_2 = 0;		
+			in_ypos_inject_1_3_2 = 0;
+				  
+				  reduce_me_1_2_3 = 0;
+			in_xpos_inject_1_2_3 = 0;
+			in_ypos_inject_1_2_3 = 0;
+			in_zneg_inject_1_2_3 = 0;
+			in_xneg_inject_1_2_3 = 0;	
+			in_yneg_inject_1_2_3 = 0;			
+				  
+				  reduce_me_1_2_2 = 0;
+			in_xneg_inject_1_2_2 = 0;
+			in_ypos_inject_1_2_2 = 0;
+			in_zneg_inject_1_2_2 = 0;
+			in_xpos_inject_1_2_2 = 0;
+			in_yneg_inject_1_2_2 = 0;
+			
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//ring
 		
