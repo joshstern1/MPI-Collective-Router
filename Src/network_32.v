@@ -790,7 +790,7 @@
 
 
 	
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(0),
         .cur_x(0),
@@ -821,7 +821,7 @@
 		  .newcomm(newcomm_0_0_0)
       );
 		
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(0),
         .cur_x(1),
@@ -852,7 +852,7 @@
 		  .newcomm(newcomm_0_0_1)
       );
 		
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(1),
         .cur_x(0),
@@ -884,7 +884,7 @@
       );
 			
 	
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(1),
         .cur_x(1),
@@ -915,7 +915,7 @@
 		  .newcomm(newcomm_0_1_1)
       );
 
-    node_16#(
+    node#(
         .cur_z(1),
         .cur_y(0),
         .cur_x(0),
@@ -946,7 +946,7 @@
 		  .newcomm(newcomm_1_0_0)
       );	
 		
-		node_16#(
+		node#(
         .cur_z(1),
         .cur_y(0),
         .cur_x(1),
@@ -977,7 +977,7 @@
 		  .newcomm(newcomm_1_0_1)
       );
 		
-    node_16#(
+    node#(
         .cur_z(1),
         .cur_y(1),
         .cur_x(0),
@@ -1008,7 +1008,7 @@
 		  .newcomm(newcomm_1_1_0)
       );
 		
-    node_16#(
+    node#(
         .cur_z(1),
         .cur_y(1),
         .cur_x(1),
@@ -1039,7 +1039,7 @@
 		  .newcomm(newcomm_1_1_1)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(0),
         .cur_x(3),
@@ -1070,7 +1070,7 @@
 		  .newcomm(newcomm_0_0_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(0),
         .cur_x(2),
@@ -1101,7 +1101,7 @@
 		  .newcomm(newcomm_0_0_2)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(1),
         .cur_x(3),
@@ -1132,7 +1132,7 @@
 		  .newcomm(newcomm_0_1_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(1),
         .cur_x(2),
@@ -1163,7 +1163,7 @@
 		  .newcomm(newcomm_0_1_2)
       );
 
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(0),
         .cur_x(3),
@@ -1194,7 +1194,7 @@
 		  .newcomm(newcomm_1_0_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(0),
         .cur_x(2),
@@ -1225,7 +1225,7 @@
 		  .newcomm(newcomm_1_0_2)
       );
 		
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(1),
         .cur_x(3),
@@ -1256,7 +1256,7 @@
 		  .newcomm(newcomm_1_1_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(1),
         .cur_x(2),
@@ -1289,7 +1289,7 @@
 
 	///////////////////////////////////////////////////////////////////////////
 	
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(3),
         .cur_x(0),
@@ -1320,7 +1320,7 @@
 		  .newcomm(newcomm_0_3_0)
       );
 		
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(3),
         .cur_x(1),
@@ -1351,7 +1351,7 @@
 		  .newcomm(newcomm_0_3_1)
       );
 		
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(2),
         .cur_x(0),
@@ -1383,7 +1383,7 @@
       );
 			
 	
-    node_16#(
+    node#(
         .cur_z(0),
         .cur_y(2),
         .cur_x(1),
@@ -1414,7 +1414,7 @@
 		  .newcomm(newcomm_0_2_1)
       );
 
-    node_16#(
+    node#(
         .cur_z(1),
         .cur_y(3),
         .cur_x(0),
@@ -1445,7 +1445,7 @@
 		  .newcomm(newcomm_1_3_0)
       );	
 		
-		node_16#(
+		node#(
         .cur_z(1),
         .cur_y(3),
         .cur_x(1),
@@ -1476,7 +1476,7 @@
 		  .newcomm(newcomm_1_3_1)
       );
 		
-    node_16#(
+    node#(
         .cur_z(1),
         .cur_y(2),
         .cur_x(0),
@@ -1507,7 +1507,7 @@
 		  .newcomm(newcomm_1_2_0)
       );
 		
-    node_16#(
+    node#(
         .cur_z(1),
         .cur_y(2),
         .cur_x(1),
@@ -1538,7 +1538,7 @@
 		  .newcomm(newcomm_1_2_1)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(3),
         .cur_x(3),
@@ -1569,7 +1569,7 @@
 		  .newcomm(newcomm_0_3_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(3),
         .cur_x(2),
@@ -1600,7 +1600,7 @@
 		  .newcomm(newcomm_0_3_2)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(2),
         .cur_x(3),
@@ -1631,7 +1631,7 @@
 		  .newcomm(newcomm_0_2_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(0),
         .cur_y(2),
         .cur_x(2),
@@ -1662,7 +1662,7 @@
 		  .newcomm(newcomm_0_2_2)
       );
 
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(3),
         .cur_x(3),
@@ -1693,7 +1693,7 @@
 		  .newcomm(newcomm_1_3_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(3),
         .cur_x(2),
@@ -1724,7 +1724,7 @@
 		  .newcomm(newcomm_1_3_2)
       );
 		
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(2),
         .cur_x(3),
@@ -1755,7 +1755,7 @@
 		  .newcomm(newcomm_1_2_3)
       );
 		
-	node_16#(
+	node#(
         .cur_z(1),
         .cur_y(2),
         .cur_x(2),
