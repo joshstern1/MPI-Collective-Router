@@ -145,7 +145,7 @@ always @(posedge clk) begin
 	 rank_table[14] <= {3'b01, 3'b01, 3'b011};
 	 rank_table[15] <= {3'b01, 3'b01, 3'b010};
 	 
-	 /*rank_table[16] <= {3'b0, 3'b011, 3'b0};
+	 rank_table[16] <= {3'b0, 3'b011, 3'b0};
 	 rank_table[17] <= {3'b0, 3'b011, 3'b01};
 	 rank_table[18] <= {3'b0, 3'b010, 3'b0};
 	 rank_table[19] <= {3'b0, 3'b10, 3'b1};	 
@@ -160,7 +160,7 @@ always @(posedge clk) begin
 	 rank_table[28] <= {3'b1, 3'b011, 3'b011};
 	 rank_table[29] <= {3'b01, 3'b011, 3'b010};
 	 rank_table[30] <= {3'b01, 3'b010, 3'b011};
-	 rank_table[31] <= {3'b01, 3'b010, 3'b010};*/
+	 rank_table[31] <= {3'b01, 3'b010, 3'b010};
 
 	
 	 
