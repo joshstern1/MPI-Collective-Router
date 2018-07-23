@@ -1168,76 +1168,122 @@ module network_32_tb;
 		//bcast
 		
 		/*for(i=0;i<1;i=i+1)begin
-			in_xpos_inject_0_0_0 = {5'b00001, 9'b000000001, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
-			in_ypos_inject_0_0_0 = {5'b00001, 9'b000001000, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
-			in_zpos_inject_0_0_0 = {5'b00001, 9'b001000000, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b000000011, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
+			in_xpos_inject_0_0_0 = {6'b000001, 9'b000000001, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
+			in_ypos_inject_0_0_0 = {6'b000001, 9'b000001000, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
+			in_zpos_inject_0_0_0 = {6'b000001, 9'b001000000, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b000000011, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000011000, 9'd0, 9'd0, 8'd0, i, 2'b00, ShortBcast, 32'd6};
 			#10;
 		end		
 		
 		in_xpos_inject_0_0_0 = 0;
 		in_ypos_inject_0_0_0 = 0;
 		in_zpos_inject_0_0_0 = 0;
-		in_xneg_inject_0_0_0 = 0;*/
+		in_xneg_inject_0_0_0 = 0;
+		in_yneg_inject_0_0_0 = 0;*/
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//scatter
 		
 		/*for(i=0;i<1;i=i+1)begin
-			in_xpos_inject_0_0_0 = {5'b00001, 9'b000000001, 9'd0, 9'd0, 8'd0, 8'd1, 2'b00, Scatter, 32'd6};
-			in_ypos_inject_0_0_0 = {5'b00001, 9'b000001000, 9'd0, 9'd0, 8'd0, 8'd2, 2'b00, Scatter, 32'd6};
-			in_zpos_inject_0_0_0 = {5'b00001, 9'b001000000, 9'd0, 9'd0, 8'd0, 8'd4, 2'b00, Scatter, 32'd6};
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b000000011, 9'd0, 9'd0, 8'd0, 8'd8, 2'b00, Scatter, 32'd6};
+			in_xpos_inject_0_0_0 = {6'b000001, 9'b000000001, 9'd0, 9'd0, 8'd0, 8'd1, 2'b00, Scatter, 32'd6};
+			in_ypos_inject_0_0_0 = {6'b000001, 9'b000001000, 9'd0, 9'd0, 8'd0, 8'd2, 2'b00, Scatter, 32'd6};
+			in_zpos_inject_0_0_0 = {6'b000001, 9'b001000000, 9'd0, 9'd0, 8'd0, 8'd4, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b000000011, 9'd0, 9'd0, 8'd0, 8'd8, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000011000, 9'd0, 9'd0, 8'd0, 8'd16, 2'b00, Scatter, 32'd6};
 			#10;
 			in_xpos_inject_0_0_0 = 0;
-			in_ypos_inject_0_0_0 = {5'b00001, 9'b000001001, 9'd0, 9'd0, 8'd0, 8'd3, 2'b00, Scatter, 32'd6};
-			in_zpos_inject_0_0_0 = {5'b00001, 9'b001000001, 9'd0, 9'd0, 8'd0, 8'd5, 2'b00, Scatter, 32'd6};
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b000000010, 9'd0, 9'd0, 8'd0, 8'd9, 2'b00, Scatter, 32'd6};
+			in_ypos_inject_0_0_0 = {6'b000001, 9'b000001001, 9'd0, 9'd0, 8'd0, 8'd3, 2'b00, Scatter, 32'd6};
+			in_zpos_inject_0_0_0 = {6'b000001, 9'b001000001, 9'd0, 9'd0, 8'd0, 8'd5, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b000000010, 9'd0, 9'd0, 8'd0, 8'd9, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000011001, 9'd0, 9'd0, 8'd0, 8'd17, 2'b00, Scatter, 32'd6};
 			#10;
 			in_ypos_inject_0_0_0 = 0;
-			in_zpos_inject_0_0_0 = {5'b00001, 9'b001001000, 9'd0, 9'd0, 8'd0, 8'd6, 2'b00, Scatter, 32'd6};
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b000001011, 9'd0, 9'd0, 8'd0, 8'd10, 2'b00, Scatter, 32'd6};
+			in_zpos_inject_0_0_0 = {6'b000001, 9'b001001000, 9'd0, 9'd0, 8'd0, 8'd6, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b000001011, 9'd0, 9'd0, 8'd0, 8'd10, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000010000, 9'd0, 9'd0, 8'd0, 8'd18, 2'b00, Scatter, 32'd6};
 			#10;
-			in_zpos_inject_0_0_0 = {5'b00001, 9'b001001001, 9'd0, 9'd0, 8'd0, 8'd7, 2'b00, Scatter, 32'd6};
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b000001010, 9'd0, 9'd0, 8'd0, 8'd11, 2'b00, Scatter, 32'd6};
+			in_zpos_inject_0_0_0 = {6'b000001, 9'b001001001, 9'd0, 9'd0, 8'd0, 8'd7, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b000001010, 9'd0, 9'd0, 8'd0, 8'd11, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000010001, 9'd0, 9'd0, 8'd0, 8'd19, 2'b00, Scatter, 32'd6};
 			#10;
 			in_zpos_inject_0_0_0 = 0;
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b001000011, 9'd0, 9'd0, 8'd0, 8'd12, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b001000011, 9'd0, 9'd0, 8'd0, 8'd12, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001011000, 9'd0, 9'd0, 8'd0, 8'd20, 2'b00, Scatter, 32'd6};
 			#10;
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b001000010, 9'd0, 9'd0, 8'd0, 8'd13, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b001000010, 9'd0, 9'd0, 8'd0, 8'd13, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001011001, 9'd0, 9'd0, 8'd0, 8'd21, 2'b00, Scatter, 32'd6};
 			#10;
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b001001011, 9'd0, 9'd0, 8'd0, 8'd14, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b001001011, 9'd0, 9'd0, 8'd0, 8'd14, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001010000, 9'd0, 9'd0, 8'd0, 8'd22, 2'b00, Scatter, 32'd6};
 			#10;
-			in_xneg_inject_0_0_0 = {5'b00001, 9'b001001010, 9'd0, 9'd0, 8'd0, 8'd15, 2'b00, Scatter, 32'd6};
+			in_xneg_inject_0_0_0 = {6'b000001, 9'b001001010, 9'd0, 9'd0, 8'd0, 8'd15, 2'b00, Scatter, 32'd6};
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001010001, 9'd0, 9'd0, 8'd0, 8'd23, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000011011, 9'd0, 9'd0, 8'd0, 8'd24, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000011010, 9'd0, 9'd0, 8'd0, 8'd25, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000010011, 9'd0, 9'd0, 8'd0, 8'd26, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b000010010, 9'd0, 9'd0, 8'd0, 8'd27, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001011011, 9'd0, 9'd0, 8'd0, 8'd28, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001011010, 9'd0, 9'd0, 8'd0, 8'd29, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001010011, 9'd0, 9'd0, 8'd0, 8'd30, 2'b00, Scatter, 32'd6};
+			#10;
+			in_yneg_inject_0_0_0 = {6'b000001, 9'b001010010, 9'd0, 9'd0, 8'd0, 8'd31, 2'b00, Scatter, 32'd6};
 			#10;
 		end		
 		
 		in_xpos_inject_0_0_0 = 0;
 		in_ypos_inject_0_0_0 = 0;
 		in_zpos_inject_0_0_0 = 0;
-		in_xneg_inject_0_0_0 = 0;*/
+		in_xneg_inject_0_0_0 = 0;
+		in_yneg_inject_0_0_0 = 0;*/
 		
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//gather
 		
 		/*for(i=0;i<1;i=i+1)begin
-			in_xneg_inject_0_0_1 = {5'b00001, 9'd0, 9'b000000001, 9'd1, 8'd0, 8'd0, 2'b00, Gather, 32'd1};
-			in_yneg_inject_0_1_0 = {5'b00001, 9'd0, 9'b000001000, 9'd2, 8'd0, 8'd0, 2'b00, Gather, 32'd2};
-			in_xneg_inject_0_1_1 = {5'b00001, 9'd0, 9'b000001001, 9'd3, 8'd0, 8'd0, 2'b00, Gather, 32'd3};
-			in_zneg_inject_1_0_0 = {5'b00001, 9'd0, 9'b001000000, 9'd4, 8'd0, 8'd0, 2'b00, Gather, 32'd4};
-			in_xneg_inject_1_0_1 = {5'b00001, 9'd0, 9'b001000001, 9'd5, 8'd0, 8'd0, 2'b00, Gather, 32'd5};
-			in_yneg_inject_1_1_0 = {5'b00001, 9'd0, 9'b001001000, 9'd6, 8'd0, 8'd0, 2'b00, Gather, 32'd6};
-			in_xneg_inject_1_1_1 = {5'b00001, 9'd0, 9'b001001001, 9'd7, 8'd0, 8'd0, 2'b00, Gather, 32'd7};
+			in_xneg_inject_0_0_1 = {6'b000001, 9'd0, 9'b000000001, 9'd1, 8'd0, 8'd0, 2'b00, Gather, 32'd1};
+			in_yneg_inject_0_1_0 = {6'b000001, 9'd0, 9'b000001000, 9'd2, 8'd0, 8'd0, 2'b00, Gather, 32'd2};
+			in_xneg_inject_0_1_1 = {6'b000001, 9'd0, 9'b000001001, 9'd3, 8'd0, 8'd0, 2'b00, Gather, 32'd3};
+			in_zneg_inject_1_0_0 = {6'b000001, 9'd0, 9'b001000000, 9'd4, 8'd0, 8'd0, 2'b00, Gather, 32'd4};
+			in_xneg_inject_1_0_1 = {6'b000001, 9'd0, 9'b001000001, 9'd5, 8'd0, 8'd0, 2'b00, Gather, 32'd5};
+			in_yneg_inject_1_1_0 = {6'b000001, 9'd0, 9'b001001000, 9'd6, 8'd0, 8'd0, 2'b00, Gather, 32'd6};
+			in_xneg_inject_1_1_1 = {6'b000001, 9'd0, 9'b001001001, 9'd7, 8'd0, 8'd0, 2'b00, Gather, 32'd7};
 			
-			in_xpos_inject_0_0_3 = {5'b00001, 9'd0, 9'b000000011, 9'd8, 8'd0, 8'd0, 2'b00, Gather, 32'd8};
-			in_xpos_inject_0_0_2 = {5'b00001, 9'd0, 9'b000000010, 9'd9, 8'd0, 8'd0, 2'b00, Gather, 32'd9};
-			in_yneg_inject_0_1_3 = {5'b00001, 9'd0, 9'b000001011, 9'd10, 8'd0, 8'd0, 2'b00, Gather, 32'd10};
-			in_xpos_inject_0_1_2 = {5'b00001, 9'd0, 9'b000001010, 9'd11, 8'd0, 8'd0, 2'b00, Gather, 32'd11};
-			in_zneg_inject_1_0_3 = {5'b00001, 9'd0, 9'b001000011, 9'd12, 8'd0, 8'd0, 2'b00, Gather, 32'd12};
-			in_xpos_inject_1_0_2 = {5'b00001, 9'd0, 9'b001000010, 9'd13, 8'd0, 8'd0, 2'b00, Gather, 32'd13};
-			in_yneg_inject_1_1_3 = {5'b00001, 9'd0, 9'b001001011, 9'd14, 8'd0, 8'd0, 2'b00, Gather, 32'd14};
-			in_xpos_inject_1_1_2 = {5'b00001, 9'd0, 9'b001001010, 9'd15, 8'd0, 8'd0, 2'b00, Gather, 32'd15};
+			in_xpos_inject_0_0_3 = {6'b000001, 9'd0, 9'b000000011, 9'd8, 8'd0, 8'd0, 2'b00, Gather, 32'd8};
+			in_xpos_inject_0_0_2 = {6'b000001, 9'd0, 9'b000000010, 9'd9, 8'd0, 8'd0, 2'b00, Gather, 32'd9};
+			in_yneg_inject_0_1_3 = {6'b000001, 9'd0, 9'b000001011, 9'd10, 8'd0, 8'd0, 2'b00, Gather, 32'd10};
+			in_xpos_inject_0_1_2 = {6'b000001, 9'd0, 9'b000001010, 9'd11, 8'd0, 8'd0, 2'b00, Gather, 32'd11};
+			in_zneg_inject_1_0_3 = {6'b000001, 9'd0, 9'b001000011, 9'd12, 8'd0, 8'd0, 2'b00, Gather, 32'd12};
+			in_xpos_inject_1_0_2 = {6'b000001, 9'd0, 9'b001000010, 9'd13, 8'd0, 8'd0, 2'b00, Gather, 32'd13};
+			in_yneg_inject_1_1_3 = {6'b000001, 9'd0, 9'b001001011, 9'd14, 8'd0, 8'd0, 2'b00, Gather, 32'd14};
+			in_xpos_inject_1_1_2 = {6'b000001, 9'd0, 9'b001001010, 9'd15, 8'd0, 8'd0, 2'b00, Gather, 32'd15};
+			
+			in_ypos_inject_0_3_0 = {6'b000001, 9'd0, 9'b000011000, 9'd16, 8'd0, 8'd0, 2'b00, Gather, 32'd16};
+			in_xneg_inject_0_3_1 = {6'b000001, 9'd0, 9'b000011001, 9'd17, 8'd0, 8'd0, 2'b00, Gather, 32'd17};
+			in_ypos_inject_0_2_0 = {6'b000001, 9'd0, 9'b000010000, 9'd18, 8'd0, 8'd0, 2'b00, Gather, 32'd18};
+			in_xneg_inject_0_2_1 = {6'b000001, 9'd0, 9'b000010001, 9'd19, 8'd0, 8'd0, 2'b00, Gather, 32'd19};
+			in_zneg_inject_1_3_0 = {6'b000001, 9'd0, 9'b001011000, 9'd20, 8'd0, 8'd0, 2'b00, Gather, 32'd20};
+			in_xneg_inject_1_3_1 = {6'b000001, 9'd0, 9'b001011001, 9'd21, 8'd0, 8'd0, 2'b00, Gather, 32'd21};
+			in_ypos_inject_1_2_0 = {6'b000001, 9'd0, 9'b001010000, 9'd22, 8'd0, 8'd0, 2'b00, Gather, 32'd22};
+			in_xneg_inject_1_2_1 = {6'b000001, 9'd0, 9'b001010001, 9'd23, 8'd0, 8'd0, 2'b00, Gather, 32'd23};
+			
+			in_xpos_inject_0_3_3 = {6'b000001, 9'd0, 9'b000011011, 9'd24, 8'd0, 8'd0, 2'b00, Gather, 32'd24};
+			in_xpos_inject_0_3_2 = {6'b000001, 9'd0, 9'b000011010, 9'd25, 8'd0, 8'd0, 2'b00, Gather, 32'd25};
+			in_ypos_inject_0_2_3 = {6'b000001, 9'd0, 9'b000010011, 9'd26, 8'd0, 8'd0, 2'b00, Gather, 32'd26};
+			in_xpos_inject_0_2_2 = {6'b000001, 9'd0, 9'b000010010, 9'd27, 8'd0, 8'd0, 2'b00, Gather, 32'd27};
+			in_zneg_inject_1_3_3 = {6'b000001, 9'd0, 9'b001011011, 9'd28, 8'd0, 8'd0, 2'b00, Gather, 32'd28};
+			in_xpos_inject_1_3_2 = {6'b000001, 9'd0, 9'b001011010, 9'd29, 8'd0, 8'd0, 2'b00, Gather, 32'd29};
+			in_ypos_inject_1_2_3 = {6'b000001, 9'd0, 9'b001010011, 9'd30, 8'd0, 8'd0, 2'b00, Gather, 32'd30};
+			in_xpos_inject_1_2_2 = {6'b000001, 9'd0, 9'b001010010, 9'd31, 8'd0, 8'd0, 2'b00, Gather, 32'd31};
+			
 			#10;
 		end		
 		
@@ -1255,7 +1301,24 @@ module network_32_tb;
 		in_zneg_inject_1_0_3 = 0;
 		in_xpos_inject_1_0_2 = 0;
 		in_yneg_inject_1_1_3 = 0;
-		in_xpos_inject_1_1_2 = 0;*/
+		in_xpos_inject_1_1_2 = 0;
+		
+		in_ypos_inject_0_3_0 = 0;
+		in_xneg_inject_0_3_1 = 0;
+		in_ypos_inject_0_2_0 = 0;
+		in_xneg_inject_0_2_1 = 0;
+		in_zneg_inject_1_3_0 = 0;
+		in_xneg_inject_1_3_1 = 0;
+		in_ypos_inject_1_2_0 = 0;
+		in_xneg_inject_1_2_1 = 0;
+		in_xpos_inject_0_3_3 = 0;
+		in_xpos_inject_0_3_2 = 0;
+		in_ypos_inject_0_2_3 = 0;
+		in_xpos_inject_0_2_2 = 0;
+		in_zneg_inject_1_3_3 = 0;
+		in_xpos_inject_1_3_2 = 0;
+		in_ypos_inject_1_2_3 = 0;
+		in_xpos_inject_1_2_2 = 0;*/
 		
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
