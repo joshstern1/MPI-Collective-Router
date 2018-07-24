@@ -977,7 +977,7 @@
 
 	wire[FLIT_SIZE - 1 : 0] in_xpos_ser_3_3_1, out_xpos_ser_3_3_1;
 	wire[FLIT_SIZE - 1 : 0] in_xneg_ser_3_3_1, out_xneg_ser_3_3_1;
-	wire[FLIT_SIZE  - 1 : 0]in_ypos_ser_3_3_1, out_ypos_ser_3_3_1;	
+	wire[FLIT_SIZE - 1 : 0] in_ypos_ser_3_3_1, out_ypos_ser_3_3_1;	
 	wire[FLIT_SIZE - 1 : 0] in_yneg_ser_3_3_1, out_yneg_ser_3_3_1;	
 	wire[FLIT_SIZE - 1 : 0] in_zpos_ser_3_3_1, out_zpos_ser_3_3_1;
 	wire[FLIT_SIZE - 1 : 0] in_zneg_ser_3_3_1, out_zneg_ser_3_3_1;
@@ -3011,7 +3011,7 @@
 		  .inject_yneg(in_yneg_inject_3_3_0),
 		  .inject_zneg(in_zneg_inject_3_3_0),
 		  .in_xpos_ser(in_xpos_ser_3_3_0),
-        .out_xpos_ser(out_xpos_ser_0_3_0),
+        .out_xpos_ser(out_xpos_ser_3_3_0),
         .in_xneg_ser(in_xneg_ser_3_3_0),
         .out_xneg_ser(out_xneg_ser_3_3_0),
         .in_ypos_ser(in_ypos_ser_3_3_0),
