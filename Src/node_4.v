@@ -63,14 +63,14 @@ module node_4
 	 localparam FlitChildWidth = FlitWidth+ChildrenWidth;
 	 
 	 localparam ReductionBitPos=opPos+opWidth-1;
-	 localparam ReductionTableSize = 2;
+	 localparam ReductionTableSize = 140;
 
 	 localparam CommTableWidth = (lg_numprocs+2)*DstWidth + lg_numprocs*2+2;
 	 localparam NewCommWidth = CommTableWidth+ContextIdWidth;
 	
 	 localparam FLIT_SIZE = FlitWidth;
-	 localparam LinkDelay = 2;
-	 localparam input_Q_size = 10;
+	 localparam LinkDelay = 24;
+	 localparam input_Q_size = 140;
 
 	
     wire [FLIT_SIZE - 1 : 0] in_xpos;
@@ -115,7 +115,8 @@ module node_4
         .cur_z(cur_z),
 		  .lg_numprocs(lg_numprocs),
 		  .PayloadWidth(PayloadWidth),
-		  .ReductionTableSize(ReductionTableSize)
+		  .ReductionTableSize(ReductionTableSize),
+		  .input_Q_size(input_Q_size)
     )
     switch_inst(
         .clk(clk),
@@ -209,8 +210,7 @@ module node_4
         .consume(xpos_reduce_grant),
         .full(),
         .empty(xpos_reduce_empty),
-        .out(xpos_reduce),
-        .usedw()
+        .out(xpos_reduce)
     ); 
 	 
 	large_buffer#(
@@ -225,8 +225,7 @@ module node_4
         .consume(ypos_reduce_grant),
         .full(),
         .empty(ypos_reduce_empty),
-        .out(ypos_reduce),
-        .usedw()
+        .out(ypos_reduce)
     ); 
 	 
 	 
@@ -242,8 +241,7 @@ module node_4
         .consume(xneg_reduce_grant),
         .full(),
         .empty(xneg_reduce_empty),
-        .out(xneg_reduce),
-        .usedw()
+        .out(xneg_reduce)
     );
 
 	large_buffer#(
@@ -258,8 +256,7 @@ module node_4
         .consume(yneg_reduce_grant),
         .full(),
         .empty(yneg_reduce_empty),
-        .out(yneg_reduce),
-        .usedw()
+        .out(yneg_reduce)
     ); 	 
 	 
 	 
