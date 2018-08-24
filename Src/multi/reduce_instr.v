@@ -282,44 +282,37 @@ assign {dst_z_uptree, dst_y_uptree, dst_x_uptree} = (local_rank == 0)? my_rank :
 
 reg [Dst_XWidth-1:0] dst_x_bcast, dst_y_bcast, dst_z_bcast;
 reg [lg_numprocs:0] send_again_bcast;
-reg home_bcast, send_home_bcast, one_child;
 wire valid_bcast = (t_op == ShortBcast);
 wire [DstWidth:0]bcast_offset = ((lg_commsize - communicator_children)+send_again_bcast)*DstWidth;
-wire [DstWidth:0]bcast_threshold = (lg_commsize-2)*DstWidth;
+wire [DstWidth:0]bcast_threshold = (lg_commsize-1)*DstWidth;
 
-wire rd_en_bcast = (local_rank==0)? (bcast_offset == bcast_threshold) : (communicator_children == 1)? one_child : ((home_bcast)||(local_rank[0]));
+wire rd_en_bcast = (communicator_children < 2)? 1 : (bcast_offset == bcast_threshold);
+wire eject_enable_bcast;
 
 always @(posedge clk) begin	
 	if(rst) begin
 		{dst_x_bcast, dst_y_bcast, dst_z_bcast} = 0;
 		send_again_bcast = 0;
-		home_bcast = 0;
-		one_child = 0;
 	end
 	
 	else if (packetIn[ValidBitPos])begin		
 		if(send_again_bcast == communicator_children-1) begin
 			send_again_bcast=0;
-			home_bcast = (local_rank!=0);
 		end					
 		else begin
-			send_again_bcast = ((!home_bcast)&&(valid_bcast))? send_again_bcast+1 : send_again_bcast;
-			home_bcast = 0;
+			send_again_bcast = (valid_bcast)? send_again_bcast+1 : send_again_bcast;
 		end
 		
 		case(communicator_children)
 			3'b000: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = my_rank;
-			3'b001: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (one_child)? my_rank : rank_table[comm_row[(DstWidth*(lg_numprocs-1))+:DstWidth]];
-			default: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = (send_home_bcast)? my_rank : rank_table[comm_row[bcast_offset+:DstWidth]]; 
+			3'b001: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = rank_table[comm_row[(DstWidth*(lg_numprocs-1))+:DstWidth]];
+			default: {dst_z_bcast, dst_y_bcast, dst_x_bcast} = rank_table[comm_row[bcast_offset+:DstWidth]]; 
 		endcase
-				
-		one_child = ((communicator_children==1) && (!one_child) && (t_op==ShortBcast));
 	end
 end
 
-always @(posedge clk)begin
-	send_home_bcast <= (rst)? 0 : home_bcast;
-end
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //recursive halving
@@ -533,12 +526,13 @@ assign packetOut[DstPos+DstWidth-1:DstPos] = {dst3, dst2, dst1};
 	3. if it is meant for me but I am keeping it, then keep the original sender	*/
 assign packetOut[RankPos+RankWidth-1:RankPos] = ((ok_meant_for_me)&&({dst3, dst2, dst1}!=my_rank))? loc_rank : rank;
 assign packetOut[SrcPos+SrcWidth-1:SrcPos] = ((ok_meant_for_me)&&({dst3, dst2, dst1}!=my_rank))? my_rank : {src_z, src_y, src_x};
-assign packetOut[ValidBitPos] = ((op==ShortAllGather)||(op==ShortAllReduce))? ({dst3,dst2,dst1}!=my_rank) : valid;
+assign packetOut[ValidBitPos] = (valid)?(((op==ShortAllGather)||(op==ShortAllReduce)||(op==ShortBcast))? ({dst3,dst2,dst1}!=9'b111111111) : ({dst3, dst2, dst1}!=my_rank)):0;
 assign packetOut[ChildrenPos+ChildrenWidth-1:ChildrenPos] = children;
 
 assign eject_enable_doubling = (((valid)&&((send_again_doubling == 1'b1)||(spec_doubling)))&&(ok_meant_for_me));
+assign eject_enable_bcast = ((valid)&&(rd_en_bcast));
 assign eject_children = lg_commsize;
-assign eject_enable = ((op==ShortAllReduce)||(op==ShortAllGather))?eject_enable_doubling : 1'b0;
+assign eject_enable = (valid)?(((op==ShortAllReduce)||(op==ShortAllGather))?eject_enable_doubling : (op==ShortBcast)? eject_enable_bcast : {dst3, dst2, dst1}==my_rank):0;
 
 endmodule
 
