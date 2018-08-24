@@ -6,7 +6,8 @@ module router_4#(
     parameter cur_z = 0,
 	 parameter lg_numprocs = 3,
 	 parameter PayloadWidth = 32,
-	 parameter ReductionTableSize = 2
+	 parameter ReductionTableSize = 140,
+	 parameter input_Q_size = 10
 )(
     input clk,
     input rst,
@@ -54,7 +55,6 @@ module router_4#(
     );
 	 
 	 localparam ROUTE_LEN = 3;
-	 localparam input_Q_size = 10;
 	 localparam PORT_NUM = 6;
 	 
 	 localparam DIR_XPOS=3'd1;
@@ -110,6 +110,11 @@ module router_4#(
 	 wire [FlitWidth - 1 : 0]in_xneg_IR;
 	 wire [FlitWidth - 1 : 0]in_yneg_IR;
 	 
+	 wire [ChildrenWidth-1:0]eject_xpos_children;
+	 wire [ChildrenWidth-1:0]eject_ypos_children;
+	 wire [ChildrenWidth-1:0]eject_xneg_children;
+	 wire [ChildrenWidth-1:0]eject_yneg_children;
+	 
 
 //IR output and buffer input
 	 wire xpos_IR_consume;
@@ -150,8 +155,7 @@ module router_4#(
         .consume(xpos_IR_consume),
         .full(),
         .empty(),
-        .out(in_xpos_IR),
-        .usedw()
+        .out(in_xpos_IR)
     );
 	 
 	 
@@ -167,8 +171,7 @@ module router_4#(
         .consume(ypos_IR_consume),
         .full(),
         .empty(),
-        .out(in_ypos_IR),
-        .usedw()
+        .out(in_ypos_IR)
     );
 	 
 	 
@@ -185,8 +188,7 @@ module router_4#(
         .consume(xneg_IR_consume),
         .full(),
         .empty(),
-        .out(in_xneg_IR),
-        .usedw()
+        .out(in_xneg_IR)
     );
 	 
 	 large_buffer#(
@@ -201,8 +203,7 @@ module router_4#(
         .consume(yneg_IR_consume),
         .full(),
         .empty(),
-        .out(in_yneg_IR),
-        .usedw()
+        .out(in_yneg_IR)
     );
 	 
 	
@@ -221,8 +222,12 @@ module router_4#(
 	 .packetIn(in_xpos_IR),
 	 .clk(clk),
 	 .rst(rst),
-	 .rd_en(xpos_IR_consume)
+	 .rd_en(xpos_IR_consume),
+	 .eject_enable(eject_xpos_valid),
+	 .eject_children(eject_xpos_children)
 	);
+	
+	assign eject_xpos = {eject_xpos_children[lg_numprocs-1:0], eject_xpos_valid ,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_xpos_RC[DstPos-1:0]};
 
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -237,8 +242,12 @@ module router_4#(
 	 .packetIn(in_ypos_IR),
 	 .clk(clk),
 	 .rst(rst),
-	 .rd_en(ypos_IR_consume)
+	 .rd_en(ypos_IR_consume),
+	 .eject_enable(eject_ypos_valid),
+	 .eject_children(eject_ypos_children)
 	);
+	
+	assign eject_ypos = {eject_ypos_children[lg_numprocs-1:0],eject_ypos_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_ypos_RC[DstPos-1:0]};
 	
 	
 	reduce_instr#(
@@ -254,8 +263,12 @@ module router_4#(
 	 .packetIn(in_xneg_IR),
 	 .clk(clk),
 	 .rst(rst),
-	 .rd_en(xneg_IR_consume)
+	 .rd_en(xneg_IR_consume),
+	 .eject_enable(eject_xneg_valid),
+	 .eject_children(eject_xneg_children)
 	);
+	
+	assign eject_xneg = {eject_xneg_children[lg_numprocs-1:0],eject_xneg_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_xneg_RC[DstPos-1:0]};
 	
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -270,8 +283,12 @@ module router_4#(
 	 .packetIn(in_yneg_IR),
 	 .clk(clk),
 	 .rst(rst),
-	 .rd_en(yneg_IR_consume)
+	 .rd_en(yneg_IR_consume),
+	 .eject_enable(eject_yneg_valid),
+	 .eject_children(eject_yneg_children)
 	);
+	
+	assign eject_yneg = {eject_yneg_children[lg_numprocs-1:0],eject_yneg_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_yneg_RC[DstPos-1:0]};
 	
 
 
@@ -296,9 +313,8 @@ module router_4#(
         .flit_after_RC(flit_xpos_VA),
         .flit_valid_out(),
         .dir_out(flit_xpos_VA_route),
-        .eject_enable(eject_xpos_valid)
+        .eject_enable()
     );
-    assign eject_xpos = flit_xpos_VA;
 	 
 	 route_comp#(
         .cur_x(cur_x),
@@ -318,9 +334,8 @@ module router_4#(
         .flit_after_RC(flit_ypos_VA),
         .flit_valid_out(),
         .dir_out(flit_ypos_VA_route),
-        .eject_enable(eject_ypos_valid)
+        .eject_enable()
     );
-    assign eject_ypos = flit_ypos_VA;
 	 
 	 
 	 route_comp#(
@@ -341,9 +356,8 @@ module router_4#(
         .flit_after_RC(flit_xneg_VA),
         .flit_valid_out(),
         .dir_out(flit_xneg_VA_route),
-        .eject_enable(eject_xneg_valid)
+        .eject_enable()
     );
-    assign eject_xneg = flit_xneg_VA;
 	 
 	 route_comp#(
         .cur_x(cur_x),
@@ -363,9 +377,9 @@ module router_4#(
         .flit_after_RC(flit_yneg_VA),
         .flit_valid_out(),
         .dir_out(flit_yneg_VA_route),
-        .eject_enable(eject_yneg_valid)
+        .eject_enable()
     );
-    assign eject_yneg = flit_yneg_VA;
+
 	 
 	 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -402,12 +416,11 @@ module router_4#(
         .clk(clk),
         .rst(rst),
         .in({flit_xpos_VA_route, flit_xpos_VA}),
-        .produce((flit_xpos_VA[ValidBitPos])&&(!eject_xpos_valid)),
+        .produce(flit_xpos_VA[ValidBitPos]),
         .consume(flit_xpos_SA_grant),
         .full(),
         .empty(),
-        .out({flit_xpos_SA_route, flit_xpos_SA}),
-        .usedw()
+        .out({flit_xpos_SA_route, flit_xpos_SA})
     );
 	 
 	 
@@ -419,12 +432,11 @@ module router_4#(
         .clk(clk),
         .rst(rst),
         .in({flit_ypos_VA_route, flit_ypos_VA}),
-        .produce((flit_ypos_VA[ValidBitPos])&&(!eject_ypos_valid)),
+        .produce(flit_ypos_VA[ValidBitPos]),
         .consume(flit_ypos_SA_grant),
         .full(),
         .empty(),
-        .out({flit_ypos_SA_route, flit_ypos_SA}),
-        .usedw()
+        .out({flit_ypos_SA_route, flit_ypos_SA})
     );
 
 
@@ -437,12 +449,11 @@ module router_4#(
         .clk(clk),
         .rst(rst),
         .in({flit_xneg_VA_route, flit_xneg_VA}),
-        .produce((flit_xneg_VA[ValidBitPos])&&(!eject_xneg_valid)),
+        .produce(flit_xneg_VA[ValidBitPos]),
         .consume(flit_xneg_SA_grant),
         .full(),
         .empty(),
-        .out({flit_xneg_SA_route, flit_xneg_SA}),
-        .usedw()
+        .out({flit_xneg_SA_route, flit_xneg_SA})
     );
 
 	 
@@ -454,12 +465,11 @@ module router_4#(
         .clk(clk),
         .rst(rst),
         .in({flit_yneg_VA_route, flit_yneg_VA}),
-        .produce((flit_yneg_VA[ValidBitPos])&&(!eject_yneg_valid)),
+        .produce(flit_yneg_VA[ValidBitPos]),
         .consume(flit_yneg_SA_grant),
         .full(),
         .empty(),
-        .out({flit_yneg_SA_route, flit_yneg_SA}),
-        .usedw()
+        .out({flit_yneg_SA_route, flit_yneg_SA})
     );
 
 
@@ -611,8 +621,7 @@ module router_4#(
         .consume(!xpos_reduce_done),
         .full(),
         .empty(),
-        .out(out_xpos_noreduce),
-        .usedw()
+        .out(out_xpos_noreduce)
     );
 	 
 	 
@@ -668,8 +677,7 @@ module router_4#(
         .consume(!ypos_reduce_done),
         .full(),
         .empty(),
-        .out(out_ypos_noreduce),
-        .usedw()
+        .out(out_ypos_noreduce)
     );
 	
 	
@@ -728,8 +736,7 @@ module router_4#(
         .consume(!xneg_reduce_done),
         .full(),
         .empty(),
-        .out(out_xneg_noreduce),
-        .usedw()
+        .out(out_xneg_noreduce)
     );
 	 
 
@@ -785,8 +792,7 @@ module router_4#(
         .consume(!yneg_reduce_done),
         .full(),
         .empty(),
-        .out(out_yneg_noreduce),
-        .usedw()
+        .out(out_yneg_noreduce)
     );
 	 
 	 
