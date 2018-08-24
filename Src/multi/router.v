@@ -283,7 +283,7 @@ module router#(
 	 .eject_children(eject_xpos_children)
 	);
 	
-	assign eject_xpos = {eject_xpos_children[lg_numprocs-1:0],in_xpos_RC[FlitWidth-1:DstPos+DstWidth],cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_xpos_RC[DstPos-1:0]};
+	assign eject_xpos = {eject_xpos_children[lg_numprocs-1:0], eject_xpos_valid ,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_xpos_RC[DstPos-1:0]};
 
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -303,7 +303,7 @@ module router#(
 	 .eject_children(eject_ypos_children)
 	);
 	
-	assign eject_ypos = {eject_ypos_children[lg_numprocs-1:0],in_ypos_RC[FlitWidth-1:DstPos+DstWidth],cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_ypos_RC[DstPos-1:0]};
+	assign eject_ypos = {eject_ypos_children[lg_numprocs-1:0],eject_ypos_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_ypos_RC[DstPos-1:0]};
 	
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -323,7 +323,7 @@ module router#(
 	 .eject_children(eject_zpos_children)
 	);
 	
-	assign eject_zpos = {eject_zpos_children[lg_numprocs-1:0],in_zpos_RC[FlitWidth-1:DstPos+DstWidth],cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_zpos_RC[DstPos-1:0]};
+	assign eject_zpos = {eject_zpos_children[lg_numprocs-1:0],eject_zpos_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_zpos_RC[DstPos-1:0]};
 	
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -343,7 +343,7 @@ module router#(
 	 .eject_children(eject_xneg_children)
 	);
 	
-	assign eject_xneg = {eject_xneg_children[lg_numprocs-1:0],in_xneg_RC[FlitWidth-1:DstPos+DstWidth],cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_xneg_RC[DstPos-1:0]};
+	assign eject_xneg = {eject_xneg_children[lg_numprocs-1:0],eject_xneg_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_xneg_RC[DstPos-1:0]};
 	
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -363,7 +363,7 @@ module router#(
 	 .eject_children(eject_yneg_children)
 	);
 	
-	assign eject_yneg = {eject_yneg_children[lg_numprocs-1:0],in_yneg_RC[FlitWidth-1:DstPos+DstWidth],cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_yneg_RC[DstPos-1:0]};
+	assign eject_yneg = {eject_yneg_children[lg_numprocs-1:0],eject_yneg_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_yneg_RC[DstPos-1:0]};
 	
 	reduce_instr#(
 		.rank_x(cur_x),
@@ -383,7 +383,7 @@ module router#(
 	 .eject_children(eject_zneg_children)
 	);
 	
-	assign eject_zneg = {eject_zneg_children[lg_numprocs-1:0],in_zneg_RC[FlitWidth-1:DstPos+DstWidth],cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_zneg_RC[DstPos-1:0]};
+	assign eject_zneg = {eject_zneg_children[lg_numprocs-1:0],eject_zneg_valid,cur_z[Dst_ZWidth-1:0], cur_y[Dst_YWidth-1:0], cur_z[Dst_XWidth-1:0], in_zneg_RC[DstPos-1:0]};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
