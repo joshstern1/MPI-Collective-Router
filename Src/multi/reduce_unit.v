@@ -36,7 +36,7 @@ module reduce_unit#(
 	input buf_empty,
 	input buf_full,
 	output rd_en, 
-	input wr_en,
+	output wr_en,
 	output valid_out,
 	output reg done,
 	output[FlitWidth-1:0]Outpacket
