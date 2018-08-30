@@ -98,7 +98,7 @@ wire reductiontype;
 wire[ReductionTableWidth-1:0] reduction_table_entry;
 wire [WaitWidth-1:0]WaitCount;
 wire [PayloadWidth-1:0] dataC;
-wire [PayloadWidth-1:0] sum;//, product;
+wire [63:0] sum, sum2, product;//, product;
 
 reg [8:0]counter;
 //reg done;
@@ -136,12 +136,19 @@ adder A1(
   .result(sum)
 );
 
-/*multiplier M1(
-  .a(reduction_table[packetIndex][63:0]),
-  .b(packetA[63:0]),
-  .clk(clk),
-  .p(product)
-);*/
+adder A2(
+  .dataa({reduction_table[packetIndex][PayloadWidth+30-1:30]}),
+  .datab({packetA[PayloadWidth+30-1:30]}),
+  .clock(clk),
+  .result(sum2)
+);
+
+multiplier M1(
+  .dataa(reduction_table[packetIndex][PayloadWidth-1:0]),
+  .datab(packetA[PayloadWidth-1:0]),
+  .clock(clk),
+  .result(product)
+);
 
 /* the following assignment statements are responsible for creating the output packet.
 they combine the results of the reduction table such as the payload, destination, etc.
@@ -268,11 +275,11 @@ always@(posedge clk) begin
   for(i=0;i<ReductionTableSize;i=i+1)begin  
    if ((reduction_table[i][WaitPos+WaitWidth-1:WaitPos]==0)&&(reduction_table[i][ValidBitPos]==1)&&(reduction_table[i][ExtraWaitPos]==1))begin
      if((reduction_table[i][LeafBitPos]==0)&&(counter>AdderLatency))begin
-      case(reduction_table[i][opPos+opWidth-1:opPos])
+      case(reduction_table[i][AlgTypePos+AlgTypeWidth-1:AlgTypePos])
       2'b00: reduction_table[i][PayloadWidth-1:0] <= sum;
-		//2'b01: reduction_table[i][PayloadWidth-1:0] <= product;
+		2'b01: reduction_table[i][PayloadWidth-1:0] <= product;
+		2'b10: reduction_table[i][PayloadWidth-1:0] <= sum2;
       endcase
-		reduction_table[i][PayloadWidth-1:0] <= sum;
      end
      reduction_table[i][ExtraWaitPos]<=0;
      reduction_table[i][LeafBitPos]<=0;
