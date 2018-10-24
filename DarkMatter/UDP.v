@@ -76,7 +76,7 @@ module UDP(
 	parameter CRC_Len = 32;
 	parameter CRC_Gen = 9;
 	parameter InterPacketGap = 96'b0;
-	wire [Packet_No_CRC_Len + CRC_Len - 1 : 0]CRC_helper = (Ethernet_No_CRC << CRC_Len)%CRC_Gen;
+	wire [Packet_No_CRC_Len + CRC_Len - 1 : 0]CRC_helper = (Packet_No_CRC << CRC_Len)%CRC_Gen;
 	
 	parameter Ethernet_Tail_Len = CRC_Len + 96;
 	wire [Ethernet_Tail_Len - 1 : 0]CRC = {(CRC_Gen - CRC_helper), InterPacketGap};
